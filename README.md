@@ -1,4 +1,4 @@
-# getting started
+# GETTING STARTED AND SO ON
 - used this:
 https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile_py.html
 - start in (for me): C:\Users\tajbe\Desktop\vs2022\projekty z patrykiem\patrykowy
@@ -60,8 +60,8 @@ cmake --build . --config Release
 > idk what this does; to find out later
 
 
-
-## 6. just for me (for later), how to initialize git -> github etc
+# GITHUB
+## 1. just for me (for later), how to initialize git -> github etc
 ```
 git init
 ```
@@ -81,4 +81,23 @@ git remote add origin http://link_to_repo
 ```
 ```
 git push -u origin master
+```
+
+## 2. get new changes from github
+```
+git pull
+```
+
+## 3. push changes to github
+```
+git status
+```
+```
+git add .
+```
+```
+git commit -m "jakis commit"
+```
+```
+git push
 ```
