@@ -19,7 +19,7 @@ choco install cmake
 choco install conan
 ```
 > [!IMPORTANT]
-> OR
+> or you can use pip
 ```
 pip install conan
 ```
