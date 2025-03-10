@@ -1,7 +1,10 @@
 # GETTING STARTED AND SO ON
-- used this:
-https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile_py.html
-- start in (for me): C:\Users\tajbe\Desktop\vs2022\projekty z patrykiem\patrykowy
+- used this two:
+  - https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile_py.html
+  - https://thescienceofcode.com/imgui-quickstart/
+
+- start in (for me):
+  - C:\Users\tajbe\Desktop\vs2022\projekty z patrykiem\patrykowy
 - file structure (for me):
 
 ![file_struct.png](file_struct.png)
