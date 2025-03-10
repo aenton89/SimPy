@@ -18,7 +18,8 @@ choco install cmake
 ```
 choco install conan
 ```
-OR
+> [!IMPORTANT]
+> OR
 ```
 pip install conan
 ```
