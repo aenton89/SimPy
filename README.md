@@ -11,6 +11,7 @@ https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile
 ```
 choco install cmake
 ```
+> [!TIP]
 > in conanfile.py change cmake version i guess? idk
 
 ### 1.2. install conan
@@ -55,6 +56,7 @@ cmake --build . --config Release
 ```
 .\deactivate_conanbuild.bat
 ```
+> [!WARNING]
 > idk what this does; to find out later
 
 
@@ -72,7 +74,8 @@ git add .
 ```
 git commit -m "jakis commit"
 ```
-now make EMPTY repo on github, and copy the link to it
+> [!NOTE]
+> now make EMPTY repo on github, and copy the link to it
 ```
 git remote add origin http://link_to_repo
 ```
