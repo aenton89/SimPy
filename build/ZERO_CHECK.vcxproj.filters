@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\tajbe\Desktop\vs2022\projekty z patrykiem\patrykcpp\build\CMakeFiles\9332540e40703bf18fee14990e4032ec\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{68B50E2A-3DC4-3446-90D1-1D524B2CBFF0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

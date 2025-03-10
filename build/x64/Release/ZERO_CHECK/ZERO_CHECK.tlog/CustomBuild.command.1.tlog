@@ -1,0 +1,10 @@
+^C:\USERS\TAJBE\DESKTOP\VS2022\PROJEKTY Z PATRYKIEM\PATRYKCPP\BUILD\CMAKEFILES\9332540E40703BF18FEE14990E4032EC\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp" "-BC:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp/build" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp/build/patrykcpp.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

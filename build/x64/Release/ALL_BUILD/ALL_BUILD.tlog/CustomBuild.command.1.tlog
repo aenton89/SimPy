@@ -1,0 +1,10 @@
+^C:\USERS\TAJBE\DESKTOP\VS2022\PROJEKTY Z PATRYKIEM\PATRYKCPP\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp" "-BC:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp/build" --check-stamp-file "C:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp/build/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

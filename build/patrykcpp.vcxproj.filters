@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\tajbe\Desktop\vs2022\projekty z patrykiem\patrykcpp\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\tajbe\Desktop\vs2022\projekty z patrykiem\patrykcpp\src\imgui_backends\imgui_impl_glfw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\tajbe\Desktop\vs2022\projekty z patrykiem\patrykcpp\src\imgui_backends\imgui_impl_opengl3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\tajbe\Desktop\vs2022\projekty z patrykiem\patrykcpp\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{F76D80D1-1D5E-30EA-A7FC-133AFC0B99D2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
