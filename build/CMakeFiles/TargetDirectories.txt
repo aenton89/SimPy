@@ -1,3 +1,0 @@
-C:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp/build/CMakeFiles/patrykcpp.dir
-C:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/tajbe/Desktop/vs2022/projekty z patrykiem/patrykcpp/build/CMakeFiles/ZERO_CHECK.dir
