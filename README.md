@@ -27,6 +27,11 @@ choco install conan
 pip install conan
 ```
 
+### 1.3. detect conan profile
+```
+conan profile detect --force
+```
+
 ## 2. install dependencies
 ### 2.1. download imgui backends (my python script)
 ```
@@ -52,8 +57,13 @@ cmake --build . --config Release
 ```
 
 ## 4. run
+### 4.1. run main program
 ```
 .\Release\patrykcpp.exe
+```
+### 4.2. run tests
+```
+.\Release\tests.exe
 ```
 
 ## 5. deactivate conan

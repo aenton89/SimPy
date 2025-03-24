@@ -1,7 +1,7 @@
 import os
 import urllib.request
 
-# Wersja ImGui zgodna z conanfile.py
+# wersja ImGui zgodna z conanfile.py
 IMGUI_VERSION = "v1.89.9"
 
 # URL bazowy do pobrania backendów
@@ -16,10 +16,10 @@ FILES = [
     "imgui_impl_opengl3_loader.h"
 ]
 
-# Ścieżka do folderu backendów
+# ścieżka do folderu backendów
 BACKEND_DIR = os.path.join("src", "imgui_backends")
 
-# Tworzymy katalog, jeśli nie istnieje
+# tworzymy katalog, jeśli nie istnieje
 os.makedirs(BACKEND_DIR, exist_ok=True)
 
 # Pobieramy pliki
