@@ -35,27 +35,27 @@ void exampleUsage() {
 
 
 std::vector<float> testPatryk(){
-  Model model;
-  std::vector<float> output;
+	Model model;
+  	std::vector<float> output;
 
-  auto sum = model.addBlock<SumBlock>("Sum1");
-  auto integ = model.addBlock<IntegratorBlock>("Integrator1", 0.01);
-  auto mult = model.addBlock<MultiplyBlock>("Mult1");
+  	auto sum = model.addBlock<SumBlock>("Sum1");
+  	auto integ = model.addBlock<IntegratorBlock>("Integrator1", 0.01);
+  	auto mult = model.addBlock<MultiplyBlock>("Mult1");
 
-  model.connect(sum, 0, integ, 0);
-  model.connect(integ, 0, mult, 0);
-  model.connect(mult, 0, sum, 1);
+  	model.connect(sum, 0, integ, 0);
+  	model.connect(integ, 0, mult, 0);
+  	model.connect(mult, 0, sum, 1);
 
-  for (int i = 0; i < 1000; i++){
-      sum->setInput(0, 1.0);
-      mult->setInput(1, -1.0);
+  	for (int i = 0; i < 1000; i++){
+      	sum->setInput(0, 1.0);
+      	mult->setInput(1, -1.0);
 
-      model.simulate();
-      std::cout << "Step " << i << ": " << integ->getOutput(0) << std::endl;
-      output.push_back(integ->getOutput(0));
-  }
+      	model.simulate();
+      	std::cout << "Step " << i << ": " << integ->getOutput(0) << std::endl;
+      	output.push_back(integ->getOutput(0));
+  	}
 
-  return output;
+  	return output;
 }
 
 
@@ -66,14 +66,10 @@ int main() {
 
     std::cout << "Running patryk test" << std::endl;
     std::cout << std::endl << "__________________________________________________\n" << std::endl;
-
     std::vector<float> wynik = testPatryk();
-
-
     for(auto i : wynik){
       std::cout << i << "; ";
     }
-
 
     return 0;
 }
