@@ -10,20 +10,32 @@
 // w tym pliku są deklaracje specyficznych bloków (narazie testowe)
 
 
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek sumujący
 class SumBlock : public Block {
 public:
-    SumBlock(const std::string& name);
+    SumBlock(int _id);
     void process() override;
+    // TODO: GUI
+    void drawContent() override;
 };
 
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek mnożący
 class MultiplyBlock : public Block {
 public:
-    MultiplyBlock(const std::string& name);
+    MultiplyBlock(int _id);
     void process() override;
+    // TODO: GUI
+    void drawContent() override;
 };
 
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek całkujący
 class IntegratorBlock : public Block {
 private:
@@ -31,11 +43,42 @@ private:
     double timeStep;
 
 public:
-    IntegratorBlock(const std::string& name, double dt);
+    // default'owo dt = 0.01
+    IntegratorBlock(int _id, double dt = 0.01);
     void process() override;
+    // TODO: GUI
+    void drawContent() override;
     void reset();
     void setState(double initialState);
 };
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// bloczek input'u
+class InputBlock : public Block {
+private:
+    double inputValue;
+
+public:
+    InputBlock(int _id);
+    void process() override;
+    // TODO: GUI
+    void drawContent() override;
+};
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// bloczek print'a
+class PrintBlock : public Block {
+public:
+    PrintBlock(int _id);
+    void process() override;
+    // TODO: GUI
+    void drawContent() override;
+};
+
 
 
 #endif

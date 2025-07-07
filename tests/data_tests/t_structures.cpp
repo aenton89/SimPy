@@ -13,9 +13,9 @@ void exampleUsage() {
     Model model;
 
     // dodawanie bloków
-    auto sum = model.addBlock<SumBlock>("Sum1");
-    auto mult = model.addBlock<MultiplyBlock>("Mult1");
-    auto integ = model.addBlock<IntegratorBlock>("Integrator1", 0.01);
+    auto sum = model.addBlock<SumBlock>(1);
+    auto mult = model.addBlock<MultiplyBlock>(2);
+    auto integ = model.addBlock<IntegratorBlock>(3, 0.01);
 
     // tworzenie połączeń, w tym sprzężenia zwrotnego
     model.connect(sum, 0, mult, 0);

@@ -10,6 +10,7 @@
 #include <memory>
 #include <iostream>
 #include <cmath>
+#include <imgui.h>
 
 
 /* klasa z której dziedziczą wszystkie bloki, odpowiada za:
@@ -20,23 +21,38 @@
  */
 class Block {
 protected:
-    std::string name;
+    // std::string name;
     std::vector<double> inputValues;
     std::vector<double> outputValues;
+    int numInputs;
+    int numOutputs;
 
 public:
-    Block(const std::string& blockName, int numInputs, int numOutputs);
+    // TODO: GUI - zmienne od GUI
+    int id;
+    ImVec2 position = ImVec2(100, 100);
+    ImVec2 size = ImVec2(300, 120);
+    bool open = true;
+    std::vector<int> connections;
+
+    Block(int _id, int _numInputs, int _numOutputs);
     virtual ~Block() = default;
+
+    // TODO: GUI - metoda do rysowania
+    virtual void drawContent() = 0;
 
     // metoda do przetwarzania danych wejściowych i generowania danych wyjściowych
     virtual void process() = 0;
 
     // gettery i settery
-    const std::string& getName() const;
+    // const std::string& getName() const;
     void setInput(int port, double value);
     double getOutput(int port) const;
     int getNumInputs() const;
     int getNumOutputs() const;
+
+    // TODO: spoza GUI
+    int getId() const;
 };
 
 
@@ -103,8 +119,14 @@ public:
     void simulateMultipleSteps(int steps);
 
     // gettery listy bloków i połączeń
-    const std::vector<std::unique_ptr<Block>>& getBlocks() const;
-    const std::vector<Connection>& getConnections() const;
+    std::vector<std::unique_ptr<Block>>& getBlocks();
+    std::vector<Connection>& getConnections();
+
+    // TODO: łączenie w całość
+    void makeConnections();
+    // dodawanie i usuwanie bloków
+    void addBlock(std::unique_ptr<Block> block);
+    void removeBlock(int removeId);
 };
 
 

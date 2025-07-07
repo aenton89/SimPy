@@ -47,12 +47,16 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(imgui REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(glad REQUIRED)
 
 # =================== GŁÓWNY PROGRAM ===================
 add_executable(patrykcpp
         src/main.cpp
         src/imgui_backends/imgui_impl_glfw.cpp
         src/imgui_backends/imgui_impl_opengl3.cpp
+        src/gui/guiClass.cpp
+        src/data/blocks.cpp
+        src/data/structures.cpp
 )
 
 target_compile_definitions(patrykcpp PRIVATE
@@ -63,11 +67,14 @@ target_link_libraries(patrykcpp PRIVATE
         imgui::imgui
         glfw
         OpenGL::GL
+        glad::glad
 )
 
 target_include_directories(patrykcpp PRIVATE
         ${imgui_INCLUDE_DIRS}
         src/imgui_backends
+        src/gui
+        src/data
 )
 
 # =================== TESTY ===================
@@ -86,6 +93,7 @@ target_link_libraries(tests PRIVATE
         imgui::imgui
         glfw
         OpenGL::GL
+        glad::glad
 )
 
 # rejestracja testów w CTest - ale tego nie sprawdzałem

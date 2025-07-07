@@ -8,6 +8,8 @@ class CompressorRecipe(ConanFile):
     def requirements(self):
         self.requires("imgui/1.89.9")
         self.requires("glfw/3.3.8")
+        # + glad, coś nowego
+        self.requires("glad/0.1.36")
 
     def configure(self):
         self.options["imgui/*"].with_glfw = True

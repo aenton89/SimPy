@@ -6,16 +6,17 @@
 
 
 
+// ----------------------------------------------------------------------------------------------------------------------------------------------
 // implementacja metod klasy Block
-Block::Block(const std::string& blockName, int numInputs, int numOutputs)
-    : name(blockName) {
+Block::Block(int _id, int _numInputs, int _numOutputs)
+    : id(_id), numInputs(_numInputs), numOutputs(_numOutputs) {
     inputValues.resize(numInputs, 0.0);
     outputValues.resize(numOutputs, 0.0);
 }
 
-const std::string& Block::getName() const {
-    return name;
-}
+// const std::string& Block::getName() const {
+//     return name;
+// }
 
 void Block::setInput(int port, double value) {
     if (port >= 0 && port < inputValues.size()) {
@@ -31,16 +32,19 @@ double Block::getOutput(int port) const {
 }
 
 int Block::getNumInputs() const {
-    return inputValues.size();
+    return numInputs;
 }
 
 int Block::getNumOutputs() const {
-    return outputValues.size();
+    return numOutputs;
+}
+
+int Block::getId() const {
+    return id;
 }
 
 
-
-
+// ----------------------------------------------------------------------------------------------------------------------------------------------
 // implementacja struktury Connection
 Connection::Connection(Block* src, int srcPort, Block* tgt, int tgtPort)
     : sourceBlock(src), sourcePort(srcPort),
@@ -48,7 +52,7 @@ Connection::Connection(Block* src, int srcPort, Block* tgt, int tgtPort)
 
 
 
-
+// ----------------------------------------------------------------------------------------------------------------------------------------------
 // implementacja metod klasy Model
 bool Model::hasCycleDFS(int v) {
     visited[v] = true;
@@ -151,10 +155,54 @@ void Model::simulateMultipleSteps(int steps) {
     }
 }
 
-const std::vector<std::unique_ptr<Block>>& Model::getBlocks() const {
+std::vector<std::unique_ptr<Block>>& Model::getBlocks() {
     return blocks;
 }
 
-const std::vector<Connection>& Model::getConnections() const {
+std::vector<Connection>& Model::getConnections() {
     return connections;
+}
+
+/* TODO:
+ * ogólnie to tu narazie jest robienie tych połączeń troche w losowej kolejności xd
+ * tym sie zająć kiedyś coś
+ * trzeba to poprawić i w GuiClass przy samym dodawaniu połączeń
+ * (może zamiast vector w Blocks zrobić pair, gdzie też jest na który Port)
+ * i tutaj, w miejścu poniżej oznaczonym jako TODO
+ * (bo tam są podane sourcePort i targetPort)
+ */
+void Model::makeConnections() {
+    for (auto& boxPtr : blocks) {
+        for (auto connId : boxPtr->connections) {
+            // szukamy tego ze zgadzającym się id
+            auto it = std::find_if(blocks.begin(), blocks.end(),
+                [connId](const std::unique_ptr<Block>& b) {
+                    return b->id == connId;
+                });
+
+            // tu tworzymy Connection
+            if (it != blocks.end()) {
+                Block *connectedBlock = it->get();
+                // TODO: o tym mówi todo wyżej
+                connect(connectedBlock, 0, boxPtr.get(), 0);
+                std::cout << "Connected block " << boxPtr->id << " to block " << connectedBlock->id << std::endl;
+            }
+            // blok o connId nie znaleziony, idk może potem jakaś lepsza obsługę wymyśleć
+            else {
+                std::cerr << "Warning: Block with ID " << connId << " not found for connections." << std::endl;
+            }
+        }
+    }
+}
+
+
+void Model::addBlock(std::unique_ptr<Block> block) {
+    blocks.push_back(std::move(block));
+}
+
+void Model::removeBlock(int removeId) {
+    blocks.erase(std::remove_if(blocks.begin(), blocks.end(),
+        [removeId](const std::unique_ptr<Block>& block) {
+            return block->getId() == removeId;
+        }), blocks.end());
 }

@@ -7,7 +7,7 @@ IMGUI_VERSION = "v1.89.9"
 # URL bazowy do pobrania backendów
 BASE_URL = f"https://raw.githubusercontent.com/ocornut/imgui/{IMGUI_VERSION}/backends/"
 
-# Lista plików do pobrania
+# lista plików do pobrania - te pod opengl3 i glfw
 FILES = [
     "imgui_impl_glfw.h",
     "imgui_impl_glfw.cpp",
@@ -22,7 +22,7 @@ BACKEND_DIR = os.path.join("src", "imgui_backends")
 # tworzymy katalog, jeśli nie istnieje
 os.makedirs(BACKEND_DIR, exist_ok=True)
 
-# Pobieramy pliki
+# pobieramy pliki
 for filename in FILES:
     url = BASE_URL + filename
     path = os.path.join(BACKEND_DIR, filename)
