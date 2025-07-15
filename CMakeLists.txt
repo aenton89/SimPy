@@ -1,43 +1,3 @@
-# TO BYŁO WCZEŚNIEJ, zerknąć
-
-#cmake_minimum_required(VERSION 3.30)
-#project(patrykcpp)
-#
-#set(CMAKE_CXX_STANDARD 20)
-#
-## znajduje wymagane pakiety
-#find_package(imgui REQUIRED)
-#find_package(glfw3 REQUIRED)
-#find_package(OpenGL REQUIRED)
-#
-## dodaje pliki źródłowe, w tym implementacje backendów
-#add_executable(patrykcpp
-#        src/main.cpp
-#        src/imgui_backends/imgui_impl_glfw.cpp
-#        src/imgui_backends/imgui_impl_opengl3.cpp
-#)
-#
-## definicje preprocesora dla imgui
-#target_compile_definitions(patrykcpp PRIVATE
-#        IMGUI_IMPL_OPENGL_LOADER_GLAD
-#)
-#
-## linkuje biblioteki
-#target_link_libraries(patrykcpp PRIVATE
-#        imgui::imgui
-#        glfw
-#        OpenGL::GL
-#)
-#
-## notatka dla siebie: jeśli bym używał plików nagłówkowych i implementacji backendów z imgui:
-## UPEWNNIĆ się, że katalogi są dostępne w ścieżce include
-#target_include_directories(patrykcpp PRIVATE
-#        ${imgui_INCLUDE_DIRS}
-#        src/imgui_backends
-#)
-
-
-
 cmake_minimum_required(VERSION 3.30)
 project(patrykcpp)
 
@@ -48,6 +8,7 @@ find_package(imgui REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glad REQUIRED)
+find_package(implot REQUIRED)
 
 # =================== GŁÓWNY PROGRAM ===================
 add_executable(patrykcpp
@@ -68,6 +29,7 @@ target_link_libraries(patrykcpp PRIVATE
         glfw
         OpenGL::GL
         glad::glad
+        implot::implot
 )
 
 target_include_directories(patrykcpp PRIVATE

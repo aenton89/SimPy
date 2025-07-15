@@ -18,6 +18,8 @@ void guiClass::init(GLFWwindow* win, const char* version) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
+    ImPlot::CreateContext();
+
     // setup platform/ renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -62,6 +64,9 @@ void guiClass::update() {
         if (ImGui::Button("Add Output Box")) {
             model.getBlocks().push_back(std::make_unique<PrintBlock>(next_id++));
         }
+        if (ImGui::Button("Add Plot Box")) {
+            model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
+        }
     }
     ImGui::End();
 
@@ -93,6 +98,7 @@ void guiClass::update() {
                 return std::find(to_remove.begin(), to_remove.end(), id) != to_remove.end();
             }), conns.end());
     }
+
 
     // TODO: przenieść do main
     // usuwamy same boxy
@@ -130,9 +136,11 @@ void guiClass::drawBox(Block& box) {
     bool isHovered = ImGui::IsItemHovered();
     bool isClicked = ImGui::IsItemClicked();
     // kolor przycisku w zależności od stanu
-    ImU32 buttonColor = isClicked ? IM_COL32(255, 0, 0, 255) : (isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(200, 200, 0, 255));
-    draw_list->AddCircleFilled(center, 8.0f, buttonColor);
-    draw_list->AddText(ImVec2(center.x - 4, center.y - 7), IM_COL32(0, 0, 0, 255), "+");
+    if (box.getNumOutputs() > 0) {
+        ImU32 buttonColor = isClicked ? IM_COL32(255, 0, 0, 255) : (isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(200, 200, 0, 255));
+        draw_list->AddCircleFilled(center, 8.0f, buttonColor);
+        draw_list->AddText(ImVec2(center.x - 4, center.y - 7), IM_COL32(0, 0, 0, 255), "+");
+    }
 
     // zaczynamy przeciąganie
     if (isClicked && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
@@ -156,7 +164,6 @@ void guiClass::drawBox(Block& box) {
 
     ImGui::End();
 }
-
 
 void guiClass::drawConnections() {
     ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
@@ -295,6 +302,7 @@ void guiClass::shutdown() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    ImPlot::DestroyContext();
 }
 
 

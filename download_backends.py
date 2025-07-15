@@ -2,7 +2,7 @@ import os
 import urllib.request
 
 # wersja ImGui zgodna z conanfile.py
-IMGUI_VERSION = "v1.89.9"
+IMGUI_VERSION = "v1.90.5"
 
 # URL bazowy do pobrania backendów
 BASE_URL = f"https://raw.githubusercontent.com/ocornut/imgui/{IMGUI_VERSION}/backends/"

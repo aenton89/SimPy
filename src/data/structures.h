@@ -27,6 +27,7 @@ protected:
     int numInputs;
     int numOutputs;
 
+
 public:
     // TODO: GUI - zmienne od GUI
     int id;
@@ -34,6 +35,8 @@ public:
     ImVec2 size = ImVec2(300, 120);
     bool open = true;
     std::vector<int> connections;
+    int numConnected = 0;
+
 
     Block(int _id, int _numInputs, int _numOutputs);
     virtual ~Block() = default;

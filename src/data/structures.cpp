@@ -184,7 +184,8 @@ void Model::makeConnections() {
             if (it != blocks.end()) {
                 Block *connectedBlock = it->get();
                 // TODO: o tym mówi todo wyżej
-                connect(connectedBlock, 0, boxPtr.get(), 0);
+                connect(connectedBlock, 0, boxPtr.get(), boxPtr->numConnected);
+                boxPtr->numConnected++;
                 std::cout << "Connected block " << boxPtr->id << " to block " << connectedBlock->id << std::endl;
             }
             // blok o connId nie znaleziony, idk może potem jakaś lepsza obsługę wymyśleć

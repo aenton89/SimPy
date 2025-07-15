@@ -6,10 +6,12 @@ class CompressorRecipe(ConanFile):
     generators = "CMakeDeps", "CMakeToolchain"
 
     def requirements(self):
-        self.requires("imgui/1.89.9")
+        self.requires("imgui/1.90.5")
         self.requires("glfw/3.3.8")
         # + glad, coś nowego
         self.requires("glad/0.1.36")
+        # implot dla wykresów
+        self.requires("implot/0.16")
 
     def configure(self):
         self.options["imgui/*"].with_glfw = True
