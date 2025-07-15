@@ -14,10 +14,6 @@ Block::Block(int _id, int _numInputs, int _numOutputs)
     outputValues.resize(numOutputs, 0.0);
 }
 
-// const std::string& Block::getName() const {
-//     return name;
-// }
-
 void Block::setInput(int port, double value) {
     if (port >= 0 && port < inputValues.size()) {
         inputValues[port] = value;

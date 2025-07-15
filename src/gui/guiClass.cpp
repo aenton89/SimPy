@@ -70,7 +70,6 @@ void guiClass::update() {
     }
     ImGui::End();
 
-    // for (auto& box : boxes) {
     for (auto& box : model.getBlocks()) {
         if (box->open)
             drawBox(*box);
@@ -82,7 +81,6 @@ void guiClass::update() {
 
     // zbieramy ID boxów do usunięcia
     std::vector<int> to_remove;
-    // for (const auto& box : boxes) {
     for (auto& box : model.getBlocks()) {
         if (!box->open) {
             to_remove.push_back(box->id);
@@ -90,7 +88,6 @@ void guiClass::update() {
     }
 
     // usuwamy połączenia do/z tych boxów
-    // for (auto& box : boxes) {
     for (auto& box : model.getBlocks()) {
         auto& conns = box->connections;
         conns.erase(std::remove_if(conns.begin(), conns.end(),
@@ -99,13 +96,7 @@ void guiClass::update() {
             }), conns.end());
     }
 
-
-    // TODO: przenieść do main
     // usuwamy same boxy
-    // boxes.erase(std::remove_if(boxes.begin(), boxes.end(),
-    //     [](const std::unique_ptr<Box>& b) {
-    //         return !b->open;
-    //     }), boxes.end());
     model.getBlocks().erase(std::remove_if(model.getBlocks().begin(), model.getBlocks().end(),
         [](const std::unique_ptr<Block>& box) {
             return !box->open;
@@ -113,7 +104,6 @@ void guiClass::update() {
 }
 
 
-// void guiClass::drawBox(Box& box) {
 void guiClass::drawBox(Block& box) {
     std::string title = "Box #" + std::to_string(box.id);
     ImGui::SetNextWindowPos(box.position, ImGuiCond_Once);
@@ -173,9 +163,7 @@ void guiClass::drawConnections() {
     for (auto& box : model.getBlocks()) {
         for (auto it = box->connections.begin(); it != box->connections.end();) {
             // Szukamy boxa docelowego (target)
-            // auto targetIt = std::find_if(boxes.begin(), boxes.end(), [&](auto& b) { return b->id == *it; });
             auto targetIt = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b) { return b->id == *it; });
-            // if (targetIt != boxes.end()) {
             if (targetIt != model.getBlocks().end()) {
                 // naprawa linii po resize'ie
                 ImVec2 p1 = (*targetIt)->position;
@@ -232,9 +220,7 @@ void guiClass::drawConnections() {
 
     // rysowanie dynamicznej linki (w trakcie przeciągania)
     if (dragging_from) {
-        // auto it = std::find_if(boxes.begin(), boxes.end(), [&](auto& b) { return b->id == *dragging_from; });
         auto it = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b) { return b->id == *dragging_from; });
-        // if (it != boxes.end()) {
         if (it != model.getBlocks().end()) {
             // P1 to początek (box źródłowy)
             ImVec2 p1 = (*it)->position;
@@ -254,7 +240,6 @@ void guiClass::drawConnections() {
         ImVec2 mousePos = ImGui::GetMousePos();
         bool connected = false;
 
-        // for (auto& box : boxes) {
         for (auto& box : model.getBlocks()) {
             ImVec2 boxMin = box->position;
             ImVec2 boxMax = ImVec2(boxMin.x + 300, boxMin.y + 120);
@@ -304,13 +289,3 @@ void guiClass::shutdown() {
     ImGui::DestroyContext();
     ImPlot::DestroyContext();
 }
-
-
-// TODO: łączenie w całość
-// bool guiClass::getisRunning() {
-//     return isRunning;
-// }
-//
-// void guiClass::setIsRunning(bool start) {
-//     isRunning = start;
-// }

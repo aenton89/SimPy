@@ -45,9 +45,6 @@ int main(){
 
 
     // ---------------------------------------------------------------------------------------
-    // TODO: łączenie w całość
-    // Model model;
-
     guiClass guiInterface;
 
     guiInterface.init(window, glsl_version);

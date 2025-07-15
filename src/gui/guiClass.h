@@ -52,56 +52,18 @@ public:
     void render();
     void shutdown();
 
-    // TODO: łączenie w całość
-    // bool getisRunning();
-    // void setIsRunning(bool start);
-    // guiClass(Model* _model) : model(_model){};
-
-
 private:
-    // struct Box {
-    //     int id;
-    //     ImVec2 position = ImVec2(100, 100);
-    //     ImVec2 size = ImVec2(300, 120);
-    //     bool open = true;
-    //     std::vector<int> connections;
-    //
-    //     virtual ~Box() = default;
-    //     virtual void drawContent() = 0;
-    // };
-    //
-    // struct FloatBox : Box {
-    //     float value = 0.0f;
-    //     FloatBox(int i) { id = i; }
-    //
-    //     void drawContent() override {
-    //         ImGui::SliderFloat("Value", &value, 0.0f, 100.0f);
-    //     };
-    // };
-    //
-    // struct StringBox : Box {
-    //     char text[128] = "Type here";
-    //     StringBox(int i) { id = i; }
-    //
-    //     void drawContent() override {
-    //         ImGui::InputText("Text", text, IM_ARRAYSIZE(text));
-    //     }
-    // };
-
-    // TODO: łączenie w całość
     void drawBox(Block& box);
     void drawConnections();
     void drawStartButton();
 
     int next_id = 0;
-    // std::vector<std::unique_ptr<Box>> boxes;
     std::optional<int> dragging_from;
     GLFWwindow* window = nullptr;
     const char* glsl_version = nullptr;
     // id boxów, do których są połączenia
     // std::optional<std::pair<int, int>> dragging_connection;
 
-    // TODO: łączenie w całość
     bool isRunning = false;
     Model model;
 };

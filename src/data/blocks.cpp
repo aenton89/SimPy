@@ -4,8 +4,6 @@
 
 #include "blocks.h"
 
-#include <ranges>
-
 // w tym pliku są implementacje specyficznych bloków
 
 
@@ -115,25 +113,6 @@ void PlotBlock::process() {
 // void PlotBlock::drawContent() {
 //     ImVec2 size = ImGui::GetContentRegionAvail();
 //     ImGui::PlotLines("", data, 1000, values_offset, nullptr, 0.0f, 1.0f, size);
-// }
-
-// void PlotBlock::drawContent() {
-//     static float x_data[100];
-//     static float y_data[100];
-//     static int count = 100;
-//
-//     // Wypełnienie przykładowymi danymi (sinusoida)
-//     for (int i = 0; i < count; ++i) {
-//         x_data[i] = (float)i;
-//         y_data[i] = sinf(i * 0.1f);
-//     }
-//
-//     ImVec2 size = ImGui::GetContentRegionAvail();
-//
-//     if (ImPlot::BeginPlot("Testowy wykres", size)) {
-//         ImPlot::PlotLine("sin(x)", x_data, y_data, count);
-//         ImPlot::EndPlot();
-//     }
 // }
 
 void PlotBlock::drawContent() {
