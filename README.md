@@ -9,11 +9,11 @@
 - uses Conan for dependencies
 - uses CMake for building
 
-# Getting started and so on
-- used this two:
-  - https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile_py.html
-  - https://thescienceofcode.com/imgui-quickstart/
+# References
+- [conan tutorial](https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile_py.html)
+- [imgui tutorial](https://thescienceofcode.com/imgui-quickstart/)
 
+# Getting started and so on
 ## 1. install cmake and conan
 ### 1.1. install cmake
 ```
