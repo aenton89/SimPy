@@ -15,6 +15,7 @@
 #include <optional>
 #include "../data/structures.h"
 #include "../data/blocks.h"
+#include <implot.h>
 
 
 static float LengthSqr(const ImVec2& a, const ImVec2& b) {

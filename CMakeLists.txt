@@ -56,6 +56,7 @@ target_link_libraries(tests PRIVATE
         glfw
         OpenGL::GL
         glad::glad
+        implot::implot
 )
 
 # rejestracja testów w CTest - ale tego nie sprawdzałem

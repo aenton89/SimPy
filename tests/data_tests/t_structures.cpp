@@ -15,7 +15,7 @@ void exampleUsage() {
     // dodawanie bloków
     auto sum = model.addBlock<SumBlock>(1);
     auto mult = model.addBlock<MultiplyBlock>(2);
-    auto integ = model.addBlock<IntegratorBlock>(3, 0.01);
+    auto integ = model.addBlock<IntegratorBlock>(3);
 
     // tworzenie połączeń, w tym sprzężenia zwrotnego
     model.connect(sum, 0, mult, 0);
@@ -38,9 +38,9 @@ std::vector<float> testPatryk(){
 	Model model;
   	std::vector<float> output;
 
-  	auto sum = model.addBlock<SumBlock>("Sum1");
-  	auto integ = model.addBlock<IntegratorBlock>("Integrator1", 0.01);
-  	auto mult = model.addBlock<MultiplyBlock>("Mult1");
+  	auto sum = model.addBlock<SumBlock>(1);
+  	auto integ = model.addBlock<IntegratorBlock>(2);
+  	auto mult = model.addBlock<MultiplyBlock>(3);
 
   	model.connect(sum, 0, integ, 0);
   	model.connect(integ, 0, mult, 0);

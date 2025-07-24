@@ -6,7 +6,7 @@
 #define BLOCKS_H
 
 #include "structures.h"
-#include "implot.h"
+#include <implot.h>
 
 // w tym pliku są deklaracje specyficznych bloków (narazie testowe)
 
