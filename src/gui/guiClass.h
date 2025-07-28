@@ -16,6 +16,7 @@
 #include "../data/structures.h"
 #include "../data/blocks.h"
 #include <implot.h>
+#include <thread>
 
 
 static float LengthSqr(const ImVec2& a, const ImVec2& b) {
@@ -62,10 +63,9 @@ private:
     std::optional<int> dragging_from;
     GLFWwindow* window = nullptr;
     const char* glsl_version = nullptr;
-    // id boxów, do których są połączenia
-    // std::optional<std::pair<int, int>> dragging_connection;
+    // odpowiada za simulate i zapewnienie, że nie odpali sie drugi raz w trakcie trwającej symulacji
+    std::atomic<bool> simulationRunning = false;
 
-    bool isRunning = false;
     Model model;
 };
 

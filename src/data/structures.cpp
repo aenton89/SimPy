@@ -122,26 +122,28 @@ bool Model::hasCycles() {
 }
 
 void Model::simulate() {
-    // jeśli mamy cykle, W TEORII potrzebna jest specjalna obsługa (np. iteracyjne rozwiązanie) -> ALE narazie ignorujemy problem
-    // bo i tak w naszym przypadku cykle są na sprzężeniach zwrotnych, a w nich ustaliliśmy, że wstawiamy 0.0
-    bool hasCyclesInModel = hasCycles();
+    if (connections.size() > 0) {
+        // jeśli mamy cykle, W TEORII potrzebna jest specjalna obsługa (np. iteracyjne rozwiązanie) -> ALE narazie ignorujemy problem
+        // bo i tak w naszym przypadku cykle są na sprzężeniach zwrotnych, a w nich ustaliliśmy, że wstawiamy 0.0
+        bool hasCyclesInModel = hasCycles();
 
-    // zbieranie wejść dla każdego bloku
-    for (const auto& conn : connections) {
-        double value = conn.sourceBlock->getOutput(conn.sourcePort);
-        conn.targetBlock->setInput(conn.targetPort, value);
-    }
+        // zbieranie wejść dla każdego bloku
+        for (const auto& conn : connections) {
+            double value = conn.sourceBlock->getOutput(conn.sourcePort);
+            conn.targetBlock->setInput(conn.targetPort, value);
+        }
 
-    // przetwarzanie bloków
-    for (auto& block : blocks) {
-        block->process();
-    }
+        // przetwarzanie bloków
+        for (auto& block : blocks) {
+            block->process();
+        }
 
-    // jeśli mamy cykle, możemy potrzebować dodatkowych iteracji do zbieżności
-    // ALE, ignorujemy, tho zostawiam komentarz i bloczek warunkowy na przyszłość
-    if (hasCyclesInModel) {
-        // tutaj np. implementacja iteracyjnego rozwiązania dla cykli
-        // np. powtórz symulację kilka razy, aż do osiągnięcia zbieżności
+        // jeśli mamy cykle, możemy potrzebować dodatkowych iteracji do zbieżności
+        // ALE, ignorujemy, tho zostawiam komentarz i bloczek warunkowy na przyszłość
+        if (hasCyclesInModel) {
+            // tutaj np. implementacja iteracyjnego rozwiązania dla cykli
+            // np. powtórz symulację kilka razy, aż do osiągnięcia zbieżności
+        }
     }
 }
 
@@ -202,4 +204,10 @@ void Model::removeBlock(int removeId) {
         [removeId](const std::unique_ptr<Block>& block) {
             return block->getId() == removeId;
         }), blocks.end());
+}
+
+void Model::cleanup() {
+    for (auto& block : blocks) {
+        block->reset();  // resetujemy stan każdego bloku
+    }
 }

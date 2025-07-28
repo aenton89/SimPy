@@ -67,6 +67,9 @@ void guiClass::update() {
         if (ImGui::Button("Add Plot Box")) {
             model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
         }
+        if (ImGui::Button("Add Gain Box")) {
+            model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
+        }
     }
     ImGui::End();
 
@@ -118,19 +121,32 @@ void guiClass::drawBox(Block& box) {
 
     box.drawContent();
 
-    // znak + po prawej stronie boxa
-    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+    // znak + po lewej stronie box'a
+    // pozycję i rozmiar okna boxa
+    ImVec2 windowPos = ImGui::GetWindowPos();
+    ImVec2 windowSize = ImGui::GetWindowSize();
+
+    // TODO: wziąć w pętle w zależności od ilości outputów
+    // środek po prawej krawędzi
+    ImVec2 center = ImVec2(windowPos.x + windowSize.x - 15, windowPos.y + windowSize.y * 0.5f);
+
+    // kursor do InvisibleButton tak, żeby kółko dało się kliknąć
+    ImGui::SetCursorScreenPos(ImVec2(center.x - 10, center.y - 10));
     ImGui::InvisibleButton(("##link" + std::to_string(box.id)).c_str(), ImVec2(20, 20));
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 center = ImVec2(cursorPos.x + 10, cursorPos.y + 10);
+
     bool isHovered = ImGui::IsItemHovered();
     bool isClicked = ImGui::IsItemClicked();
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
     // kolor przycisku w zależności od stanu
     if (box.getNumOutputs() > 0) {
         ImU32 buttonColor = isClicked ? IM_COL32(255, 0, 0, 255) : (isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(200, 200, 0, 255));
         draw_list->AddCircleFilled(center, 8.0f, buttonColor);
         draw_list->AddText(ImVec2(center.x - 4, center.y - 7), IM_COL32(0, 0, 0, 255), "+");
     }
+    // TODO: aż do tąd pętle
+
 
     // zaczynamy przeciąganie
     if (isClicked && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
@@ -260,16 +276,26 @@ void guiClass::drawConnections() {
 
 void guiClass::drawStartButton() {
     if (ImGui::Begin("Start / Stop")) {
-        if (ImGui::Button("Run Simulation")) {
-            // uruchom w osobnym wątku i nie czekaj na niego:
-            std::thread([this]() {
-                model.makeConnections();
-                // TODO: tu na ogół nie ma być na stałe pętli do 1000
-                // patryk chyba chciał to jakoś ustawiać, idk w sumie nie pamiętam
-                for (int i = 0; i < 1000; i++) {
-                    model.simulate();
-                }
-            }).detach();
+        if (simulationRunning) {
+            ImGui::BeginDisabled();
+            ImGui::Button("Running...");
+            ImGui::EndDisabled();
+        } else {
+            if (ImGui::Button("Run Simulation")) {
+                simulationRunning = true;
+                // uruchom w osobnym wątku i nie czekaj na niego:
+                std::thread([this]() {
+                    model.makeConnections();
+                    // cleanup w bloczkach jeśli jest potrzebny
+                    model.cleanup();
+                    // TODO: tu na ogół nie ma być na stałe pętli do 1000
+                    // patryk chyba chciał to jakoś ustawiać, idk w sumie nie pamiętam
+                    for (int i = 0; i < 1000; i++) {
+                        model.simulate();
+                    }
+                    simulationRunning = false;
+                }).detach();
+            }
         }
     }
     ImGui::End();

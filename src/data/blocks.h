@@ -89,7 +89,18 @@ public:
     PlotBlock(int _id);
     void process() override;
     void drawContent() override;
+    void reset() override;
 };
 
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// jak MultiplyBlock, ale z ustawianym mnożnikiem
+class GainBlock: public Block {
+    float multiplier = 1.0f;
+public:
+    GainBlock(int _id);
+    void process() override;
+    // TODO: GUI
+    void drawContent() override;
+};
 
 #endif

@@ -27,7 +27,6 @@ protected:
     int numInputs;
     int numOutputs;
 
-
 public:
     // TODO: GUI - zmienne od GUI
     int id;
@@ -36,7 +35,6 @@ public:
     bool open = true;
     std::vector<int> connections;
     int numConnected = 0;
-
 
     Block(int _id, int _numInputs, int _numOutputs);
     virtual ~Block() = default;
@@ -56,6 +54,9 @@ public:
 
     // TODO: spoza GUI
     int getId() const;
+
+    // resetowanie stanu bloku - jeśli jest potrzebne
+    virtual void reset() {};
 };
 
 
@@ -120,6 +121,9 @@ public:
     void simulate();
     // symulacja, wiele kroków
     void simulateMultipleSteps(int steps);
+
+    // czyszczenie na koniec symulacji
+    void cleanup();
 
     // gettery listy bloków i połączeń
     std::vector<std::unique_ptr<Block>>& getBlocks();
