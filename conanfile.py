@@ -12,6 +12,8 @@ class CompressorRecipe(ConanFile):
         self.requires("glad/0.1.36")
         # implot dla wykresów
         self.requires("implot/0.16")
+        # dla serializacji
+        self.requires("nlohmann_json/3.12.0")
 
     def configure(self):
         self.options["imgui/*"].with_glfw = True

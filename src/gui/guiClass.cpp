@@ -16,7 +16,8 @@ void guiClass::init(GLFWwindow* win, const char* version) {
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
 
     ImPlot::CreateContext();
 
@@ -61,7 +62,7 @@ void guiClass::update() {
         if (ImGui::Button("Add Input Box")) {
             model.getBlocks().push_back(std::make_unique<InputBlock>(next_id++));
         }
-        if (ImGui::Button("Add Output Box")) {
+        if (ImGui::Button("Add Print Box")) {
             model.getBlocks().push_back(std::make_unique<PrintBlock>(next_id++));
         }
         if (ImGui::Button("Add Plot Box")) {

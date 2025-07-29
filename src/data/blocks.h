@@ -15,11 +15,14 @@
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek sumujący
 class SumBlock : public Block {
+    // bo vector<bool> nie zwraca zwykłego wskaźnika (chyba??)
+    std::vector<char> negate_inputs = {0, 0};
 public:
     SumBlock(int _id);
     void process() override;
     // TODO: GUI
     void drawContent() override;
+    void drawMenu() override;
 };
 
 
@@ -85,6 +88,8 @@ public:
 class PlotBlock : public Block {
     int values_offset = 0; // offset do przesunięcia wykresu
     float data[1000] = {}; // wskaźnik do danych do wykresu
+    float max_val = 1.0f;
+    float min_val = -1.0f;
 public:
     PlotBlock(int _id);
     void process() override;
@@ -101,6 +106,7 @@ public:
     void process() override;
     // TODO: GUI
     void drawContent() override;
+    void drawMenu() override;
 };
 
 #endif

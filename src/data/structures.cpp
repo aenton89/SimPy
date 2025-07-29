@@ -8,8 +8,8 @@
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // implementacja metod klasy Block
-Block::Block(int _id, int _numInputs, int _numOutputs)
-    : id(_id), numInputs(_numInputs), numOutputs(_numOutputs) {
+Block::Block(int _id, int _numInputs, int _numOutputs, bool _has_menu)
+    : id(_id), numInputs(_numInputs), numOutputs(_numOutputs), has_menu(_has_menu) {
     inputValues.resize(numInputs, 0.0);
     outputValues.resize(numOutputs, 0.0);
 }
@@ -38,6 +38,26 @@ int Block::getNumOutputs() const {
 int Block::getId() const {
     return id;
 }
+
+void Block::drawContent() {
+    if (has_menu) {
+        // przycisk rozwijający menu
+        if (ImGui::Button(">", ImVec2(20.0, 20.0))) {
+            ImGui::OpenPopup("MoreOptionsPopup");
+        }
+
+        // samo menu
+        if (ImGui::BeginPopup("MoreOptionsPopup")) {
+            drawMenu();
+
+            if (ImGui::Button("Close")) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+}
+
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -160,6 +180,15 @@ std::vector<std::unique_ptr<Block>>& Model::getBlocks() {
 std::vector<Connection>& Model::getConnections() {
     return connections;
 }
+
+const std::vector<std::unique_ptr<Block>>& Model::getBlocks() const {
+    return blocks;
+}
+
+const std::vector<Connection>& Model::getConnections() const {
+    return connections;
+}
+
 
 /* TODO:
  * ogólnie to tu narazie jest robienie tych połączeń troche w losowej kolejności xd

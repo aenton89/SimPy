@@ -21,11 +21,12 @@
  */
 class Block {
 protected:
-    // std::string name;
-    std::vector<double> inputValues;
-    std::vector<double> outputValues;
     int numInputs;
     int numOutputs;
+    bool has_menu;
+    // TODO: potem wrócić to do protected
+    std::vector<double> inputValues;
+    std::vector<double> outputValues;
 
 public:
     // TODO: GUI - zmienne od GUI
@@ -36,11 +37,13 @@ public:
     std::vector<int> connections;
     int numConnected = 0;
 
-    Block(int _id, int _numInputs, int _numOutputs);
+    Block(int _id, int _numInputs, int _numOutputs, bool _has_menu = false);
     virtual ~Block() = default;
 
     // TODO: GUI - metoda do rysowania
-    virtual void drawContent() = 0;
+    virtual void drawContent();
+    // tu stricte odpowiada za to co będzie narysowane w menu
+    virtual void drawMenu() {};
 
     // metoda do przetwarzania danych wejściowych i generowania danych wyjściowych
     virtual void process() = 0;
@@ -49,6 +52,7 @@ public:
     // const std::string& getName() const;
     void setInput(int port, double value);
     double getOutput(int port) const;
+
     int getNumInputs() const;
     int getNumOutputs() const;
 
@@ -57,6 +61,9 @@ public:
 
     // resetowanie stanu bloku - jeśli jest potrzebne
     virtual void reset() {};
+
+    // pod serializacje
+    // virtual std::string getTypeName() const = 0;
 };
 
 
@@ -125,9 +132,12 @@ public:
     // czyszczenie na koniec symulacji
     void cleanup();
 
-    // gettery listy bloków i połączeń
+    // gettery listy bloków i połączeń - przeciążone na const i nie-const
     std::vector<std::unique_ptr<Block>>& getBlocks();
     std::vector<Connection>& getConnections();
+    const std::vector<std::unique_ptr<Block>>& getBlocks() const;
+    const std::vector<Connection>& getConnections() const;
+
 
     // TODO: łączenie w całość
     void makeConnections();
