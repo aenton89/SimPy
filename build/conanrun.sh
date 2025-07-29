@@ -1,0 +1,1 @@
+. "/home/patryk/CLionProjects/SimPy_gui_refactor/build/conanrunenv-release-x86_64.sh"

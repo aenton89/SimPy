@@ -1,0 +1,1 @@
+. "/home/patryk/CLionProjects/SimPy_gui_refactor/build/deactivate_conanbuildenv-release-x86_64.sh"

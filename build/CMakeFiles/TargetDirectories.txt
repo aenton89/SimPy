@@ -1,0 +1,3 @@
+/home/patryk/CLionProjects/SimPy_gui_refactor/build/CMakeFiles/patrykcpp.dir
+/home/patryk/CLionProjects/SimPy_gui_refactor/build/CMakeFiles/edit_cache.dir
+/home/patryk/CLionProjects/SimPy_gui_refactor/build/CMakeFiles/rebuild_cache.dir

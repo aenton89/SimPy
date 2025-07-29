@@ -1,0 +1,6 @@
+{
+    "kernels": [
+        "path/to/new/kernel/python",
+        "/home/patryk/Desktop/venv/ML_venv/bin/python3"
+    ]
+}
