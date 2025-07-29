@@ -7,6 +7,7 @@
 
 #include "structures.h"
 #include <implot.h>
+#include <array>
 
 // w tym pliku są deklaracje specyficznych bloków (narazie testowe)
 
@@ -35,6 +36,7 @@ public:
     void process() override;
     // TODO: GUI
     void drawContent() override;
+    void drawMenu() override;
 };
 
 
@@ -54,6 +56,7 @@ public:
     void drawContent() override;
     void reset();
     void setState(double initialState);
+    void drawMenu() override;
 };
 
 
@@ -86,8 +89,10 @@ public:
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek robiący wykres
 class PlotBlock : public Block {
-    int values_offset = 0; // offset do przesunięcia wykresu
-    float data[1000] = {}; // wskaźnik do danych do wykresu
+    // offset do przesunięcia wykresu
+    int values_offset = 0;
+    // wskaźnik do danych do wykresu
+    std::vector<std::array<float, 1000>> data;
     float max_val = 1.0f;
     float min_val = -1.0f;
 public:
@@ -95,6 +100,7 @@ public:
     void process() override;
     void drawContent() override;
     void reset() override;
+    void drawMenu() override;
 };
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------

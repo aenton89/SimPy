@@ -36,9 +36,31 @@ void SumBlock::drawContent() {
 }
 
 void SumBlock::drawMenu() {
-    for (int i = 0; i < numInputs; ++i) {
-        // rzutujemy char* na bool* - to działa bo bool i char są 1-bajtowe
-        ImGui::Checkbox(("Negate Input " + std::to_string(i + 1)).c_str(), reinterpret_cast<bool*>(&negate_inputs[i]));
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
+        if (numInputs < 2)
+            numInputs = 2;
+        else {
+            std::cout<<"changed number of inputs: "<<numInputs<<std::endl;
+            inputValues.resize(numInputs);
+            negate_inputs.resize(numInputs, 0);
+        }
+    }
+
+    if (ImGui::Button("Negate Inputs >")) {
+        ImGui::OpenPopup("MoreOptionsPopup");
+    }
+
+    // samo menu
+    if (ImGui::BeginPopup("MoreOptionsPopup")) {
+        for (int i = 0; i < numInputs; ++i) {
+            // rzutujemy char* na bool* - to działa bo bool i char są 1-bajtowe
+            ImGui::Checkbox(("Negate Input " + std::to_string(i + 1)).c_str(), reinterpret_cast<bool*>(&negate_inputs[i]));
+        }
+
+        if (ImGui::Button("Close")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
 }
 
@@ -58,6 +80,17 @@ void MultiplyBlock::drawContent() {
     ImGui::Text("Mult: %f", outputValues[0]);
 
     Block::drawContent();
+}
+
+void MultiplyBlock::drawMenu() {
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
+        if (numInputs < 2)
+            numInputs = 2;
+        else {
+            std::cout<<"changed number of inputs: "<<numInputs<<std::endl;
+            inputValues.resize(numInputs);
+        }
+    }
 }
 
 
@@ -88,6 +121,10 @@ void IntegratorBlock::reset() {
 void IntegratorBlock::setState(double initialState) {
     state = initialState;
     outputValues[0] = state;
+}
+
+void IntegratorBlock::drawMenu() {
+    ImGui::InputDouble("Initial state: ", &state);
 }
 
 
@@ -130,25 +167,40 @@ void PrintBlock::drawContent() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // plot'a
-PlotBlock::PlotBlock(int _id) : Block(_id, 1, 0) {}
+PlotBlock::PlotBlock(int _id) : Block(_id, 1, 0, true) {
+    data.resize(numInputs);
+    for (auto& arr : data) {
+        std::fill(arr.begin(), arr.end(), 0.0f);
+    }
+}
 
 void PlotBlock::process() {
-    if (max_val < inputValues[0])
-        max_val = inputValues[0];
-    else if (min_val > inputValues[0])
-        min_val = inputValues[0];
+    if (data.size() < numInputs)
+        return;
 
-    data[values_offset] = inputValues[0];
+    for (int i = 0; i < numInputs; ++i) {
+        if (max_val < inputValues[i])
+            max_val = inputValues[i];
+        else if (min_val > inputValues[i])
+            min_val = inputValues[i];
+
+        data.at(i)[values_offset] = inputValues[i];
+        std::cout<<"plot's new value: "<<inputValues[i]<<std::endl;
+    }
+
     values_offset++;
-    std::cout<<"plot's new value: "<<inputValues[0]<<std::endl;
+    if (values_offset > 1000)
+        values_offset = 1000;
 }
 
 void PlotBlock::reset() {
     values_offset = 0;
     min_val = -1.0f;
     max_val = 1.0f;
-    // resetujemy dane wykresu
-    std::fill(data, data + 1000, 0.0f);
+    for (int i = 0; i < numInputs; ++i) {
+        // resetujemy dane wykresu
+        std::fill(data.at(i).begin(), data.at(i).end(), 0.0f);
+    }
 }
 
 void PlotBlock::drawContent() {
@@ -160,15 +212,33 @@ void PlotBlock::drawContent() {
         // Oś Y: zakres 0..1
         ImPlot::SetupAxisLimits(ImAxis_Y1, min_val, max_val + (max_val / 10.0), ImGuiCond_Always);
 
-        // rysowanie danych
-        ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 10.0f);
-        ImPlot::PlotLine("##Data", data, 1000, 1, 0, values_offset * sizeof(float));
-        ImPlot::PopStyleVar();
-
+        for (int i = 0; i < numInputs; ++i) {
+            if (i >= data.size())
+                continue;
+            ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
+            // unikalna etykieta
+            std::string label = "Input " + std::to_string(i + 1);
+            ImPlot::PlotLine(label.c_str(), data[i].data(), 1000, 1, 0, values_offset * sizeof(float));
+            ImPlot::PopStyleVar();
+        }
         ImPlot::EndPlot();
     }
-
     Block::drawContent();
+}
+
+void PlotBlock::drawMenu() {
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
+        if (numInputs < 1)
+            numInputs = 1;
+        else {
+            std::cout<<"changed number of inputs: "<<numInputs<<std::endl;
+            data.resize(numInputs);
+            inputValues.resize(numInputs);
+            for (int i = 0; i < numInputs; ++i) {
+                std::fill(data[i].begin(), data[i].end(), 0.0f);
+            }
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
