@@ -19,29 +19,11 @@ void RenderUI() {
 }
 
 
-void ShowDirectoryTree(const fs::path& path, std::string& selected_path) {
-    for (const auto& entry : fs::directory_iterator(path)) {
-        const std::string name = entry.path().filename().string();
-
-        if (entry.is_directory()) {
-            if (ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_OpenOnArrow)) {
-                if (ImGui::IsItemClicked())
-                    selected_path = entry.path().string();
-
-                ShowDirectoryTree(entry.path(), selected_path);
-                ImGui::TreePop();
-            }
-        } else {
-            if (ImGui::Selectable(name.c_str()))
-                selected_path = entry.path().string();
-        }
-    }
-}
 /*
 void RenderUI() {
     ImGui::Begin("File Browser");
     static std::string selected_path;
-    fs::path root = "/home/patryk/CLionProjects/SimPy_gui_refactor/src";
+    fs::path root = "/home/patryk/Desktop";
 
     if (ImGui::TreeNode(root.filename().string().c_str())) {
         ShowDirectoryTree(root, selected_path);

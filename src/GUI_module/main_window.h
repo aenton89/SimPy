@@ -12,6 +12,7 @@
 #include <map>
 #include "openFile.h"
 #include <imfilebrowser.h>
+#include <filesystem>
 
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
@@ -27,7 +28,13 @@ class MainWindow : public FileMenager, public OpenFile
 
         std::map<std::string, std::string> dict2map(const std::string dict);
 
+        void ShowDirectoryNode(const std::filesystem::directory_entry& entry, std::string& selected_path);
+        void ShowDirectoryTree(const std::filesystem::path& path, std::string& selected_path);
+        void HandleDragDropTarget(const std::filesystem::path& target);
+
     protected:
+
+        std::filesystem::path selected_path{};
 
         ImVec4 codeEditor();
         ImVec4 varTable();
@@ -38,9 +45,6 @@ class MainWindow : public FileMenager, public OpenFile
         void stopKernel();
         void resetKernel();
 
-        //std::string OpenPopup(const std::string& textTitle);
-        //void OpenFileBrowser(std::string& selectedPath);
-
 
     public:
         MainWindow();
@@ -50,15 +54,17 @@ class MainWindow : public FileMenager, public OpenFile
         void refresDisp(ImVec2 dispSize);
 };
 
-class OpenFileBrowser
-{
-    public:
-        OpenFileBrowser();
+class OpenFileBrowser {
+public:
+    OpenFileBrowser();
+    void Open();
+    void Render();
+    void set_selectPath(std::filesystem::path& path);
 
-        void Open();
-        void Render(std::string& selectedPath);
-
-    private:
-        ImGui::FileBrowser fileDialog;
+private:
+    ImGui::FileBrowser fileDialog;
+    std::filesystem::path* path = nullptr;
+    std::filesystem::path tempSelection;
+    bool hasTempSelection = false;
 };
 #endif //MAIN_WINDOW_H

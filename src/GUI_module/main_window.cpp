@@ -11,13 +11,15 @@
 #include <map>
 #include <nlohmann/json.hpp>
 #include "file_menager.h"
+#include <filesystem>
 
 using json = nlohmann::json;
 
+namespace fs = std::filesystem;
 
 ///////////////////////////////////////////////////////////////// Custom open FileBrowser /////////////////////////////////////////////////////////////
 OpenFileBrowser::OpenFileBrowser()
-    : fileDialog(ImGuiFileBrowserFlags_CloseOnEsc)
+    :  fileDialog(ImGuiFileBrowserFlags_CloseOnEsc | ImGuiFileBrowserFlags_SelectDirectory)
 {
     fileDialog.SetTitle("Select File");
 }
@@ -25,15 +27,21 @@ void OpenFileBrowser::Open()
 {
     fileDialog.Open();
 }
-void OpenFileBrowser::Render(std::string& selectedPath)
+void OpenFileBrowser::Render()
 {
     fileDialog.Display();
     if (fileDialog.HasSelected())
     {
-        selectedPath = fileDialog.GetSelected().string();
+        *this->path = fs::path(fileDialog.GetSelected());
         fileDialog.ClearSelected();
     }
 }
+
+void OpenFileBrowser::set_selectPath(fs::path& path)
+{
+    this->path = &path;
+}
+
 
 static OpenFileBrowser browser;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,36 +69,6 @@ void MainWindow::refresDisp(ImVec2 dispSize)
     this->width = dispSize.x;
     this->height = dispSize.y;
 }
-
-/*
- *Fun is open popup with file browser. From this window we can add new Python kernel
- */
-
-/*
-void MainWindow::OpenFileBrowser(std::string& selectedPath)
-{
-    static ImGui::FileBrowser fileDialog(ImGuiFileBrowserFlags_CloseOnEsc);
-    static bool initialized = false;
-
-    if (!initialized)
-    {
-        fileDialog.SetTitle("Add Kernel");
-        // fileDialog.SetTypeFilters({ ".cpp", ".h", ".txt" }); // opcjonalnie
-        initialized = true;
-    }
-
-    fileDialog.Open();
-
-    fileDialog.Display();
-
-    if (fileDialog.HasSelected())
-    {
-        selectedPath = fileDialog.GetSelected().string();
-        fileDialog.ClearSelected();
-    }
-}
-*/
-
 
 /*
  * Fun convert Python dict to cpp map.
@@ -384,16 +362,21 @@ ImVec4 MainWindow::menuBar()
     static std::string pathFile;
 
     ///////////////////// Te gowna bedzie trzeba wyjebac na koniec
-    browser.Render(pathFile);
+    browser.Render();
 
 
     /////////////////////// Otieranie pliku jupiter /////////////////////
     if (openOpenfile)
-        browser.Open();
-    if (!pathFile.empty())
     {
-        std::cout<< "PathFile" << pathFile << "\n";
-        for (auto& pair : openIpynb(pathFile))
+        browser.Open();
+        browser.set_selectPath(this->selected_path);
+    }
+
+    /*
+    if (!this->selected_path.empty())
+    {
+        std::cout<< "PathFile" << this->selected_path << "\n";
+        for (auto& pair : openIpynb(this->selected_path))
         {
             if (pair.second.cell_type == "code")
             {
@@ -412,6 +395,7 @@ ImVec4 MainWindow::menuBar()
         }
         pathFile.clear();
     }
+    */
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -454,7 +438,7 @@ ImVec4 MainWindow::menuBar()
 
     ImGui::PushItemWidth(windowSize.x * 0.1f);
 
-    static std::string kernelPath;
+    static fs::path kernelPath;
 
     if (!kernels.empty()) {
         auto it = std::next(kernels.begin(), current_kernels);
@@ -466,6 +450,7 @@ ImVec4 MainWindow::menuBar()
                     current_kernels = index;
                     if (kernel.first == "Add Kernel") {
                         browser.Open();
+                        browser.set_selectPath(kernelPath);
                     } else if (kernel.first != it->first.c_str()) {
                         initKernel(kernel.second);
                     }
@@ -549,22 +534,121 @@ ImVec4 MainWindow::varTable()
     return windowData;
 }
 
+/////////////////////////////////////////////////////////////////////////// Funkje zwiazne z workspace /////////////////////////////////////////////////////////////
+
+
+void MainWindow::HandleDragDropTarget(const fs::path& target) {
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FILE_PATH")) {
+            const char* sourcePath = (const char*)payload->Data;
+            fs::path source(sourcePath);
+            fs::path destination = target / source.filename();
+
+            try {
+                if (!fs::exists(source)) {
+                    std::cerr << "Źródło nie istnieje!\n";
+                } else {
+                    if (fs::exists(destination)) {
+                        // unikamy kolizji nazw → dopisujemy "_copy"
+                        destination = target / (source.filename().string() + "_copy");
+                    }
+                    fs::rename(source, destination); // realne przenoszenie
+                }
+            } catch (const fs::filesystem_error& e) {
+                std::cerr << "Błąd przenoszenia: " << e.what() << "\n";
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+}
+
+void MainWindow::ShowDirectoryNode(const fs::directory_entry& entry, std::string& selected_path) {
+    const std::string name = entry.path().filename().string();
+
+    if (entry.is_directory()) {
+        if (ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_OpenOnArrow)) {
+            // Kliknięcia
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+                selected_path = entry.path().string();
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+                ImGui::OpenPopup("DirContextMenu");
+
+            // Źródło przeciągania
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+                std::string folderPath = entry.path().string();
+                ImGui::SetDragDropPayload("FILE_PATH", folderPath.c_str(), folderPath.size() + 1);
+                ImGui::Text("Przenoszę folder: %s", name.c_str());
+                ImGui::EndDragDropSource();
+            }
+
+            // Obsługa drop target
+            MainWindow::HandleDragDropTarget(entry.path());
+
+            // Rekurencja
+            for (const auto& child : fs::directory_iterator(entry.path()))
+                ShowDirectoryNode(child, selected_path);
+
+            ImGui::TreePop();
+        }
+    } else {
+        // Plik jako element listy
+        if (ImGui::Selectable(name.c_str()))
+            selected_path = entry.path().string();
+
+        // Drag source (plik)
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+            std::string filePath = entry.path().string();
+            ImGui::SetDragDropPayload("FILE_PATH", filePath.c_str(), filePath.size() + 1);
+            ImGui::Text("Przenoszę plik: %s", name.c_str());
+            ImGui::EndDragDropSource();
+        }
+
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+            ImGui::OpenPopup("FileContextMenu");
+    }
+}
+
+void MainWindow::ShowDirectoryTree(const fs::path& path, std::string& selected_path) {
+    if (!fs::exists(path) || !fs::is_directory(path)) {
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Folder doesn't exist: %s", path.string().c_str());
+        return;
+    }
+
+    for (const auto& entry : fs::directory_iterator(path)) {
+        ShowDirectoryNode(entry, selected_path);
+    }
+}
+
+
 ImVec4 MainWindow::workSpace()
 {
     ImGui::SetCursorPos(ImVec2(0, this->height/10));
     ImVec2 childSize = ImVec2(this->width/10, this->height*9/10);
 
+    static std::string selected_path;
+
     ImGui::BeginChild("WorkSpace", childSize, true);
 
     ImGui::Text("Work Space");
 
-    ImVec2 windowPos = ImGui::GetWindowPos();
-    ImVec2 windowSize = ImGui::GetWindowSize();
-    ImVec4 windowData(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
+    if (ImGui::TreeNode(this->selected_path.filename().string().c_str())) {
+        ShowDirectoryTree(this->selected_path, selected_path);
 
-    ImGui::EndChild();
+        if (!selected_path.empty()) {
+            std::cout << selected_path << std::endl;
+            selected_path.clear();
+        }
 
-    return windowData;
+        ImGui::TreePop();
+
+        ImVec2 windowPos = ImGui::GetWindowPos();
+        ImVec2 windowSize = ImGui::GetWindowSize();
+        ImVec4 windowData(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
+
+        ImGui::EndChild();
+
+        return windowData;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
