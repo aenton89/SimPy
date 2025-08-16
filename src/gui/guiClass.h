@@ -17,6 +17,7 @@
 #include "../data/blocks.h"
 #include <implot.h>
 #include <thread>
+#include <algorithm>
 
 
 static float LengthSqr(const ImVec2& a, const ImVec2& b) {
@@ -54,10 +55,34 @@ public:
     void render();
     void shutdown();
 
+    // dockowanie menu i start
+    enum class DockPosition {
+        None,
+        Left,
+        Right,
+        Top,
+        Bottom
+    };
+
+    struct DockableWindow {
+        DockPosition position = DockPosition::None;
+        ImVec2 undockedPos = ImVec2(100, 100);
+        ImVec2 undockedSize = ImVec2(200, 150);
+        bool isDocked = true;
+    };
+
 private:
     void drawBox(Block& box);
     void drawConnections();
     void drawStartButton();
+    void zoom();
+    void applyCanvasTransform();
+
+    // funkcje pomocnicze dla dockingu
+    ImVec2 calculateDockedPosition(DockPosition position, ImVec2 size, bool isStartWindow = false);
+    ImVec2 calculateDockedSize(DockPosition position, bool isStartWindow = false);
+    DockPosition checkDockPosition(ImVec2 windowPos, ImVec2 windowSize);
+
 
     int next_id = 0;
     std::optional<int> dragging_from;
@@ -65,6 +90,26 @@ private:
     const char* glsl_version = nullptr;
     // odpowiada za simulate i zapewnienie, że nie odpali sie drugi raz w trakcie trwającej symulacji
     std::atomic<bool> simulationRunning = false;
+
+    // zoomowanie
+    float zoomAmount = 1.0f;
+    ImVec2 viewOffset = ImVec2(0.0, 0.0);
+    float zoomSpeed = 0.1f;
+    // przesuwanie canvas'u
+    bool canvasDragging = false;
+    ImVec2 dragStartPos = ImVec2(0.0, 0.0);
+    ImVec2 dragStartOffset = ImVec2(0.0, 0.0);
+    // dragging vs zooming -> problem który fix'ujemy
+    bool isDraggingWindow = false;
+    int draggedWindowId = -1;
+    // offset dla przeciągania okna
+    ImVec2 windowDragOffset;
+
+    // zmienne dla dockingu
+    DockableWindow menuWindow;
+    DockableWindow startWindow;
+    // odległość od krawędzi do snap'owania
+    float dockSnapDistance = 50.0f;
 
     Model model;
 };

@@ -11,6 +11,7 @@
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // sumowania
 SumBlock::SumBlock(int _id) : Block(_id, 2, 1, true) {
+    size = ImVec2(150, 80);
     if (numInputs != 2) {
         negate_inputs.resize(numInputs, 0);
     }
@@ -68,7 +69,9 @@ void SumBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // mnożenia
-MultiplyBlock::MultiplyBlock(int _id) : Block(_id, 2, 1, true) {}
+MultiplyBlock::MultiplyBlock(int _id) : Block(_id, 2, 1, true) {
+    size = ImVec2(150, 80);
+}
 
 void MultiplyBlock::process() {
     outputValues[0] = inputValues[0] * inputValues[1];
@@ -97,7 +100,10 @@ void MultiplyBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // całkowania
-IntegratorBlock::IntegratorBlock(int _id, double dt) : Block(_id, 1, 1, true), state(0.0), timeStep(dt) {}
+IntegratorBlock::IntegratorBlock(int _id, double dt) : Block(_id, 1, 1, true), initial_state(0.0), timeStep(dt) {
+    size = ImVec2(200, 120);
+    state = initial_state;
+}
 
 void IntegratorBlock::process() {
     state += inputValues[0] * timeStep;
@@ -107,31 +113,38 @@ void IntegratorBlock::process() {
 
 // TODO: GUI
 void IntegratorBlock::drawContent() {
-    ImGui::Text("Integrator: %f", outputValues[0]);
     ImGui::Text("Time step: ");
     ImGui::InputDouble("", &timeStep);
+    ImGui::Text("Integrator: %f", outputValues[0]);
 
     Block::drawContent();
 }
 
-void IntegratorBlock::reset() {
-    state = 0.0;
+void IntegratorBlock::resetAfter() {
+    state = initial_state;
 }
 
-void IntegratorBlock::setState(double initialState) {
-    state = initialState;
-    outputValues[0] = state;
+void IntegratorBlock::resetBefore() {
+    state = initial_state;
+    outputValues[0] = initial_state;
+}
+
+void IntegratorBlock::setState(double _initial_state) {
+    initial_state = _initial_state;
+    outputValues[0] = _initial_state;
 }
 
 void IntegratorBlock::drawMenu() {
-    ImGui::InputDouble("Initial state: ", &state);
+    ImGui::InputDouble("Initial state: ", &initial_state);
 }
 
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // input'u
-InputBlock::InputBlock(int _id) : Block(_id, 0, 1) {}
+InputBlock::InputBlock(int _id) : Block(_id, 0, 1) {
+    size = ImVec2(150, 80);
+}
 
 void InputBlock::process() {
     outputValues[0] = inputValue;
@@ -150,7 +163,9 @@ void InputBlock::drawContent() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // print'a
-PrintBlock::PrintBlock(int _id) : Block(_id, 1, 0) {}
+PrintBlock::PrintBlock(int _id) : Block(_id, 1, 0) {
+    size = ImVec2(150, 60);
+}
 
 void PrintBlock::process() {
     std::cout << "print: " << inputValues[0] << std::endl;
@@ -168,6 +183,7 @@ void PrintBlock::drawContent() {
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // plot'a
 PlotBlock::PlotBlock(int _id) : Block(_id, 1, 0, true) {
+    size = ImVec2(350, 200);
     data.resize(numInputs);
     for (auto& arr : data) {
         std::fill(arr.begin(), arr.end(), 0.0f);
@@ -193,7 +209,7 @@ void PlotBlock::process() {
         values_offset = 1000;
 }
 
-void PlotBlock::reset() {
+void PlotBlock::resetBefore() {
     values_offset = 0;
     min_val = -1.0f;
     max_val = 1.0f;
@@ -204,6 +220,8 @@ void PlotBlock::reset() {
 }
 
 void PlotBlock::drawContent() {
+    Block::drawContent();
+
     ImVec2 size = ImGui::GetContentRegionAvail();
 
     if (ImPlot::BeginPlot("##Plot", size, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus)) {
@@ -223,7 +241,6 @@ void PlotBlock::drawContent() {
         }
         ImPlot::EndPlot();
     }
-    Block::drawContent();
 }
 
 void PlotBlock::drawMenu() {
@@ -243,7 +260,9 @@ void PlotBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // gain'a
-GainBlock::GainBlock(int _id) : Block(_id, 1, 1, true) {}
+GainBlock::GainBlock(int _id) : Block(_id, 1, 1, true) {
+    size = ImVec2(200, 120);
+}
 
 void GainBlock::process() {
     outputValues[0] = inputValues[0] * multiplier;

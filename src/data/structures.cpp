@@ -126,6 +126,10 @@ bool Model::connect(Block* source, int sourcePort, Block* target, int targetPort
     return true;
 }
 
+void Model::disconnectAll() {
+    connections.clear();
+}
+
 bool Model::hasCycles() {
     visited.resize(blocks.size(), false);
     inStack.resize(blocks.size(), false);
@@ -142,7 +146,9 @@ bool Model::hasCycles() {
 }
 
 void Model::simulate() {
+    std::cout<<"simulate() called"<<std::endl;
     if (connections.size() > 0) {
+        std::cout<<"connections.size() > 0"<<std::endl;
         // jeśli mamy cykle, W TEORII potrzebna jest specjalna obsługa (np. iteracyjne rozwiązanie) -> ALE narazie ignorujemy problem
         // bo i tak w naszym przypadku cykle są na sprzężeniach zwrotnych, a w nich ustaliliśmy, że wstawiamy 0.0
         bool hasCyclesInModel = hasCycles();
@@ -155,6 +161,7 @@ void Model::simulate() {
 
         // przetwarzanie bloków
         for (auto& block : blocks) {
+            std::cout<<"Processing block ID: " << block->getId() << std::endl;
             block->process();
         }
 
@@ -199,6 +206,8 @@ const std::vector<Connection>& Model::getConnections() const {
  * (bo tam są podane sourcePort i targetPort)
  */
 void Model::makeConnections() {
+    // disconnectAll();
+
     for (auto& boxPtr : blocks) {
         for (auto connId : boxPtr->connections) {
             // szukamy tego ze zgadzającym się id
@@ -235,8 +244,14 @@ void Model::removeBlock(int removeId) {
         }), blocks.end());
 }
 
-void Model::cleanup() {
+void Model::cleanupAfter() {
     for (auto& block : blocks) {
-        block->reset();  // resetujemy stan każdego bloku
+        block->resetAfter();  // resetujemy stan każdego bloku
+    }
+}
+
+void Model::cleanupBefore() {
+    for (auto& block : blocks) {
+        block->resetBefore();  // resetujemy stan każdego bloku
     }
 }

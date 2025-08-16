@@ -32,7 +32,7 @@ public:
     // TODO: GUI - zmienne od GUI
     int id;
     ImVec2 position = ImVec2(100, 100);
-    ImVec2 size = ImVec2(300, 120);
+    ImVec2 size = ImVec2(120, 120);
     bool open = true;
     std::vector<int> connections;
     int numConnected = 0;
@@ -60,7 +60,8 @@ public:
     int getId() const;
 
     // resetowanie stanu bloku - jeśli jest potrzebne
-    virtual void reset() {};
+    virtual void resetBefore() {};
+    virtual void resetAfter() {};
 
     // pod serializacje
     // virtual std::string getTypeName() const = 0;
@@ -120,6 +121,7 @@ public:
     }
     // dodanie połączenia między blokami do modelu
     bool connect(Block* source, int sourcePort, Block* target, int targetPort);
+    void disconnectAll();
 
     // sprawdzenie czy model zawiera cykle
     bool hasCycles();
@@ -130,14 +132,14 @@ public:
     void simulateMultipleSteps(int steps);
 
     // czyszczenie na koniec symulacji
-    void cleanup();
+    void cleanupBefore();
+    void cleanupAfter();
 
     // gettery listy bloków i połączeń - przeciążone na const i nie-const
     std::vector<std::unique_ptr<Block>>& getBlocks();
     std::vector<Connection>& getConnections();
     const std::vector<std::unique_ptr<Block>>& getBlocks() const;
     const std::vector<Connection>& getConnections() const;
-
 
     // TODO: łączenie w całość
     void makeConnections();

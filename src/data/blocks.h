@@ -45,16 +45,17 @@ public:
 // bloczek całkujący
 class IntegratorBlock : public Block {
 private:
+    double initial_state;
     double state;
     double timeStep;
-
 public:
     // default'owo dt = 0.01
     IntegratorBlock(int _id, double dt = 0.01);
     void process() override;
     // TODO: GUI
     void drawContent() override;
-    void reset();
+    void resetAfter() override;
+    void resetBefore() override;
     void setState(double initialState);
     void drawMenu() override;
 };
@@ -66,7 +67,6 @@ public:
 class InputBlock : public Block {
 private:
     double inputValue;
-
 public:
     InputBlock(int _id);
     void process() override;
@@ -99,7 +99,7 @@ public:
     PlotBlock(int _id);
     void process() override;
     void drawContent() override;
-    void reset() override;
+    void resetBefore() override;
     void drawMenu() override;
 };
 
