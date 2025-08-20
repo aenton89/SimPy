@@ -6,6 +6,9 @@
 #include "guiClass.h"
 #include <iostream>
 #include <thread>
+#include "GLFW/glfw3.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 
 
@@ -13,6 +16,16 @@
 void guiClass::init(GLFWwindow* win, const char* version) {
     window = win;
     glsl_version = version;
+
+    // jakaś defaultowa ikonka, potem zmienie
+    GLFWimage images[1];
+    images[0].pixels = stbi_load("../../icon.png", &images[0].width, &images[0].height, 0, 4);
+    glfwSetWindowIcon(window, 1, images);
+    stbi_image_free(images[0].pixels);
+    if (!images[0].pixels) {
+        std::cerr << "Nie udalo sie wczytac icon.png!" << std::endl;
+    }
+
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -111,146 +124,11 @@ void guiClass::newFrame() {
 
 // TODO: przenieść koemntarze
 void guiClass::update() {
-    // MENU WINDOW
-    ImVec2 menuPos, menuSize;
-    ImGuiWindowFlags menuFlags = ImGuiWindowFlags_None;
+    // Wywołaj nowe funkcje
+    drawMenu();
+    drawStartButton();
 
-    if (menuWindow.isDocked) {
-        menuSize = calculateDockedSize(menuWindow.position, false);
-        menuPos = calculateDockedPosition(menuWindow.position, menuSize, false);
-        // zablokuj tylko przesuwanie, nie resize
-        menuFlags |= ImGuiWindowFlags_NoMove;
-    } else {
-        menuPos = menuWindow.undockedPos;
-        menuSize = menuWindow.undockedSize;
-    }
-
-    ImGui::SetNextWindowPos(menuPos, menuWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowBgAlpha(0.6f);
-    ImGui::SetNextWindowSize(menuSize, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(160, 150), ImVec2(FLT_MAX, FLT_MAX));
-
-    if (ImGui::Begin("Menu", nullptr, menuFlags)) {
-        // przyciski dodawania bloków
-        if (ImGui::Button("Add Sum Box")) {
-            model.getBlocks().push_back(std::make_unique<SumBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Multiply Box")) {
-            model.getBlocks().push_back(std::make_unique<MultiplyBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Integrator Box")) {
-            model.getBlocks().push_back(std::make_unique<IntegratorBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Input Box")) {
-            model.getBlocks().push_back(std::make_unique<InputBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Print Box")) {
-            model.getBlocks().push_back(std::make_unique<PrintBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Plot Box")) {
-            model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Gain Box")) {
-            model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
-        }
-
-        ImGui::Separator();
-
-        // przycisk do undocking - szkoda, że nie działa (może przenieść się na jakaś biblioteke)
-        if (menuWindow.isDocked) {
-            if (ImGui::Button("Undock Menu")) {
-                menuWindow.isDocked = false;
-                menuWindow.position = DockPosition::None;
-            }
-        }
-
-        // sprawdź docking tylko jeśli okno nie jest zadockowane
-        if (!menuWindow.isDocked) {
-            ImVec2 currentPos = ImGui::GetWindowPos();
-            ImVec2 currentSize = ImGui::GetWindowSize();
-
-            // zapisz pozycję jako undocked
-            menuWindow.undockedPos = currentPos;
-            menuWindow.undockedSize = currentSize;
-
-            // sprawdź czy powinno się zadockować
-            DockPosition newDockPos = checkDockPosition(currentPos, currentSize);
-            if (newDockPos != DockPosition::None && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                menuWindow.isDocked = true;
-                menuWindow.position = newDockPos;
-            }
-        }
-    }
-    ImGui::End();
-
-    // RUN WINDOW
-    ImVec2 startPos, startSize;
-    ImGuiWindowFlags startFlags = ImGuiWindowFlags_None;
-
-    if (startWindow.isDocked) {
-        startSize = calculateDockedSize(startWindow.position, true);
-        startPos = calculateDockedPosition(startWindow.position, startSize, true);
-        // again zablokuj tylko przesuwanie, nie resize
-        startFlags |= ImGuiWindowFlags_NoMove;
-    } else {
-        startPos = startWindow.undockedPos;
-        startSize = startWindow.undockedSize;
-    }
-
-    ImGui::SetNextWindowPos(startPos, startWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowBgAlpha(0.6f);
-    ImGui::SetNextWindowSize(startSize, ImGuiCond_FirstUseEver);
-
-    if (ImGui::Begin("Start / Stop", nullptr, startFlags)) {
-        if (simulationRunning) {
-            ImGui::BeginDisabled();
-            ImGui::Button("Running...");
-            ImGui::EndDisabled();
-        } else {
-            if (ImGui::Button("Run Simulation")) {
-                simulationRunning = true;
-                std::thread([this]() {
-                    model.cleanupBefore();
-                    model.makeConnections();
-                    for (int i = 0; i < 1000; i++) {
-                        model.simulate();
-                    }
-                    model.cleanupAfter();
-                    simulationRunning = false;
-                }).detach();
-            }
-        }
-
-        ImGui::Separator();
-
-        // przycisk do undocking
-        if (startWindow.isDocked) {
-            if (ImGui::Button("Undock Window")) {
-                startWindow.isDocked = false;
-                startWindow.position = DockPosition::None;
-            }
-        }
-
-        // sprawdź docking tylko jeśli okno nie jest zadockowane
-        if (!startWindow.isDocked) {
-            ImVec2 currentPos = ImGui::GetWindowPos();
-            ImVec2 currentSize = ImGui::GetWindowSize();
-
-            // zapisz pozycję jako undocked
-            startWindow.undockedPos = currentPos;
-            startWindow.undockedSize = currentSize;
-
-            // sprawdź czy powinno się zadockować
-            DockPosition newDockPos = checkDockPosition(currentPos, currentSize);
-            if (newDockPos != DockPosition::None && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                startWindow.isDocked = true;
-                startWindow.position = newDockPos;
-            }
-        }
-    }
-    ImGui::End();
-
-    // ten kod jeszcze sprzed docking'u (chyba totalnie bez zmian)
+    // Reszta kodu pozostaje bez zmian
     for (auto& box : model.getBlocks()) {
         if (box->open)
             drawBox(*box);
@@ -289,33 +167,38 @@ ImVec2 guiClass::calculateDockedPosition(DockPosition position, ImVec2 size, boo
     switch (position) {
         case DockPosition::Left:
             // jeśli RUN WINDOW i MENU WINDOW jest już zadockowane po lewej, umieść poniżej
-            if (isStartWindow && menuWindow.isDocked && menuWindow.position == DockPosition::Left)
-                return ImVec2(0, menuWindow.undockedSize.y + 10);
+            if (isStartWindow && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
+                return ImVec2(0, DEFAULT_DOCKED_MENU_SIZE.y + 1);
             return ImVec2(0, 0);
 
         case DockPosition::Right:
             if (isStartWindow && menuWindow.isDocked && menuWindow.position == DockPosition::Right)
-                return ImVec2(displaySize.x - size.x, menuWindow.undockedSize.y + 10);
+                return ImVec2(displaySize.x - size.x, DEFAULT_DOCKED_MENU_SIZE.y + 1);
             return ImVec2(displaySize.x - size.x, 0);
 
         case DockPosition::Top:
             // rozsuń okna w poziomie
-            return ImVec2(isStartWindow ? 165 : 0, 0);
+            if (isStartWindow && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
+                return ImVec2(DEFAULT_DOCKED_MENU_SIZE.x + 1, 0);
+            return ImVec2(0, 0);
 
         case DockPosition::Bottom:
-            return ImVec2(isStartWindow ? 165 : 0, displaySize.y - size.y);
+            if (isStartWindow && menuWindow.isDocked && menuWindow.position == DockPosition::Bottom)
+                return ImVec2(DEFAULT_DOCKED_MENU_SIZE.x + 1, displaySize.y - size.y);
+            return ImVec2(0, displaySize.y - size.y);
 
         default:
             return ImVec2(100, 100);
     }
 }
 
-// okna zachowują swój naturalny rozmiar
 ImVec2 guiClass::calculateDockedSize(DockPosition position, bool isStartWindow) {
+    // start window
     if (isStartWindow)
-        return ImVec2(150, 80);
+        return DEFAULT_DOCKED_RUN_SIZE;
 
-    return ImVec2(150, 200);
+    // menu window
+    return DEFAULT_DOCKED_MENU_SIZE;
 }
 
 // funkcja do sprawdzania czy okno powinno się zadockować
@@ -825,8 +708,111 @@ void guiClass::drawConnections() {
     }
 }
 
+
+void guiClass::drawMenu() {
+    ImVec2 menuPos, menuSize;
+    ImGuiWindowFlags menuFlags = ImGuiWindowFlags_None;
+
+    if (menuWindow.isDocked) {
+        menuSize = calculateDockedSize(menuWindow.position, false);
+        menuPos = calculateDockedPosition(menuWindow.position, menuSize, false);
+        menuFlags |= ImGuiWindowFlags_NoMove;
+    } else {
+        menuPos = menuWindow.undockedPos;
+        menuSize = menuWindow.undockedSize;
+    }
+
+    ImGui::SetNextWindowPos(menuPos, menuWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(0.6f);
+    ImGui::SetNextWindowSize(menuSize, menuWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(160, 150), ImVec2(FLT_MAX, FLT_MAX));
+
+    if (ImGui::Begin("Menu", nullptr, menuFlags)) {
+        // przyciski dodawania bloków
+        if (ImGui::Button("Add Sum Box")) {
+            model.getBlocks().push_back(std::make_unique<SumBlock>(next_id++));
+        }
+        if (ImGui::Button("Add Multiply Box")) {
+            model.getBlocks().push_back(std::make_unique<MultiplyBlock>(next_id++));
+        }
+        if (ImGui::Button("Add Integrator Box")) {
+            model.getBlocks().push_back(std::make_unique<IntegratorBlock>(next_id++));
+        }
+        if (ImGui::Button("Add Input Box")) {
+            model.getBlocks().push_back(std::make_unique<InputBlock>(next_id++));
+        }
+        if (ImGui::Button("Add Print Box")) {
+            model.getBlocks().push_back(std::make_unique<PrintBlock>(next_id++));
+        }
+        if (ImGui::Button("Add Plot Box")) {
+            model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
+        }
+        if (ImGui::Button("Add Gain Box")) {
+            model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
+        }
+
+        ImGui::Separator();
+
+        // przycisk do undocking
+        if (menuWindow.isDocked) {
+            if (ImGui::Button("Undock Menu")) {
+                menuWindow.isDocked = false;
+                menuWindow.position = DockPosition::None;
+
+                // przesuń okno z dala od krawędzi i zresetuj rozmiar
+                ImGuiIO& io = ImGui::GetIO();
+                ImVec2 displaySize = io.DisplaySize;
+                menuWindow.undockedPos = ImVec2(displaySize.x * 0.3f, displaySize.y * 0.3f);
+                // domyślny rozmiar
+                menuWindow.undockedSize = DEFAULT_UNDOCKED_MENU_SIZE;
+            }
+        }
+
+        // sprawdź docking tylko jeśli okno nie jest zadockowane
+        if (!menuWindow.isDocked) {
+            ImVec2 currentPos = ImGui::GetWindowPos();
+            ImVec2 currentSize = ImGui::GetWindowSize();
+
+            // zapisz pozycję jako undocked
+            menuWindow.undockedPos = currentPos;
+            menuWindow.undockedSize = currentSize;
+
+            // sprawdź czy powinno się zadockować
+            static bool wasDragging = false;
+            bool isDragging = ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowFocused();
+
+            if (wasDragging && !isDragging) {
+                DockPosition newDockPos = checkDockPosition(currentPos, currentSize);
+                if (newDockPos != DockPosition::None) {
+                    menuWindow.isDocked = true;
+                    menuWindow.position = newDockPos;
+                }
+            }
+
+            wasDragging = isDragging;
+        }
+    }
+    ImGui::End();
+}
+
 void guiClass::drawStartButton() {
-    if (ImGui::Begin("Start / Stop")) {
+    ImVec2 startPos, startSize;
+    ImGuiWindowFlags startFlags = ImGuiWindowFlags_None;
+
+    if (startWindow.isDocked) {
+        startSize = calculateDockedSize(startWindow.position, true);
+        startPos = calculateDockedPosition(startWindow.position, startSize, true);
+        startFlags |= ImGuiWindowFlags_NoMove;
+    } else {
+        startPos = startWindow.undockedPos;
+        startSize = startWindow.undockedSize;
+    }
+
+    ImGui::SetNextWindowPos(startPos, startWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(0.6f);
+    ImGui::SetNextWindowSize(startSize, startWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+
+    if (ImGui::Begin("Start / Stop", nullptr, startFlags)) {
         if (simulationRunning) {
             ImGui::BeginDisabled();
             ImGui::Button("Running...");
@@ -849,10 +835,47 @@ void guiClass::drawStartButton() {
                 }).detach();
             }
         }
+
+        ImGui::Separator();
+
+        if (startWindow.isDocked) {
+            if (ImGui::Button("Undock Window")) {
+                startWindow.isDocked = false;
+                startWindow.position = DockPosition::None;
+
+                // przesuń okno z dala od krawędzi i zresetuj rozmiar
+                ImGuiIO& io = ImGui::GetIO();
+                ImVec2 displaySize = io.DisplaySize;
+                startWindow.undockedPos = ImVec2(displaySize.x * 0.5f, displaySize.y * 0.4f);
+                // domyślny rozmiar
+                startWindow.undockedSize = DEFAULT_UNDOCKED_RUN_SIZE;
+            }
+        }
+
+        if (!startWindow.isDocked) {
+            ImVec2 currentPos = ImGui::GetWindowPos();
+            ImVec2 currentSize = ImGui::GetWindowSize();
+
+            startWindow.undockedPos = currentPos;
+            startWindow.undockedSize = currentSize;
+
+            // taka sama logika jak dla menu window
+            static bool wasDraggingStart = false;
+            bool isDragging = ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowFocused();
+
+            if (wasDraggingStart && !isDragging) {
+                DockPosition newDockPos = checkDockPosition(currentPos, currentSize);
+                if (newDockPos != DockPosition::None) {
+                    startWindow.isDocked = true;
+                    startWindow.position = newDockPos;
+                }
+            }
+
+            wasDraggingStart = isDragging;
+        }
     }
     ImGui::End();
 }
-
 
 
 void guiClass::render() {

@@ -19,6 +19,10 @@
 #include <thread>
 #include <algorithm>
 
+const ImVec2 DEFAULT_DOCKED_RUN_SIZE = ImVec2(125, 85);
+const ImVec2 DEFAULT_DOCKED_MENU_SIZE = ImVec2(150, 220);
+const ImVec2 DEFAULT_UNDOCKED_RUN_SIZE = ImVec2(125, 85);
+const ImVec2 DEFAULT_UNDOCKED_MENU_SIZE = ImVec2(150, 220);
 
 static float LengthSqr(const ImVec2& a, const ImVec2& b) {
     ImVec2 d = ImVec2(a.x - b.x, a.y - b.y);
@@ -68,13 +72,14 @@ public:
         DockPosition position = DockPosition::None;
         ImVec2 undockedPos = ImVec2(100, 100);
         ImVec2 undockedSize = ImVec2(200, 150);
-        bool isDocked = true;
+        bool isDocked = false;
     };
 
 private:
     void drawBox(Block& box);
     void drawConnections();
     void drawStartButton();
+    void drawMenu();
     void zoom();
     void applyCanvasTransform();
 

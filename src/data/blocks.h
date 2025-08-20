@@ -24,6 +24,7 @@ public:
     // TODO: GUI
     void drawContent() override;
     void drawMenu() override;
+    void resetBefore() override;
 };
 
 
@@ -37,6 +38,7 @@ public:
     // TODO: GUI
     void drawContent() override;
     void drawMenu() override;
+    void resetBefore() override;
 };
 
 
@@ -113,6 +115,6 @@ public:
     // TODO: GUI
     void drawContent() override;
     void drawMenu() override;
+    void resetBefore() override;
 };
-
 #endif

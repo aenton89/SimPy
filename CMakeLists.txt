@@ -10,6 +10,7 @@ find_package(OpenGL REQUIRED)
 find_package(glad REQUIRED)
 find_package(implot REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(stb REQUIRED)
 
 # =================== GŁÓWNY PROGRAM ===================
 add_executable(patrykcpp
@@ -32,6 +33,7 @@ target_link_libraries(patrykcpp PRIVATE
         glad::glad
         implot::implot
         nlohmann_json::nlohmann_json
+        stb::stb
 )
 
 target_include_directories(patrykcpp PRIVATE

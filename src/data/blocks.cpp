@@ -65,6 +65,10 @@ void SumBlock::drawMenu() {
     }
 }
 
+void SumBlock::resetBefore() {
+    std::fill(inputValues.begin(), inputValues.end(), 0);
+    std::fill(outputValues.begin(), outputValues.end(), 0);
+}
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -96,6 +100,10 @@ void MultiplyBlock::drawMenu() {
     }
 }
 
+void MultiplyBlock::resetBefore() {
+    std::fill(inputValues.begin(), inputValues.end(), 0);
+    std::fill(outputValues.begin(), outputValues.end(), 0);
+}
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -144,6 +152,7 @@ void IntegratorBlock::drawMenu() {
 // input'u
 InputBlock::InputBlock(int _id) : Block(_id, 0, 1) {
     size = ImVec2(150, 80);
+    inputValue = 0.0;
 }
 
 void InputBlock::process() {
@@ -210,6 +219,8 @@ void PlotBlock::process() {
 }
 
 void PlotBlock::resetBefore() {
+    std::fill(inputValues.begin(), inputValues.end(), 0);
+
     values_offset = 0;
     min_val = -1.0f;
     max_val = 1.0f;
@@ -284,4 +295,9 @@ void GainBlock::drawMenu() {
 
     static bool check = false;
     ImGui::Checkbox("Enable feature", &check);
+}
+
+void GainBlock::resetBefore() {
+    std::fill(inputValues.begin(), inputValues.end(), 0);
+    std::fill(outputValues.begin(), outputValues.end(), 0);
 }
