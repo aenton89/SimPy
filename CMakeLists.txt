@@ -12,7 +12,7 @@ find_package(implot REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(stb REQUIRED)
 
-# =================== GŁÓWNY PROGRAM ===================
+# =================== MAIN PROGRAM ===================
 add_executable(patrykcpp
         src/main.cpp
         src/imgui_backends/imgui_impl_glfw.cpp
@@ -20,6 +20,7 @@ add_executable(patrykcpp
         src/gui/guiClass.cpp
         src/data/blocks.cpp
         src/data/structures.cpp
+        resources.rc
 )
 
 target_compile_definitions(patrykcpp PRIVATE
@@ -43,7 +44,7 @@ target_include_directories(patrykcpp PRIVATE
         src/data
 )
 
-# =================== TESTY ===================
+# =================== TESTS ===================
 enable_testing()
 
 # tworzymy target dla testów
