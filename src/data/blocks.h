@@ -8,6 +8,7 @@
 #include "structures.h"
 #include <implot.h>
 #include <array>
+#include "data_sender/data_channel_manager.h"
 
 // w tym pliku są deklaracje specyficznych bloków (narazie testowe)
 
@@ -117,4 +118,30 @@ public:
     void drawMenu() override;
     void resetBefore() override;
 };
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// data sending
+class DataSenderBlock : public Block {
+private:
+    std::string channelName;
+    std::string dataTypeName;
+    bool sendEnabled;
+    int sendCounter;
+
+public:
+    DataSenderBlock(int id, const std::string& channel = "default_channel");
+
+    void process() override;
+    void drawContent() override;
+
+    // getters/setters
+    void setChannelName(const std::string& name);
+    std::string getChannelName() const;
+    void setDataType(const std::string& type);
+    std::string getDataType() const;
+    bool isSendEnabled() const;
+    void setSendEnabled(bool enabled);
+    int getSendCounter() const;
+};
+
 #endif

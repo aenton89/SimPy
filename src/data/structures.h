@@ -63,6 +63,11 @@ public:
     virtual void resetBefore() {};
     virtual void resetAfter() {};
 
+    #ifdef UNIT_TESTS
+    public:
+        std::vector<double>& getInputValues() { return inputValues; }
+    #endif
+
     // pod serializacje
     // virtual std::string getTypeName() const = 0;
 };

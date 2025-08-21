@@ -750,6 +750,9 @@ void guiClass::drawMenu() {
         if (ImGui::Button("Add Gain Box")) {
             model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
         }
+        if (ImGui::Button("Add Sender Box")) {
+            model.getBlocks().push_back(std::make_unique<DataSenderBlock>(next_id++));
+        }
 
         ImGui::Separator();
 

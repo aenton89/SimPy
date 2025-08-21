@@ -301,3 +301,98 @@ void GainBlock::resetBefore() {
     std::fill(inputValues.begin(), inputValues.end(), 0);
     std::fill(outputValues.begin(), outputValues.end(), 0);
 }
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// data sending
+DataSenderBlock::DataSenderBlock(int id, const std::string& channel)
+    : Block(id, 1, 0), channelName(channel), dataTypeName("float"), sendEnabled(true), sendCounter(0) {
+    size = ImVec2(250, 150);
+}
+
+void DataSenderBlock::process() {
+    if (!sendEnabled) return;
+
+    // wysyłanie w zależności od wybranego typu
+    if (dataTypeName == "float") {
+        DataChannelManager::sendData<float>(channelName, inputValues[0], "float");
+    }
+    else if (dataTypeName == "int") {
+        DataChannelManager::sendData<int>(channelName, static_cast<int>(inputValues[0]), "int");
+    }
+    else if (dataTypeName == "double") {
+        DataChannelManager::sendData<double>(channelName, static_cast<double>(inputValues[0]), "double");
+    }
+
+    sendCounter++;
+    std::cout << "Sent to '" << channelName << "': " << inputValues[0]
+              << " (type: " << dataTypeName << ", count: " << sendCounter << ")" << std::endl;
+}
+
+void DataSenderBlock::drawContent() {
+    ImGui::Text("Data Sender");
+
+    // nazwa kanału
+    char channelBuffer[128];
+    strcpy(channelBuffer, channelName.c_str());
+    if (ImGui::InputText("Channel", channelBuffer, sizeof(channelBuffer))) {
+        channelName = std::string(channelBuffer);
+    }
+
+    // typ danych
+    const char* types[] = {"float", "int", "double"};
+    static int currentType = 0;
+    if (ImGui::Combo("Data Type", &currentType, types, IM_ARRAYSIZE(types))) {
+        dataTypeName = types[currentType];
+    }
+
+    // kontrolki
+    ImGui::Checkbox("Send enabled", &sendEnabled);
+
+    // informacje
+    ImGui::Separator();
+    ImGui::Text("Queue size: %d", DataChannelManager::getChannelSize(channelName));
+    ImGui::Text("Sent count: %d", sendCounter);
+
+    // lista dostępnych kanałów
+    ImGui::Text("Available channels:");
+    auto channels = DataChannelManager::getAvailableChannels();
+    for (const auto& ch : channels) {
+        ImGui::Text("  - %s (%d)", ch.c_str(), DataChannelManager::getChannelSize(ch));
+    }
+
+    // przycisk czyszczenia
+    if (ImGui::Button("Clear Channel")) {
+        DataChannelManager::clearChannel(channelName);
+    }
+
+    Block::drawContent();
+}
+
+// getters/setters
+void DataSenderBlock::setChannelName(const std::string& name) {
+    channelName = name;
+}
+
+std::string DataSenderBlock::getChannelName() const {
+    return channelName;
+}
+
+void DataSenderBlock::setDataType(const std::string& type) {
+    dataTypeName = type;
+}
+
+std::string DataSenderBlock::getDataType() const {
+    return dataTypeName;
+}
+
+bool DataSenderBlock::isSendEnabled() const {
+    return sendEnabled;
+}
+
+void DataSenderBlock::setSendEnabled(bool enabled) {
+    sendEnabled = enabled;
+}
+
+int DataSenderBlock::getSendCounter() const {
+    return sendCounter;
+}

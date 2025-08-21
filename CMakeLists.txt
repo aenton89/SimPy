@@ -20,6 +20,7 @@ add_executable(patrykcpp
         src/gui/guiClass.cpp
         src/data/blocks.cpp
         src/data/structures.cpp
+        src/data/data_sender/data_channel_manager.cpp
         resources.rc
 )
 
@@ -49,12 +50,17 @@ enable_testing()
 
 # tworzymy target dla testów
 add_executable(tests
-        tests/data_tests/t_structures.cpp
+        tests/data_tests/test_structures.cpp
         src/data/blocks.cpp
         src/data/structures.cpp
+        src/data/data_sender/data_channel_manager.cpp
+        tests/data_tests/test_sender.cpp
+        tests/test.cpp
 )
 
 target_include_directories(tests PRIVATE src)
+
+target_compile_definitions(tests PRIVATE UNIT_TESTS)
 
 target_link_libraries(tests PRIVATE
         imgui::imgui

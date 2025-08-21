@@ -2,14 +2,11 @@
 // Created by tajbe on 24.03.2025.
 //
 
-#include <iostream>
-#include <vector>
-#include "../../src/data/structures.h"
-#include "../../src/data/blocks.h"
+#include "test_structures.h"
 
 
 // testowy przykład użycia, bo nie chce mi sie pisać porządnego testu
-void exampleUsage() {
+void StructuresTests::exampleUsage() {
     Model model;
 
     // dodawanie bloków
@@ -33,8 +30,7 @@ void exampleUsage() {
     }
 }
 
-
-std::vector<float> testPatryk(){
+std::vector<float> StructuresTests::testPatryk(){
 	Model model;
   	std::vector<float> output;
 
@@ -58,18 +54,15 @@ std::vector<float> testPatryk(){
   	return output;
 }
 
+void StructuresTests::runAllTests() {
+	std::cout << std::endl << "Example test" << std::endl;
+	std::cout << std::endl << "__________________________________________________\n" << std::endl;
+	exampleUsage();
 
-int main() {
-    std::cout << std::endl << "Example test" << std::endl;
-    std::cout << std::endl << "__________________________________________________\n" << std::endl;
-    exampleUsage();
-
-    std::cout << "Running patryk test" << std::endl;
-    std::cout << std::endl << "__________________________________________________\n" << std::endl;
-    std::vector<float> wynik = testPatryk();
-    for(auto i : wynik){
-      std::cout << i << "; ";
-    }
-
-    return 0;
+	std::cout << "Running patryk test" << std::endl;
+	std::cout << std::endl << "__________________________________________________\n" << std::endl;
+	std::vector<float> wynik = testPatryk();
+	for(auto i : wynik){
+		std::cout << i << "; ";
+	}
 }

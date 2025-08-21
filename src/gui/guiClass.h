@@ -20,9 +20,9 @@
 #include <algorithm>
 
 const ImVec2 DEFAULT_DOCKED_RUN_SIZE = ImVec2(125, 85);
-const ImVec2 DEFAULT_DOCKED_MENU_SIZE = ImVec2(150, 220);
+const ImVec2 DEFAULT_DOCKED_MENU_SIZE = ImVec2(160, 245);
 const ImVec2 DEFAULT_UNDOCKED_RUN_SIZE = ImVec2(125, 85);
-const ImVec2 DEFAULT_UNDOCKED_MENU_SIZE = ImVec2(150, 220);
+const ImVec2 DEFAULT_UNDOCKED_MENU_SIZE = ImVec2(160, 245);
 
 static float LengthSqr(const ImVec2& a, const ImVec2& b) {
     ImVec2 d = ImVec2(a.x - b.x, a.y - b.y);
