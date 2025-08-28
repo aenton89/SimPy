@@ -28,6 +28,10 @@ protected:
     std::vector<double> inputValues;
     std::vector<double> outputValues;
 
+    // Te dwie zmainne zeby po przez menu mozna bylo ustawiac czas symuliociu i dt
+    double timeStep = 0.01;
+    double simTime;
+
 public:
     // TODO: GUI - zmienne od GUI
     int id;
@@ -62,6 +66,9 @@ public:
     // resetowanie stanu bloku - jeśli jest potrzebne
     virtual void resetBefore() {};
     virtual void resetAfter() {};
+
+    void settimeStep(double dt);
+    void setsimTime(double simTime);
 
     #ifdef UNIT_TESTS
     public:
@@ -148,6 +155,8 @@ public:
 
     // TODO: łączenie w całość
     void makeConnections();
+    // metoda pomoicncza do usuwania polaczen. Ma je robic od nowa
+    
     // dodawanie i usuwanie bloków
     void addBlock(std::unique_ptr<Block> block);
     void removeBlock(int removeId);

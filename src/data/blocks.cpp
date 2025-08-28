@@ -11,7 +11,6 @@
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // sumowania
 SumBlock::SumBlock(int _id) : Block(_id, 2, 1, true) {
-    size = ImVec2(150, 80);
     if (numInputs != 2) {
         negate_inputs.resize(numInputs, 0);
     }
@@ -65,17 +64,11 @@ void SumBlock::drawMenu() {
     }
 }
 
-void SumBlock::resetBefore() {
-    std::fill(inputValues.begin(), inputValues.end(), 0);
-    std::fill(outputValues.begin(), outputValues.end(), 0);
-}
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // mnożenia
-MultiplyBlock::MultiplyBlock(int _id) : Block(_id, 2, 1, true) {
-    size = ImVec2(150, 80);
-}
+MultiplyBlock::MultiplyBlock(int _id) : Block(_id, 2, 1, true) {}
 
 void MultiplyBlock::process() {
     outputValues[0] = inputValues[0] * inputValues[1];
@@ -100,18 +93,11 @@ void MultiplyBlock::drawMenu() {
     }
 }
 
-void MultiplyBlock::resetBefore() {
-    std::fill(inputValues.begin(), inputValues.end(), 0);
-    std::fill(outputValues.begin(), outputValues.end(), 0);
-}
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // całkowania
-IntegratorBlock::IntegratorBlock(int _id, double dt) : Block(_id, 1, 1, true), initial_state(0.0), timeStep(dt) {
-    size = ImVec2(200, 120);
-    state = initial_state;
-}
+IntegratorBlock::IntegratorBlock(int _id, double dt) : Block(_id, 1, 1, true), state(0.0), timeStep(dt) {}
 
 void IntegratorBlock::process() {
     state += inputValues[0] * timeStep;
@@ -121,39 +107,31 @@ void IntegratorBlock::process() {
 
 // TODO: GUI
 void IntegratorBlock::drawContent() {
+    ImGui::Text("Integrator: %f", outputValues[0]);
     ImGui::Text("Time step: ");
     ImGui::InputDouble("", &timeStep);
-    ImGui::Text("Integrator: %f", outputValues[0]);
 
     Block::drawContent();
 }
 
-void IntegratorBlock::resetAfter() {
-    state = initial_state;
+void IntegratorBlock::reset() {
+    state = 0.0;
 }
 
-void IntegratorBlock::resetBefore() {
-    state = initial_state;
-    outputValues[0] = initial_state;
-}
-
-void IntegratorBlock::setState(double _initial_state) {
-    initial_state = _initial_state;
-    outputValues[0] = _initial_state;
+void IntegratorBlock::setState(double initialState) {
+    state = initialState;
+    outputValues[0] = state;
 }
 
 void IntegratorBlock::drawMenu() {
-    ImGui::InputDouble("Initial state: ", &initial_state);
+    ImGui::InputDouble("Initial state: ", &state);
 }
 
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // input'u
-InputBlock::InputBlock(int _id) : Block(_id, 0, 1) {
-    size = ImVec2(150, 80);
-    inputValue = 0.0;
-}
+InputBlock::InputBlock(int _id) : Block(_id, 0, 1) {}
 
 void InputBlock::process() {
     outputValues[0] = inputValue;
@@ -172,9 +150,7 @@ void InputBlock::drawContent() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // print'a
-PrintBlock::PrintBlock(int _id) : Block(_id, 1, 0) {
-    size = ImVec2(150, 60);
-}
+PrintBlock::PrintBlock(int _id) : Block(_id, 1, 0) {}
 
 void PrintBlock::process() {
     std::cout << "print: " << inputValues[0] << std::endl;
@@ -192,7 +168,6 @@ void PrintBlock::drawContent() {
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // plot'a
 PlotBlock::PlotBlock(int _id) : Block(_id, 1, 0, true) {
-    size = ImVec2(350, 200);
     data.resize(numInputs);
     for (auto& arr : data) {
         std::fill(arr.begin(), arr.end(), 0.0f);
@@ -218,9 +193,7 @@ void PlotBlock::process() {
         values_offset = 1000;
 }
 
-void PlotBlock::resetBefore() {
-    std::fill(inputValues.begin(), inputValues.end(), 0);
-
+void PlotBlock::reset() {
     values_offset = 0;
     min_val = -1.0f;
     max_val = 1.0f;
@@ -231,8 +204,6 @@ void PlotBlock::resetBefore() {
 }
 
 void PlotBlock::drawContent() {
-    Block::drawContent();
-
     ImVec2 size = ImGui::GetContentRegionAvail();
 
     if (ImPlot::BeginPlot("##Plot", size, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus)) {
@@ -252,6 +223,7 @@ void PlotBlock::drawContent() {
         }
         ImPlot::EndPlot();
     }
+    Block::drawContent();
 }
 
 void PlotBlock::drawMenu() {
@@ -271,9 +243,7 @@ void PlotBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // gain'a
-GainBlock::GainBlock(int _id) : Block(_id, 1, 1, true) {
-    size = ImVec2(200, 120);
-}
+GainBlock::GainBlock(int _id) : Block(_id, 1, 1, true) {}
 
 void GainBlock::process() {
     outputValues[0] = inputValues[0] * multiplier;
@@ -295,104 +265,4 @@ void GainBlock::drawMenu() {
 
     static bool check = false;
     ImGui::Checkbox("Enable feature", &check);
-}
-
-void GainBlock::resetBefore() {
-    std::fill(inputValues.begin(), inputValues.end(), 0);
-    std::fill(outputValues.begin(), outputValues.end(), 0);
-}
-
-// ----------------------------------------------------------------------------------------------------------------------------------------------
-// data sending
-DataSenderBlock::DataSenderBlock(int id, const std::string& channel)
-    : Block(id, 1, 0), channelName(channel), dataTypeName("float"), sendEnabled(true), sendCounter(0) {
-    size = ImVec2(250, 150);
-}
-
-void DataSenderBlock::process() {
-    if (!sendEnabled) return;
-
-    // wysyłanie w zależności od wybranego typu
-    if (dataTypeName == "float") {
-        DataChannelManager::sendData<float>(channelName, inputValues[0], "float");
-    }
-    else if (dataTypeName == "int") {
-        DataChannelManager::sendData<int>(channelName, static_cast<int>(inputValues[0]), "int");
-    }
-    else if (dataTypeName == "double") {
-        DataChannelManager::sendData<double>(channelName, static_cast<double>(inputValues[0]), "double");
-    }
-
-    sendCounter++;
-    std::cout << "Sent to '" << channelName << "': " << inputValues[0]
-              << " (type: " << dataTypeName << ", count: " << sendCounter << ")" << std::endl;
-}
-
-void DataSenderBlock::drawContent() {
-    ImGui::Text("Data Sender");
-
-    // nazwa kanału
-    char channelBuffer[128];
-    strcpy(channelBuffer, channelName.c_str());
-    if (ImGui::InputText("Channel", channelBuffer, sizeof(channelBuffer))) {
-        channelName = std::string(channelBuffer);
-    }
-
-    // typ danych
-    const char* types[] = {"float", "int", "double"};
-    static int currentType = 0;
-    if (ImGui::Combo("Data Type", &currentType, types, IM_ARRAYSIZE(types))) {
-        dataTypeName = types[currentType];
-    }
-
-    // kontrolki
-    ImGui::Checkbox("Send enabled", &sendEnabled);
-
-    // informacje
-    ImGui::Separator();
-    ImGui::Text("Queue size: %d", DataChannelManager::getChannelSize(channelName));
-    ImGui::Text("Sent count: %d", sendCounter);
-
-    // lista dostępnych kanałów
-    ImGui::Text("Available channels:");
-    auto channels = DataChannelManager::getAvailableChannels();
-    for (const auto& ch : channels) {
-        ImGui::Text("  - %s (%d)", ch.c_str(), DataChannelManager::getChannelSize(ch));
-    }
-
-    // przycisk czyszczenia
-    if (ImGui::Button("Clear Channel")) {
-        DataChannelManager::clearChannel(channelName);
-    }
-
-    Block::drawContent();
-}
-
-// getters/setters
-void DataSenderBlock::setChannelName(const std::string& name) {
-    channelName = name;
-}
-
-std::string DataSenderBlock::getChannelName() const {
-    return channelName;
-}
-
-void DataSenderBlock::setDataType(const std::string& type) {
-    dataTypeName = type;
-}
-
-std::string DataSenderBlock::getDataType() const {
-    return dataTypeName;
-}
-
-bool DataSenderBlock::isSendEnabled() const {
-    return sendEnabled;
-}
-
-void DataSenderBlock::setSendEnabled(bool enabled) {
-    sendEnabled = enabled;
-}
-
-int DataSenderBlock::getSendCounter() const {
-    return sendCounter;
 }

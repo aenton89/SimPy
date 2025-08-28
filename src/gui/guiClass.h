@@ -80,6 +80,7 @@ private:
     void drawConnections();
     void drawStartButton();
     void drawMenu();
+    void drawSettings();
     void zoom();
     void applyCanvasTransform();
 
@@ -115,6 +116,13 @@ private:
     DockableWindow startWindow;
     // odległość od krawędzi do snap'owania
     float dockSnapDistance = 50.0f;
+
+    // zminne odpwoedzialne za symualcje (czas symulacji, sampling time, rodzaj solvera itd.)
+    float samplingTime = 0.01f;
+    float simTime = 10.f;
+
+    std::string solverName;
+    std::string solverPrecison;
 
     Model model;
 };

@@ -20,6 +20,18 @@ void Block::setInput(int port, double value) {
     }
 }
 
+void Block::setsimTime(double simTime)
+{
+    this->simTime = simTime;
+}
+
+void Block::settimeStep(double dt)
+{
+    this->timeStep = dt;
+}
+
+
+
 double Block::getOutput(int port) const {
     if (port >= 0 && port < outputValues.size()) {
         return outputValues[port];
@@ -126,6 +138,39 @@ bool Model::connect(Block* source, int sourcePort, Block* target, int targetPort
     return true;
 }
 
+/* TODO:
+ * ogólnie to tu narazie jest robienie tych połączeń troche w losowej kolejności xd
+ * tym sie zająć kiedyś coś
+ * trzeba to poprawić i w GuiClass przy samym dodawaniu połączeń
+ * (może zamiast vector w Blocks zrobić pair, gdzie też jest na który Port)
+ * i tutaj, w miejścu poniżej oznaczonym jako TODO
+ * (bo tam są podane sourcePort i targetPort)
+ */
+void Model::makeConnections() {
+    disconnectAll(); // bardzo ważne – usuwamy stare połączenia
+
+    for (auto& boxPtr : blocks) {
+        boxPtr->numConnected = 0; // reset licznika!
+        for (auto connId : boxPtr->connections) {
+            auto it = std::find_if(blocks.begin(), blocks.end(),
+                [connId](const std::unique_ptr<Block>& b) {
+                    return b->id == connId;
+                });
+
+            if (it != blocks.end()) {
+                Block* connectedBlock = it->get();
+                connect(connectedBlock, 0, boxPtr.get(), boxPtr->numConnected);
+                boxPtr->numConnected++;
+                std::cout << "Connected block " << boxPtr->id
+                          << " to block " << connectedBlock->id << std::endl;
+            } else {
+                std::cerr << "Warning: Block with ID " << connId << " not found.\n";
+            }
+        }
+    }
+}
+
+
 void Model::disconnectAll() {
     connections.clear();
 }
@@ -151,7 +196,7 @@ void Model::simulate() {
         std::cout<<"connections.size() > 0"<<std::endl;
         // jeśli mamy cykle, W TEORII potrzebna jest specjalna obsługa (np. iteracyjne rozwiązanie) -> ALE narazie ignorujemy problem
         // bo i tak w naszym przypadku cykle są na sprzężeniach zwrotnych, a w nich ustaliliśmy, że wstawiamy 0.0
-        bool hasCyclesInModel = hasCycles();
+        //bool hasCyclesInModel = hasCycles();
 
         // zbieranie wejść dla każdego bloku
         for (const auto& conn : connections) {
@@ -167,10 +212,10 @@ void Model::simulate() {
 
         // jeśli mamy cykle, możemy potrzebować dodatkowych iteracji do zbieżności
         // ALE, ignorujemy, tho zostawiam komentarz i bloczek warunkowy na przyszłość
-        if (hasCyclesInModel) {
+        //if (hasCyclesInModel) {
             // tutaj np. implementacja iteracyjnego rozwiązania dla cykli
             // np. powtórz symulację kilka razy, aż do osiągnięcia zbieżności
-        }
+        //}
     }
 }
 
@@ -194,42 +239,6 @@ const std::vector<std::unique_ptr<Block>>& Model::getBlocks() const {
 
 const std::vector<Connection>& Model::getConnections() const {
     return connections;
-}
-
-
-/* TODO:
- * ogólnie to tu narazie jest robienie tych połączeń troche w losowej kolejności xd
- * tym sie zająć kiedyś coś
- * trzeba to poprawić i w GuiClass przy samym dodawaniu połączeń
- * (może zamiast vector w Blocks zrobić pair, gdzie też jest na który Port)
- * i tutaj, w miejścu poniżej oznaczonym jako TODO
- * (bo tam są podane sourcePort i targetPort)
- */
-void Model::makeConnections() {
-    // disconnectAll();
-
-    for (auto& boxPtr : blocks) {
-        for (auto connId : boxPtr->connections) {
-            // szukamy tego ze zgadzającym się id
-            auto it = std::find_if(blocks.begin(), blocks.end(),
-                [connId](const std::unique_ptr<Block>& b) {
-                    return b->id == connId;
-                });
-
-            // tu tworzymy Connection
-            if (it != blocks.end()) {
-                Block *connectedBlock = it->get();
-                // TODO: o tym mówi todo wyżej
-                connect(connectedBlock, 0, boxPtr.get(), boxPtr->numConnected);
-                boxPtr->numConnected++;
-                std::cout << "Connected block " << boxPtr->id << " to block " << connectedBlock->id << std::endl;
-            }
-            // blok o connId nie znaleziony, idk może potem jakaś lepsza obsługę wymyśleć
-            else {
-                std::cerr << "Warning: Block with ID " << connId << " not found for connections." << std::endl;
-            }
-        }
-    }
 }
 
 
