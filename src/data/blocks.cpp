@@ -5,6 +5,7 @@
 #include "blocks.h"
 #include <sstream>
 #include <cmath>
+#include <numbers>
 
 // w tym pliku są implementacje specyficznych bloków
 
@@ -73,6 +74,7 @@ void SumBlock::resetBefore() {
 }
 
 
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // mnożenia
 MultiplyBlock::MultiplyBlock(int _id) : Block(_id, 2, 1, true) {
@@ -106,6 +108,7 @@ void MultiplyBlock::resetBefore() {
     std::fill(inputValues.begin(), inputValues.end(), 0);
     std::fill(outputValues.begin(), outputValues.end(), 0);
 }
+
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,22 +151,23 @@ void IntegratorBlock::drawMenu() {
     ImGui::InputDouble("Initial state: ", &initial_state);
 }
 
+
+
 // ------------------------------------------------------------------------------------------------------------------------------------
 // blok pierwsikaonia
-sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, false)
-{
+sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, false) {
     size = ImVec2(150, 80);
 }
 
-void sqrtBlock::process()
-{
+void sqrtBlock::process() {
     outputValues[0] = std::sqrt(inputValues[0]);
 }
 
-void sqrtBlock::drawContent()
-{
+void sqrtBlock::drawContent() {
     ImGui::Text("Sqrt");
 }
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // input'u
@@ -182,117 +186,105 @@ void StepBlock::process() {
 }
 
 // TODO: GUI
-void StepBlock::drawContent()
-{
+void StepBlock::drawContent() {
     ImGui::Text("Step Input");
     Block::drawContent();
 }
 
-void StepBlock::drawMenu()
-{
+void StepBlock::drawMenu() {
     ImGui::InputDouble("Dealy", &delay);
     ImGui::InputDouble("Value", &inputValue);
 }
 
-void StepBlock::resetBefore()
-{
+void StepBlock::resetBefore() {
     currentTime = 0;
 }
 
+
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postaci Sinusa
-SinusInputBlock::SinusInputBlock(int id_) : Block(id_, 0, 1, true)
-{
+SinusInputBlock::SinusInputBlock(int id_) : Block(id_, 0, 1, true) {
     size = ImVec2(150, 80);
     inputValue = 0.0;
 }
 
-void SinusInputBlock::process()
-{
+void SinusInputBlock::process() {
     // A*sin(2*pi*f + phase)
     outputValues[0] = amplitude*std::sin(2*std::numbers::pi*frequency*currentTime + shiftPhase);
     currentTime += this->timeStep;
 }
 
-void SinusInputBlock::resetBefore()
-{
+void SinusInputBlock::resetBefore() {
     currentTime = 0;
 }
 
-void SinusInputBlock::drawContent()
-{
+void SinusInputBlock::drawContent() {
     ImGui::Text("Sinus Input");
     Block::drawContent();
 }
 
-void SinusInputBlock::drawMenu()
-{
+void SinusInputBlock::drawMenu() {
     ImGui::Text("Amp * sin(2*pi*Freq*t + Phase)");
     ImGui::InputDouble("Amp", &amplitude);
     ImGui::InputDouble("Freq", &frequency);
     ImGui::InputDouble("Phase", &shiftPhase);
 }
 
+
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // PWM input
-PWMInputBlock::PWMInputBlock(int _id) : Block(_id, 0, 1, true)
-{
+PWMInputBlock::PWMInputBlock(int _id) : Block(_id, 0, 1, true) {
     size = ImVec2(150, 200);
 }
 
-void PWMInputBlock::drawMenu()
-{
+void PWMInputBlock::drawMenu() {
     ImGui::InputDouble("Delay", &delay);
     ImGui::InputDouble("Value", &inputValue);
     ImGui::InputDouble("freq", &frequency);
     ImGui::InputDouble("Duty Cycle", &dutyCycle);
 }
 
-void PWMInputBlock::drawContent()
-{
+void PWMInputBlock::drawContent() {
     ImGui::Text("PWM Generator");
     Block::drawContent();
 }
 
-void PWMInputBlock::process()
-{
+void PWMInputBlock::process() {
     double T = 1.0 / this->frequency;  // okres
 
-    if (this->currentTime < this->delay) {
+    if (this->currentTime < this->delay)
         this->outputValues[0] = 0;
-    }
-    else if (std::fmod(this->currentTime, T) < this->dutyCycle * T) {
-        this->outputValues[0] = this->inputValue; // amplituda
-    }
-    else {
+    // amplituda
+    else if (std::fmod(this->currentTime, T) < this->dutyCycle * T)
+        this->outputValues[0] = this->inputValue;
+    else
         this->outputValues[0] = 0;
-    }
 
     this->currentTime += this->timeStep;
 }
 
 
-void PWMInputBlock::resetBefore()
-{
+void PWMInputBlock::resetBefore() {
     currentTime = 0;
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // Generator bilalego szumu
-WhiteNoiseInputBlock::WhiteNoiseInputBlock(int id_) : Block(id_, 0, 1, true), distribution(mean, std)
-{
+WhiteNoiseInputBlock::WhiteNoiseInputBlock(int id_) : Block(id_, 0, 1, true), distribution(mean, std) {
     size = ImVec2(150, 80);
     std::random_device rd;
     generator.seed(rd());
 }
 
-void WhiteNoiseInputBlock::process()
-{
+void WhiteNoiseInputBlock::process() {
     outputValues[0] = distribution(generator);
 }
 
-void WhiteNoiseInputBlock::drawMenu()
-{
+void WhiteNoiseInputBlock::drawMenu() {
     if (ImGui::InputDouble("Mean", &mean))
         distribution = std::normal_distribution<double>(mean, std);
     if (ImGui::InputDouble("Std", &std))
@@ -301,12 +293,10 @@ void WhiteNoiseInputBlock::drawMenu()
         generator.seed(seed);
 }
 
-void WhiteNoiseInputBlock::drawContent()
-{
+void WhiteNoiseInputBlock::drawContent() {
     ImGui::Text("White Noise Generator");
     Block::drawContent();
 }
-
 
 
 
@@ -425,13 +415,11 @@ void PlotBlock::drawMenu() {
 }
 
 
+
 // --------------------------------------------------------------------------------------------------------------------------------------
 //  plotowanie grafu XY
-// trzeba to pobrac. Array trzeba zamienic na dynamiczny wketyor
-
-PLotXYBlock::PLotXYBlock(int _id)
-    : Block(_id, 2, 0, true) // 2 wejścia: X i Y
-{
+// trzeba to pobrac. Array trzeba zamienic na dynamiczny wketyor, 2 wejścia: X i Y
+PLotXYBlock::PLotXYBlock(int _id) : Block(_id, 2, 0, true) {
     size = ImVec2(350, 200);
     data.resize(2); // X i Y
     for (auto &arr : data) {
@@ -439,8 +427,7 @@ PLotXYBlock::PLotXYBlock(int _id)
     }
 }
 
-void PLotXYBlock::process()
-{
+void PLotXYBlock::process() {
     // Musimy mieć oba wejścia (X i Y)
     if (inputValues.size() < 2)
         return;
@@ -452,7 +439,8 @@ void PLotXYBlock::process()
     if (sampleIndex == 0) {
         x_limMin = x_limMax = x;
         y_limMin = y_limMax = y;
-    } else {
+    }
+    else {
         if (x < x_limMin) x_limMin = x;
         if (x > x_limMax) x_limMax = x;
         if (y < y_limMin) y_limMin = y;
@@ -461,8 +449,8 @@ void PLotXYBlock::process()
 
     // Zapisz nową próbkę
     if (sampleIndex < (int)data[0].size()) {
-        data[0][sampleIndex] = x; // X
-        data[1][sampleIndex] = y; // Y
+        data[0][sampleIndex] = x;
+        data[1][sampleIndex] = y;
         sampleIndex++;
     }
 }
@@ -470,7 +458,6 @@ void PLotXYBlock::process()
 void PLotXYBlock::drawContent()
 {
     Block::drawContent();
-
     ImVec2 size = ImGui::GetContentRegionAvail();
 
     if (ImPlot::BeginPlot("##PlotXY", size, ImPlotFlags_NoLegend)) {
@@ -487,8 +474,7 @@ void PLotXYBlock::drawContent()
     }
 }
 
-void PLotXYBlock::resetBefore()
-{
+void PLotXYBlock::resetBefore() {
     for (auto &arr : data) {
         arr.fill(0.0f);
     }
@@ -529,6 +515,7 @@ void PLotXYBlock::drawMenu() {
 }
 
 
+
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // roznczkowanie
 DifferentiatorBlock::DifferentiatorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {}
@@ -538,9 +525,7 @@ void DifferentiatorBlock::process() {
     initial_state = inputValues[0];
     outputValues[0] = derivative;
 
-    std::cout << "differentiator: (" << inputValues[0]
-              << " - " << initial_state << ") / " << timeStep
-              << " = " << outputValues[0] << std::endl;
+    std::cout << "differentiator: (" << inputValues[0] << " - " << initial_state << ") / " << timeStep << " = " << outputValues[0] << std::endl;
 }
 
 // TODO: GUI
@@ -570,34 +555,33 @@ void DifferentiatorBlock::drawMenu() {
     ImGui::InputDouble("Initial state: ", &initial_state);
 }
 
+
+
 // -----------------------------------------------------------------------------------------------------------------------------------------
 // Blok saturacji
-SaturationBlock::SaturationBlock(int id_): Block(id_, 1, 1, true)
-{
+SaturationBlock::SaturationBlock(int id_): Block(id_, 1, 1, true) {
     this->size = ImVec2(200, 150);
 }
 
-void SaturationBlock::process()
-{
+void SaturationBlock::process() {
     this->outputValues[0] = std::clamp(this->inputValues[0], lowerLimit, upperLimit);
 }
 
-void SaturationBlock::drawContent()
-{
+void SaturationBlock::drawContent() {
     ImGui::Text("Saturation block");
     Block::drawContent();
 }
 
-void SaturationBlock::drawMenu()
-{
+void SaturationBlock::drawMenu() {
     ImGui::InputDouble("Upper limit", &upperLimit);
     ImGui::InputDouble("Lower limit", &lowerLimit);
 }
 
+
+
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // transmitacja operatorowa
-TransferFuncionContinous::TransferFuncionContinous(int id_) : Block(id_, 1, 1, true)
-{
+TransferFuncionContinous::TransferFuncionContinous(int id_) : Block(id_, 1, 1, true) {
     this->size = ImVec2(200, 130);
     this->num = "1";
     this->denum = "1, 1";
@@ -609,16 +593,17 @@ std::vector<float> TransferFuncionContinous::stringToVector(const std::string& s
     std::stringstream ss(s);
     std::string item;
 
-    while (std::getline(ss, item, ',')) { // dzieli po przecinku
+    // dzieli po przecinku
+    while (std::getline(ss, item, ',')) {
         try {
             // usuń spacje z początku i końca
             size_t start = item.find_first_not_of(" \t");
             size_t end = item.find_last_not_of(" \t");
             std::string trimmed = (start == std::string::npos) ? "" : item.substr(start, end - start + 1);
 
-            if (!trimmed.empty()) {
-                result.push_back(std::stof(trimmed)); // konwertuj na float
-            }
+            // konwertuj na float
+            if (!trimmed.empty())
+                result.push_back(std::stof(trimmed));
         } catch (...) {
             // jeśli coś nie jest liczbą, pomiń
         }
@@ -694,82 +679,87 @@ std::string polyToString(std::vector<float>& coeffs) {
         int coeff = coeffs[i];
         int power = n - i - 1;
 
-        if (coeff == 0) continue;
+        if (coeff == 0)
+            continue;
 
-        if (!result.empty()) result += " + ";
+        if (!result.empty())
+            result += " + ";
 
         if (power == 0) {
             result += std::to_string(coeff);
-        } else if (power == 1) {
-            if (coeff == 1) result += "s";
-            else result += std::to_string(coeff) + "s";
-        } else {
-            if (coeff == 1) result += "s^" + std::to_string(power);
-            else result += std::to_string(coeff) + "s^" + std::to_string(power);
+        }
+        else if (power == 1) {
+            if (coeff == 1)
+                result += "s";
+            else
+                result += std::to_string(coeff) + "s";
+        }
+        else {
+            if (coeff == 1)
+                result += "s^" + std::to_string(power);
+            else
+                result += std::to_string(coeff) + "s^" + std::to_string(power);
         }
     }
 
     return result.empty() ? "0" : result;
 }
 
-void TransferFuncionContinous::drawContent()
-{
+void TransferFuncionContinous::drawContent() {
     ImGui::Text("Transfer Funcion Continous");
     ImGui::Separator();
     ImGui::Text(polyToString(this->numerator).c_str());
     ImGui::Text("-------------");
     ImGui::Text(polyToString(this->denominator).c_str());
 
-    if (this->run_tf2ss)
-    {
+    if (this->run_tf2ss) {
         this->numerator = stringToVector(num);
         this->denominator = stringToVector(denum);
 
-        //if (this->numerator.size() < this->denominator.size())
-            ss = TransferFuncionContinous::tf2ss(this->numerator, this->denominator);
+        // if (this->numerator.size() < this->denominator.size())
+        ss = TransferFuncionContinous::tf2ss(this->numerator, this->denominator);
         this->run_tf2ss = false;
 
         std::cout << "A matrix:\n";
         for (auto& row : ss.A) {
-            for (auto val : row) std::cout << val << " ";
+            for (auto val : row)
+                std::cout << val << " ";
             std::cout << "\n";
         }
 
         std::cout << "B vector:\n";
-        for (auto val : ss.B) std::cout << val << " ";
+        for (auto val : ss.B)
+            std::cout << val << " ";
         std::cout << "\n";
 
         std::cout << "C vector:\n";
-        for (auto val : ss.C) std::cout << val << " ";
+        for (auto val : ss.C)
+            std::cout << val << " ";
         std::cout << "\n";
 
         std::cout << "D: " << ss.D << "\n";
     }
-
     Block::drawContent();
 }
 
-void TransferFuncionContinous::drawMenu()
-{
+void TransferFuncionContinous::drawMenu() {
     static char num_buf[128];
     static char denum_buf[128];
 
     strncpy(num_buf, num.c_str(), sizeof(num_buf));
     strncpy(denum_buf, denum.c_str(), sizeof(denum_buf));
 
-    if (ImGui::InputText("Numerator", num_buf, IM_ARRAYSIZE(num_buf))) {
-        num = num_buf; // aktualizujemy std::string tylko jeśli użytkownik zmienił tekst
-    }
-    if (ImGui::InputText("Denominator", denum_buf, IM_ARRAYSIZE(denum_buf))) {
+    // aktualizujemy std::string tylko jeśli użytkownik zmienił tekst
+    if (ImGui::InputText("Numerator", num_buf, IM_ARRAYSIZE(num_buf)))
+        num = num_buf;
+    if (ImGui::InputText("Denominator", denum_buf, IM_ARRAYSIZE(denum_buf)))
         denum = denum_buf;
-    }
 
     this->run_tf2ss = true;
 }
 
 // funkcja mnożenia macierzy przez wektor
-std::vector<double> matVecMul(const std::vector<std::vector<double>>& M,
-                              const std::vector<double>& v) {
+std::vector<double> matVecMul(const std::vector<std::vector<double>>& M, const std::vector<double>& v) {
     std::vector<double> result(M.size(), 0.0);
     for (size_t i = 0; i < M.size(); i++) {
         for (size_t j = 0; j < v.size(); j++) {
@@ -780,8 +770,7 @@ std::vector<double> matVecMul(const std::vector<std::vector<double>>& M,
 }
 
 // dodawanie dwóch wektorów
-std::vector<double> vecAdd(const std::vector<double>& v1,
-                           const std::vector<double>& v2) {
+std::vector<double> vecAdd(const std::vector<double>& v1, const std::vector<double>& v2) {
     std::vector<double> result(v1.size());
     for (size_t i = 0; i < v1.size(); i++) {
         result[i] = v1[i] + v2[i];
@@ -806,7 +795,6 @@ void TransferFuncionContinous::process() {
     // dx/dt = A*x + B*u
     std::vector<double> Ax = matVecMul(ss.A, state);     // A*x
     std::vector<double> Bu = scalarVecMul(inputValues[0], ss.B); // B*u
-
     std::vector<double> dx = vecAdd(Ax, Bu);
 
     // Euler
@@ -825,37 +813,29 @@ void TransferFuncionContinous::process() {
 
     // debug
     std::cout << "state: ";
-    for (auto s : state) std::cout << s << " ";
+    for (auto s : state)
+        std::cout << s << " ";
     std::cout << "\noutput: " << y << std::endl;
 }
 
-void TransferFuncionContinous::resetAfter()
-{
-
-}
-
-void TransferFuncionContinous::resetBefore()
-{
-    for (int i = 0; i < outputValues.size(); i++)
-    {
+void TransferFuncionContinous::resetBefore() {
+    for (int i = 0; i < outputValues.size(); i++) {
         outputValues[i] = 0.0;
     }
-    for (int i = 0; i < state.size(); i++)
-    {
+    for (int i = 0; i < state.size(); i++) {
         state[i] = 0.0;
     }
 }
 
 
+
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // tranformacja pkt na jego wartosc funkji trygonometrycznej
-TrigonometricFunctionBlock::TrigonometricFunctionBlock(int id_) : Block(id_, 1, 1, true)
-{
+TrigonometricFunctionBlock::TrigonometricFunctionBlock(int id_) : Block(id_, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
-void TrigonometricFunctionBlock::drawContent()
-{
+void TrigonometricFunctionBlock::drawContent() {
     ImGui::Text("Trigonometric Block");
     ImGui::Text("Block Type: ");
     ImGui::SameLine();
@@ -863,32 +843,25 @@ void TrigonometricFunctionBlock::drawContent()
     Block::drawContent();
 }
 
-void TrigonometricFunctionBlock::drawMenu()
-{
+void TrigonometricFunctionBlock::drawMenu() {
     static int current_item = 0;
-    static char* items[] = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh"};
+    static const char* items[] = {"sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh"};
 
-    if (ImGui::BeginCombo("Trigonometric Funcion", items[current_item], false))
-    {
-        for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-        {
+    if (ImGui::BeginCombo("Trigonometric Funcion", items[current_item], false)) {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
             bool is_selected = (current_item == n);
-            if (ImGui::Selectable(items[n], is_selected))
-            {
+            if (ImGui::Selectable(items[n], is_selected)) {
                 current_item = n;
                 this->functionName = items[n];
             }
             if (is_selected)
-            {
                 ImGui::SetItemDefaultFocus();
-            }
         }
         ImGui::EndCombo();
     }
 }
 
-void TrigonometricFunctionBlock::process()
-{
+void TrigonometricFunctionBlock::process() {
     if (this->functionName == "sin")
         outputValues[0] = std::sin(inputValues[0]);
     else if (this->functionName == "cos")
@@ -915,15 +888,15 @@ void TrigonometricFunctionBlock::process()
         outputValues[0] = std::atanh(inputValues[0]);
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
-// Deadzone blok
-DeadZoneBlock::DeadZoneBlock(int id_) : Block(id_, 1, 1, true)
-{
+// DeadZone blok
+DeadZoneBlock::DeadZoneBlock(int id_) : Block(id_, 1, 1, true) {
     this->size = ImVec2(200, 120);
 }
 
-void DeadZoneBlock::process()
-{
+void DeadZoneBlock::process() {
     if (this->inputValues[0] > this->endDeadZone)
         this->outputValues[0] = this->inputValues[0] - this->endDeadZone;
     else if (this->inputValues[0] < -this->endDeadZone)
@@ -932,18 +905,17 @@ void DeadZoneBlock::process()
         this->outputValues[0] = 0.0;
 }
 
-
-void DeadZoneBlock::drawContent()
-{
+void DeadZoneBlock::drawContent() {
     ImGui::Text("Dead Zone");
     Block::drawContent();
 }
 
-void DeadZoneBlock::drawMenu()
-{
+void DeadZoneBlock::drawMenu() {
     ImGui::InputDouble("Start Dead Zopne", &startDeadZone);
     ImGui::InputDouble("End Dead Zopne", &endDeadZone);
 }
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // gain'a
@@ -978,38 +950,33 @@ void GainBlock::resetBefore() {
     std::fill(outputValues.begin(), outputValues.end(), 0);
 }
 
+
+
 // -----------------------------------------------------------------------------------------------------------------------------------------------
-// Bloki logicznw
-logicORBlock::logicORBlock(int id_): Block(id_, 2, 1, true)
-{
+// OR
+logicORBlock::logicORBlock(int id_): Block(id_, 2, 1, true) {
     size = ImVec2(200, 120);
 }
 
-void logicORBlock::process()
-{
-    for (int i = 0; i < numInputs; i++)
-    {
-        if (inputValues[i] > 2.3) // to trzeba zmainic i ustwaic zgodnie z cmos
-        {
+void logicORBlock::process() {
+    for (int i = 0; i < numInputs; i++) {
+        // to trzeba zmainic i ustwaic zgodnie z cmos
+        if (inputValues[i] > 2.3) {
             outputValues[0] = 5;
             break;
         }
-        else
-            outputValues[0] = 0;
+        outputValues[0] = 0;
     }
 }
 
 
-void logicORBlock::drawContent()
-{
+void logicORBlock::drawContent() {
     ImGui::Text("Logick OR");
     Block::drawContent();
 }
 
-void logicORBlock::drawMenu()
-{
-    if (ImGui::InputInt("Number of inputs", &numInputs))
-    {
+void logicORBlock::drawMenu() {
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
         if (numInputs < 2)
             numInputs = 2;
         else {
@@ -1019,40 +986,31 @@ void logicORBlock::drawMenu()
     }
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // AND
-
-logicANDBlock::logicANDBlock(int id_) : Block(id_, 2, 1, true)
-{
+logicANDBlock::logicANDBlock(int id_) : Block(id_, 2, 1, true) {
     size = ImVec2(200, 120);
 }
 
-void logicANDBlock::process()
-{
-    for (int i = 0; i < numInputs; i++)
-    {
-        if (inputValues[i] < 2.3)
-        {
+void logicANDBlock::process() {
+    for (int i = 0; i < numInputs; i++) {
+        if (inputValues[i] < 2.3) {
             outputValues[0] = 0;
             break;
         }
-        else
-        {
-            outputValues[0] = 5;
-        }
+        outputValues[0] = 5;
     }
 }
 
-void logicANDBlock::drawContent()
-{
+void logicANDBlock::drawContent() {
     ImGui::Text("Logick AND");
     Block::drawContent();
 }
 
-void logicANDBlock::drawMenu()
-{
-    if (ImGui::InputInt("Number of inputs", &numInputs))
-    {
+void logicANDBlock::drawMenu() {
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
         if (numInputs < 2)
             numInputs = 2;
         else {
@@ -1062,56 +1020,47 @@ void logicANDBlock::drawMenu()
     }
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // NOT
-logicNOTBlock::logicNOTBlock(int id_) : Block(id_, 1, 1, false)
-{
+logicNOTBlock::logicNOTBlock(int id_) : Block(id_, 1, 1, false) {
     size = ImVec2(200, 120);
 }
 
-void logicNOTBlock::process()
-{
+void logicNOTBlock::process() {
     outputValues[0] = inputValues[0] < 2.3 ? 5 : 0;
 }
 
-void logicNOTBlock::drawContent()
-{
+void logicNOTBlock::drawContent() {
     ImGui::Text("Logic NOT");
     Block::drawContent();
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // NOR
-logicNORBlock::logicNORBlock(int id_) : Block(id_, 2, 1, true)
-{
+logicNORBlock::logicNORBlock(int id_) : Block(id_, 2, 1, true) {
     size = ImVec2(200, 120);
 }
 
-void logicNORBlock::process()
-{
-    for (int i = 0; i < numInputs; i++)
-    {
+void logicNORBlock::process() {
+    for (int i = 0; i < numInputs; i++) {
         if (inputValues[i] > 2.3)
-        {
             outputValues[0] = 0;
-        }
         else
-        {
             outputValues[0] = 5;
-        }
     }
 }
 
-void logicNORBlock::drawContent()
-{
+void logicNORBlock::drawContent() {
     ImGui::Text("Logic NOR");
     Block::drawContent();
 }
 
-void logicNORBlock::drawMenu()
-{
-    if (ImGui::InputInt("Number of inputs", &numInputs))
-    {
+void logicNORBlock::drawMenu() {
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
         if (numInputs < 2)
             numInputs = 2;
         else {

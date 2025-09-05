@@ -64,6 +64,7 @@ public:
 };
 
 
+
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek rozniczkujacy
 class DifferentiatorBlock : public Block {
@@ -82,10 +83,11 @@ public:
     void drawMenu() override;
 };
 
+
+
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // transmitacja operatorowa
-class TransferFuncionContinous : public Block
-{
+class TransferFuncionContinous : public Block{
 public:
     std::string num;   // licznik
     std::string denum; // mianownik
@@ -110,25 +112,21 @@ public:
     void resetBefore() override;
     std::vector<float> stringToVector(const std::string& s);
     StateSpace tf2ss(std::vector<float> numerator, std::vector<float> denominator);
-
 private:
     bool run_tf2ss;
     StateSpace ss;
 };
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // blok pierwiskownaia
-
-class sqrtBlock : public Block
-{
-private:
-
+class sqrtBlock : public Block {
 public:
     sqrtBlock(int id_);
     void process() override;
     void drawContent() override;
 };
-
 
 
 
@@ -147,64 +145,62 @@ public:
     void resetBefore() override;
 };
 
+
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postaci Sinusa
-class SinusInputBlock : public Block
-{
-    private:
-       double inputValue;
-       double shiftPhase = 0;
-       double frequency = 1;
-       double amplitude = 1;
-       double currentTime = 0;
-    public:
-       SinusInputBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
-        void resetBefore() override;
+class SinusInputBlock : public Block {
+private:
+   double inputValue;
+   double shiftPhase = 0;
+   double frequency = 1;
+   double amplitude = 1;
+   double currentTime = 0;
+public:
+   SinusInputBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
 };
+
+
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postac PWM
-
-class PWMInputBlock : public Block
-{
-    private:
-        double currentTime;
-        double inputValue;
-        double delay;
-        double frequency;
-        double dutyCycle;
-
-    public:
-        PWMInputBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
-        void resetBefore() override;
+class PWMInputBlock : public Block {
+private:
+    double currentTime;
+    double inputValue;
+    double delay;
+    double frequency;
+    double dutyCycle;
+public:
+    PWMInputBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
 };
+
+
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postaci bialego szumu
+class WhiteNoiseInputBlock : public Block {
+private:
+    double mean = 0;
+    double std = 1;
+    double seed = 0;
 
-class WhiteNoiseInputBlock : public Block
-{
-    private:
-        double mean = 0;
-        double std = 1;
-        double seed = 0;
-
-        std::default_random_engine generator;
-        std::normal_distribution<double> distribution;
-
-    public:
-        WhiteNoiseInputBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution;
+public:
+    WhiteNoiseInputBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
 };
-
 
 
 
@@ -217,6 +213,8 @@ public:
     // TODO: GUI
     void drawContent() override;
 };
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek robiący wykres
@@ -237,65 +235,59 @@ public:
 };
 
 //bloczek wykresy
-class PLotXYBlock : public Block
-{
-    private:
-        float x_limMax = 0;
-        float x_limMin = 0;
-        std::vector<std::array<float, 1000>> data;
-        float y_limMax = 1.0f;
-        float y_limMin = -1.0f;
+class PLotXYBlock : public Block {
+private:
+    float x_limMax = 0;
+    float x_limMin = 0;
+    std::vector<std::array<float, 1000>> data;
+    float y_limMax = 1.0f;
+    float y_limMin = -1.0f;
 
-        int sampleIndex = 0;
-    public:
-        PLotXYBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void resetBefore() override;
-        void drawMenu() override;
-
+    int sampleIndex = 0;
+public:
+    PLotXYBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void resetBefore() override;
+    void drawMenu() override;
 };
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
-// Blok saturacji
-class SaturationBlock : public Block
-{
-    private:
-        double upperLimit = 1.0f;
-        double lowerLimit = 1.0f;
-    public:
-        SaturationBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
+// blok saturacji
+class SaturationBlock : public Block {
+private:
+    double upperLimit = 1.0f;
+    double lowerLimit = 1.0f;
+public:
+    SaturationBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
 };
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// Blok deadzona
-class DeadZoneBlock : public Block
-{
-    private:
-        double startDeadZone = -1.f;
-        double endDeadZone = -1.f;
-    public:
-        DeadZoneBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
-
+// blok deadzona
+class DeadZoneBlock : public Block {
+private:
+    double startDeadZone = -1.f;
+    double endDeadZone = -1.f;
+public:
+    DeadZoneBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
 };
 
 // zamina pkt na wartosc funkjo trygonometrycznej pkt
-class TrigonometricFunctionBlock : public Block
-{
-    private:
-        std::string functionName = "sin";
-    public:
-        TrigonometricFunctionBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
+class TrigonometricFunctionBlock : public Block {
+private:
+    std::string functionName = "sin";
+public:
+    TrigonometricFunctionBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
 };
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -336,34 +328,30 @@ public:
     int getSendCounter() const;
 };
 
-// -----------------------------------------------------------------------------------------------------------------------------------------------
-// Bloki logicznw
+
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // OR block
-class logicORBlock : public Block
-{
-    public:
-        logicORBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
+class logicORBlock : public Block {
+public:
+    logicORBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
 };
 
-class logicANDBlock : public Block
-{
-    public:
-        logicANDBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
+class logicANDBlock : public Block {
+public:
+    logicANDBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
 };
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // NOT block
-class logicNOTBlock : public Block
-{
-    public:
+class logicNOTBlock : public Block {
+public:
     logicNOTBlock(int _id);
     void process() override;
     void drawContent() override;
@@ -371,13 +359,12 @@ class logicNOTBlock : public Block
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // NOR block
-class logicNORBlock : public Block
-{
-    public:
-        logicNORBlock(int _id);
-        void process() override;
-        void drawContent() override;
-        void drawMenu() override;
+class logicNORBlock : public Block {
+public:
+    logicNORBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
 };
 
 #endif

@@ -731,102 +731,106 @@ void guiClass::drawMenu() {
         // przyciski dodawania bloków
 
         // modul math
-        ImGui::Text("Math");
-        if (ImGui::Button("Add Sum Box")) {
-            model.getBlocks().push_back(std::make_unique<SumBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Multiply Box")) {
-            model.getBlocks().push_back(std::make_unique<MultiplyBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Integrator Box")) {
-            model.getBlocks().push_back(std::make_unique<IntegratorBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Diff Box")) {
-            model.getBlocks().push_back(std::make_unique<DifferentiatorBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Trigonometric Funcion Box")) {
-            model.getBlocks().push_back(std::make_unique<TrigonometricFunctionBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Sqrt Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<sqrtBlock>(next_id++));
+        if (ImGui::CollapsingHeader("Math")) {
+            if (ImGui::Button("Add Sum Box")) {
+                model.getBlocks().push_back(std::make_unique<SumBlock>(next_id++));
+            }
+            if (ImGui::Button("Add Multiply Box")) {
+                model.getBlocks().push_back(std::make_unique<MultiplyBlock>(next_id++));
+            }
+            if (ImGui::Button("Add Integrator Box")) {
+                model.getBlocks().push_back(std::make_unique<IntegratorBlock>(next_id++));
+            }
+            if (ImGui::Button("Add Diff Box")) {
+                model.getBlocks().push_back(std::make_unique<DifferentiatorBlock>(next_id++));
+            }
+            if (ImGui::Button("Add Trigonometric Funcion Box")) {
+                model.getBlocks().push_back(std::make_unique<TrigonometricFunctionBlock>(next_id++));
+            }
+            if (ImGui::Button("Add Sqrt Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<sqrtBlock>(next_id++));
+            }
         }
 
         // modul contorl
-        ImGui::Separator();
-        ImGui::Text("Control Continous");
-        if (ImGui::Button("Add Tf box"))
-        {
-            model.getBlocks().push_back(std::make_unique<TransferFuncionContinous>(next_id++));
-        }
-        if (ImGui::Button("Add Gain Box")) {
-            model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Saturation Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<SaturationBlock>(next_id++));
-        }
-        if (ImGui::Button("Add DeadZone Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<DeadZoneBlock>(next_id++));
+        if (ImGui::CollapsingHeader("Control Continous")) {
+            if (ImGui::Button("Add Tf box"))
+            {
+                model.getBlocks().push_back(std::make_unique<TransferFuncionContinous>(next_id++));
+            }
+            if (ImGui::Button("Add Gain Box")) {
+                model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
+            }
+            if (ImGui::Button("Add Saturation Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<SaturationBlock>(next_id++));
+            }
+            if (ImGui::Button("Add DeadZone Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<DeadZoneBlock>(next_id++));
+            }
         }
 
         // modul inputy
-        ImGui::Separator();
-        ImGui::Text("Input");
-        if (ImGui::Button("Add Step Box")) {
-            model.getBlocks().push_back(std::make_unique<StepBlock>(next_id++));
+        if (ImGui::CollapsingHeader("Input")) {
+            if (ImGui::Button("Add Step Box")) {
+                model.getBlocks().push_back(std::make_unique<StepBlock>(next_id++));
+            }
+            if (ImGui::Button("Add SinusInput Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<SinusInputBlock>(next_id++));
+            }
+            if (ImGui::Button("Add PWM Input"))
+            {
+                model.getBlocks().push_back(std::make_unique<PWMInputBlock>(next_id++));
+            }
+            if (ImGui::Button("Add WhiteNoise Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<WhiteNoiseInputBlock>(next_id++));
+            }
         }
-        if (ImGui::Button("Add SinusInput Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<SinusInputBlock>(next_id++));
-        }
-        if (ImGui::Button("Add PWM Input"))
-        {
-            model.getBlocks().push_back(std::make_unique<PWMInputBlock>(next_id++));
-        }
-        if (ImGui::Button("Add WhiteNoise Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<WhiteNoiseInputBlock>(next_id++));
-        }
+
         // modul print/ploty
-        ImGui::Separator();
-        ImGui::Text("Print");
-        if (ImGui::Button("Add Print Box")) {
-            model.getBlocks().push_back(std::make_unique<PrintBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Plot Box")) {
-            model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
-        }
-        if (ImGui::Button("Add Plot XY Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<PLotXYBlock>(next_id++));
+        if (ImGui::CollapsingHeader("Print")) {
+            if (ImGui::Button("Add Print Box")) {
+                model.getBlocks().push_back(std::make_unique<PrintBlock>(next_id++));
+            }
+            if (ImGui::Button("Add Plot Box")) {
+                model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
+            }
+            if (ImGui::Button("Add Plot XY Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<PLotXYBlock>(next_id++));
+            }
         }
 
         // Bloki logicvzne (sprawdzenie czy akhualnia strutra sie do tego nadaje)
-        ImGui::Separator();
-        ImGui::Text("Logick");
-        if (ImGui::Button("Add OR Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<logicORBlock>(next_id++));
-        }
+        if (ImGui::CollapsingHeader("Logick")) {
+            if (ImGui::Button("Add OR Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<logicORBlock>(next_id++));
+            }
 
-        if (ImGui::Button("Add AND Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<logicANDBlock>(next_id++));
-        }
-        if (ImGui::Button("Add NOT Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<logicNOTBlock>(next_id++));
-        }
-        if (ImGui::Button("Add NOR Box"))
-        {
-            model.getBlocks().push_back(std::make_unique<logicNORBlock>(next_id++));
+            if (ImGui::Button("Add AND Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<logicANDBlock>(next_id++));
+            }
+            if (ImGui::Button("Add NOT Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<logicNOTBlock>(next_id++));
+            }
+            if (ImGui::Button("Add NOR Box"))
+            {
+                model.getBlocks().push_back(std::make_unique<logicNORBlock>(next_id++));
+            }
         }
 
         // wysylanie danych
-        if (ImGui::Button("Add Sender Box")) {
-            model.getBlocks().push_back(std::make_unique<DataSenderBlock>(next_id++));
+        if (ImGui::CollapsingHeader("Sender")) {
+            if (ImGui::Button("Add Sender Box")) {
+                model.getBlocks().push_back(std::make_unique<DataSenderBlock>(next_id++));
+            }
         }
 
         ImGui::Separator();
