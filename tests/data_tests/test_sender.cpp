@@ -24,7 +24,7 @@ void DataSenderTests::testBasicChannelCommunication() {
     // Sprawdź czy kanał jest pusty po odbiorze
     assert(DataChannelManager::getChannelSize(testChannel) == 0);
 
-    std::cout << "✓ Basic channel communication test passed" << std::endl;
+    std::cout << "Basic channel communication test passed" << std::endl;
 }
 
 void DataSenderTests::testMultipleDataTypes() {
@@ -53,7 +53,7 @@ void DataSenderTests::testMultipleDataTypes() {
     assert(DataChannelManager::receiveData<float>(testChannel, floatVal));
     assert(floatVal == 2.71f);
 
-    std::cout << "✓ Multiple data types test passed" << std::endl;
+    std::cout << "Multiple data types test passed" << std::endl;
 }
 
 void DataSenderTests::testWaitForDataTimeout() {
@@ -73,7 +73,7 @@ void DataSenderTests::testWaitForDataTimeout() {
     assert(!success);
     assert(duration.count() >= 100); // Minimum 100ms timeout
 
-    std::cout << "✓ Timeout test passed (" << duration.count() << "ms)" << std::endl;
+    std::cout << "Timeout test passed (" << duration.count() << "ms)" << std::endl;
 }
 
 void DataSenderTests::testQueueOverflow() {
@@ -98,7 +98,7 @@ void DataSenderTests::testQueueOverflow() {
 
     DataChannelManager::clearChannel(testChannel);
 
-    std::cout << "✓ Queue overflow test passed (queue size: " << queueSize << ")" << std::endl;
+    std::cout << "Queue overflow test passed (queue size: " << queueSize << ")" << std::endl;
 }
 
 void DataSenderTests::testChannelClearing() {
@@ -118,7 +118,7 @@ void DataSenderTests::testChannelClearing() {
 
     assert(DataChannelManager::getChannelSize(testChannel) == 0);
 
-    std::cout << "✓ Channel clearing test passed" << std::endl;
+    std::cout << "Channel clearing test passed" << std::endl;
 }
 
 void DataSenderTests::testChannelInfo() {
@@ -144,7 +144,7 @@ void DataSenderTests::testChannelInfo() {
 
     DataChannelManager::clearChannel(testChannel);
 
-    std::cout << "✓ Channel info test passed" << std::endl;
+    std::cout << "Channel info test passed" << std::endl;
 }
 
 void DataSenderTests::testDataSenderBlock() {
