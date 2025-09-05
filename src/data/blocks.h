@@ -108,7 +108,6 @@ public:
     void process() override;
     void drawMenu() override;
     void drawContent() override;
-    void resetAfter() override;
     void resetBefore() override;
     std::vector<float> stringToVector(const std::string& s);
     StateSpace tf2ss(std::vector<float> numerator, std::vector<float> denominator);
