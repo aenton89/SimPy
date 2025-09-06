@@ -127,6 +127,8 @@ void guiClass::update() {
     drawMenu();
     drawStartButton();
     drawSettings();
+    drawMenuBar();
+
 
     // Reszta kodu pozostaje bez zmian
     for (auto& box : model.getBlocks()) {
@@ -159,46 +161,148 @@ void guiClass::update() {
         }), model.getBlocks().end());
 }
 
+// // funkcja pomocnicza do obliczania pozycji zadockowanego okna
+// ImVec2 guiClass::calculateDockedPosition(DockPosition position, ImVec2 size, DockableWindowType type) {
+//     ImGuiIO& io = ImGui::GetIO();
+//     ImVec2 displaySize = io.DisplaySize;
+//
+//     switch (position) {
+//         case DockPosition::Left:
+//             // jeśli RUN WINDOW i MENU WINDOW jest już zadockowane po lewej, umieść poniżej
+//             if (isStartWindow && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
+//                 return ImVec2(0, DEFAULT_DOCKED_MENU_SIZE.y + 1);
+//             return ImVec2(0, 0);
+//
+//         case DockPosition::Right:
+//             if (isStartWindow && menuWindow.isDocked && menuWindow.position == DockPosition::Right)
+//                 return ImVec2(displaySize.x - size.x, DEFAULT_DOCKED_MENU_SIZE.y + 1);
+//             return ImVec2(displaySize.x - size.x, 0);
+//
+//         case DockPosition::Top:
+//             // rozsuń okna w poziomie
+//             if (isStartWindow && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
+//                 return ImVec2(DEFAULT_DOCKED_MENU_SIZE.x + 1, 0);
+//             return ImVec2(0, 0);
+//
+//         case DockPosition::Bottom:
+//             if (isStartWindow && menuWindow.isDocked && menuWindow.position == DockPosition::Bottom)
+//                 return ImVec2(DEFAULT_DOCKED_MENU_SIZE.x + 1, displaySize.y - size.y);
+//             return ImVec2(0, displaySize.y - size.y);
+//
+//         default:
+//             return ImVec2(100, 100);
+//     }
+// }
 // funkcja pomocnicza do obliczania pozycji zadockowanego okna
-ImVec2 guiClass::calculateDockedPosition(DockPosition position, ImVec2 size, bool isStartWindow) {
+ImVec2 guiClass::calculateDockedPosition(DockPosition position, ImVec2 size, DockableWindowType type) {
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 displaySize = io.DisplaySize;
 
+    // przybliżone rozmiary okien dla auto-resize (używane tylko do pozycjonowania)
+    const float APPROX_MENU_WIDTH = 180.0f;
+    const float APPROX_MENU_HEIGHT = 300.0f;
+    const float APPROX_START_WIDTH = 150.0f;
+    const float APPROX_START_HEIGHT = 100.0f;
+    const float APPROX_SETTINGS_WIDTH = 200.0f;
+    const float APPROX_SETTINGS_HEIGHT = 150.0f;
+
     switch (position) {
-        case DockPosition::Left:
-            // jeśli RUN WINDOW i MENU WINDOW jest już zadockowane po lewej, umieść poniżej
-            if (isStartWindow && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
-                return ImVec2(0, DEFAULT_DOCKED_MENU_SIZE.y + 1);
-            return ImVec2(0, 0);
+        case DockPosition::Left: {
+            float yOffset = 0.0f;
 
-        case DockPosition::Right:
-            if (isStartWindow && menuWindow.isDocked && menuWindow.position == DockPosition::Right)
-                return ImVec2(displaySize.x - size.x, DEFAULT_DOCKED_MENU_SIZE.y + 1);
-            return ImVec2(displaySize.x - size.x, 0);
+            // sprawdzamy które okna są już zadockowane po lewej stronie i obliczamy offset
+            if (type != DockableWindowType::Menu && menuWindow.isDocked && menuWindow.position == DockPosition::Left)
+                yOffset += APPROX_MENU_HEIGHT + 5.0f; // 5px odstępu
+            if (type != DockableWindowType::Start && startWindow.isDocked && startWindow.position == DockPosition::Left)
+                yOffset += APPROX_START_HEIGHT + 5.0f;
+            if (type != DockableWindowType::Settings && settingsWindow.isDocked && settingsWindow.position == DockPosition::Left)
+                yOffset += APPROX_SETTINGS_HEIGHT + 5.0f;
 
-        case DockPosition::Top:
-            // rozsuń okna w poziomie
-            if (isStartWindow && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
-                return ImVec2(DEFAULT_DOCKED_MENU_SIZE.x + 1, 0);
-            return ImVec2(0, 0);
+            return ImVec2(0, yOffset);
+        }
 
-        case DockPosition::Bottom:
-            if (isStartWindow && menuWindow.isDocked && menuWindow.position == DockPosition::Bottom)
-                return ImVec2(DEFAULT_DOCKED_MENU_SIZE.x + 1, displaySize.y - size.y);
-            return ImVec2(0, displaySize.y - size.y);
+        case DockPosition::Right: {
+            float yOffset = 0.0f;
+            float xOffset = displaySize.x;
+
+            // ustal szerokość na podstawie typu okna
+            switch (type) {
+                case DockableWindowType::Menu:
+                    xOffset -= APPROX_MENU_WIDTH;
+                    break;
+                case DockableWindowType::Start:
+                    xOffset -= APPROX_START_WIDTH;
+                    break;
+                case DockableWindowType::Settings:
+                    xOffset -= APPROX_SETTINGS_WIDTH;
+                    break;
+            }
+
+            // sprawdzamy które okna są już zadockowane po prawej stronie
+            if (type != DockableWindowType::Menu && menuWindow.isDocked && menuWindow.position == DockPosition::Right)
+                yOffset += APPROX_MENU_HEIGHT + 5.0f;
+            if (type != DockableWindowType::Start && startWindow.isDocked && startWindow.position == DockPosition::Right)
+                yOffset += APPROX_START_HEIGHT + 5.0f;
+            if (type != DockableWindowType::Settings && settingsWindow.isDocked && settingsWindow.position == DockPosition::Right)
+                yOffset += APPROX_SETTINGS_HEIGHT + 5.0f;
+
+            return ImVec2(xOffset, yOffset);
+        }
+
+        case DockPosition::Top: {
+            float xOffset = 0.0f;
+
+            // sprawdzamy które okna są już zadockowane na górze i obliczamy offset
+            if (type != DockableWindowType::Menu && menuWindow.isDocked && (menuWindow.position == DockPosition::Top || menuWindow.position == DockPosition::Left))
+                xOffset += APPROX_MENU_WIDTH + 5.0f;
+            if (type != DockableWindowType::Start && startWindow.isDocked && (startWindow.position == DockPosition::Top || startWindow.position == DockPosition::Left))
+                xOffset += APPROX_START_WIDTH + 5.0f;
+            if (type != DockableWindowType::Settings && settingsWindow.isDocked && (settingsWindow.position == DockPosition::Top || settingsWindow.position == DockPosition::Left))
+                xOffset += APPROX_SETTINGS_WIDTH + 5.0f;
+
+            return ImVec2(xOffset, 0);
+        }
+
+        case DockPosition::Bottom: {
+            float xOffset = 0.0f;
+            float yOffset = displaySize.y;
+
+            // ustal wysokość na podstawie typu okna
+            switch (type) {
+                case DockableWindowType::Menu:
+                    yOffset -= APPROX_MENU_HEIGHT;
+                    break;
+                case DockableWindowType::Start:
+                    yOffset -= APPROX_START_HEIGHT;
+                    break;
+                case DockableWindowType::Settings:
+                    yOffset -= APPROX_SETTINGS_HEIGHT;
+                    break;
+            }
+
+            // sprawdzamy które okna są już zadockowane na dole
+            if (type != DockableWindowType::Menu && menuWindow.isDocked && menuWindow.position == DockPosition::Bottom)
+                xOffset += APPROX_MENU_WIDTH + 5.0f;
+            if (type != DockableWindowType::Start && startWindow.isDocked && startWindow.position == DockPosition::Bottom)
+                xOffset += APPROX_START_WIDTH + 5.0f;
+            if (type != DockableWindowType::Settings && settingsWindow.isDocked && settingsWindow.position == DockPosition::Bottom)
+                xOffset += APPROX_SETTINGS_WIDTH + 5.0f;
+
+            return ImVec2(xOffset, yOffset);
+        }
 
         default:
             return ImVec2(100, 100);
     }
 }
 
-ImVec2 guiClass::calculateDockedSize(DockPosition position, bool isStartWindow) {
-    // start window
-    if (isStartWindow)
+ImVec2 guiClass::calculateDockedSize(DockPosition position, DockableWindowType type) {
+    if (type == DockableWindowType::Start)
         return DEFAULT_DOCKED_RUN_SIZE;
-
-    // menu window
-    return DEFAULT_DOCKED_MENU_SIZE;
+    if (type == DockableWindowType::Settings)
+        return DEFAULT_DOCKED_SETTINGS_SIZE;
+    if (type == DockableWindowType::Menu)
+        return DEFAULT_DOCKED_MENU_SIZE;
 }
 
 // funkcja do sprawdzania czy okno powinno się zadockować
@@ -709,17 +813,45 @@ void guiClass::drawConnections() {
 }
 
 
+void guiClass::drawMenuBar() {
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Open", "Ctrl+O")) { /* akcja */ }
+            if (ImGui::MenuItem("Save", "Ctrl+S")) { /* akcja */ }
+            if (ImGui::MenuItem("Exit")) { /* zamknij app */ }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::MenuItem("Undo", "Ctrl+Z")) { /* akcja */ }
+            if (ImGui::MenuItem("Redo", "Ctrl+Y")) { /* akcja */ }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Settings")) {
+            static bool darkMode = true;
+            static bool gridEnabled = false;
+
+            ImGui::MenuItem("Dark mode", "", &darkMode);
+            ImGui::MenuItem("Show grid", "", &gridEnabled);
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+}
+
 void guiClass::drawMenu() {
     ImVec2 menuPos, menuSize;
-    ImGuiWindowFlags menuFlags = ImGuiWindowFlags_None;
+    ImGuiWindowFlags menuFlags = ImGuiWindowFlags_AlwaysAutoResize;
 
     if (menuWindow.isDocked) {
-        menuSize = calculateDockedSize(menuWindow.position, false);
-        menuPos = calculateDockedPosition(menuWindow.position, menuSize, false);
+        menuSize = calculateDockedSize(menuWindow.position, DockableWindowType::Menu);
+        menuPos = calculateDockedPosition(menuWindow.position, menuSize, DockableWindowType::Menu);
         menuFlags |= ImGuiWindowFlags_NoMove;
     } else {
         menuPos = menuWindow.undockedPos;
-        menuSize = menuWindow.undockedSize;
     }
 
     ImGui::SetNextWindowPos(menuPos, menuWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
@@ -732,105 +864,70 @@ void guiClass::drawMenu() {
 
         // modul math
         if (ImGui::CollapsingHeader("Math")) {
-            if (ImGui::Button("Add Sum Box")) {
+            if (ImGui::Button("Add Sum Box"))
                 model.getBlocks().push_back(std::make_unique<SumBlock>(next_id++));
-            }
-            if (ImGui::Button("Add Multiply Box")) {
+            if (ImGui::Button("Add Multiply Box"))
                 model.getBlocks().push_back(std::make_unique<MultiplyBlock>(next_id++));
-            }
-            if (ImGui::Button("Add Integrator Box")) {
+            if (ImGui::Button("Add Integrator Box"))
                 model.getBlocks().push_back(std::make_unique<IntegratorBlock>(next_id++));
-            }
-            if (ImGui::Button("Add Diff Box")) {
+            if (ImGui::Button("Add Diff Box"))
                 model.getBlocks().push_back(std::make_unique<DifferentiatorBlock>(next_id++));
-            }
-            if (ImGui::Button("Add Trigonometric Funcion Box")) {
+            if (ImGui::Button("Add Trigonometric Funcion Box"))
                 model.getBlocks().push_back(std::make_unique<TrigonometricFunctionBlock>(next_id++));
-            }
             if (ImGui::Button("Add Sqrt Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<sqrtBlock>(next_id++));
-            }
         }
 
         // modul contorl
         if (ImGui::CollapsingHeader("Control Continous")) {
             if (ImGui::Button("Add Tf box"))
-            {
                 model.getBlocks().push_back(std::make_unique<TransferFuncionContinous>(next_id++));
-            }
-            if (ImGui::Button("Add Gain Box")) {
+            if (ImGui::Button("Add Gain Box"))
                 model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
-            }
             if (ImGui::Button("Add Saturation Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<SaturationBlock>(next_id++));
-            }
             if (ImGui::Button("Add DeadZone Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<DeadZoneBlock>(next_id++));
-            }
         }
 
         // modul inputy
         if (ImGui::CollapsingHeader("Input")) {
-            if (ImGui::Button("Add Step Box")) {
+            if (ImGui::Button("Add Step Box"))
                 model.getBlocks().push_back(std::make_unique<StepBlock>(next_id++));
-            }
             if (ImGui::Button("Add SinusInput Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<SinusInputBlock>(next_id++));
-            }
             if (ImGui::Button("Add PWM Input"))
-            {
                 model.getBlocks().push_back(std::make_unique<PWMInputBlock>(next_id++));
-            }
             if (ImGui::Button("Add WhiteNoise Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<WhiteNoiseInputBlock>(next_id++));
-            }
         }
 
         // modul print/ploty
         if (ImGui::CollapsingHeader("Print")) {
-            if (ImGui::Button("Add Print Box")) {
+            if (ImGui::Button("Add Print Box"))
                 model.getBlocks().push_back(std::make_unique<PrintBlock>(next_id++));
-            }
-            if (ImGui::Button("Add Plot Box")) {
+            if (ImGui::Button("Add Plot Box"))
                 model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
-            }
             if (ImGui::Button("Add Plot XY Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<PLotXYBlock>(next_id++));
-            }
         }
 
         // Bloki logicvzne (sprawdzenie czy akhualnia strutra sie do tego nadaje)
         if (ImGui::CollapsingHeader("Logick")) {
             if (ImGui::Button("Add OR Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<logicORBlock>(next_id++));
-            }
-
             if (ImGui::Button("Add AND Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<logicANDBlock>(next_id++));
-            }
             if (ImGui::Button("Add NOT Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<logicNOTBlock>(next_id++));
-            }
             if (ImGui::Button("Add NOR Box"))
-            {
                 model.getBlocks().push_back(std::make_unique<logicNORBlock>(next_id++));
-            }
         }
 
         // wysylanie danych
         if (ImGui::CollapsingHeader("Sender")) {
-            if (ImGui::Button("Add Sender Box")) {
+            if (ImGui::Button("Add Sender Box"))
                 model.getBlocks().push_back(std::make_unique<DataSenderBlock>(next_id++));
-            }
         }
 
         ImGui::Separator();
@@ -845,8 +942,6 @@ void guiClass::drawMenu() {
                 ImGuiIO& io = ImGui::GetIO();
                 ImVec2 displaySize = io.DisplaySize;
                 menuWindow.undockedPos = ImVec2(displaySize.x * 0.3f, displaySize.y * 0.3f);
-                // domyślny rozmiar
-                menuWindow.undockedSize = DEFAULT_UNDOCKED_MENU_SIZE;
             }
         }
 
@@ -857,7 +952,6 @@ void guiClass::drawMenu() {
 
             // zapisz pozycję jako undocked
             menuWindow.undockedPos = currentPos;
-            menuWindow.undockedSize = currentSize;
 
             // sprawdź czy powinno się zadockować
             static bool wasDragging = false;
@@ -877,11 +971,25 @@ void guiClass::drawMenu() {
     ImGui::End();
 }
 
-void guiClass::drawSettings()
-{
-    ImGui::SetNextWindowBgAlpha(0.6f);
+void guiClass::drawSettings() {
+    ImVec2 settingsPos, settingsSize;
+    ImGuiWindowFlags settingsFlags = ImGuiWindowFlags_AlwaysAutoResize;
 
-    ImGui::Begin("Simulate Settings");
+    if (settingsWindow.isDocked) {
+        settingsSize = calculateDockedSize(settingsWindow.position, DockableWindowType::Settings);
+        settingsPos = calculateDockedPosition(settingsWindow.position, settingsSize, DockableWindowType::Settings);
+        settingsFlags |= ImGuiWindowFlags_NoMove;
+    } else {
+        settingsPos = settingsWindow.undockedPos;
+    }
+
+    ImGui::SetNextWindowPos(settingsPos, settingsWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(0.6f);
+    ImGui::SetNextWindowSize(settingsSize, settingsWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(160, 150), ImVec2(FLT_MAX, FLT_MAX));
+
+
+    ImGui::Begin("Simulate Settings", nullptr, settingsFlags);
     ImGui::InputFloat("Sampling Time", &samplingTime);
     ImGui::InputFloat("Simulation Time", &simTime);
 
@@ -892,55 +1000,81 @@ void guiClass::drawSettings()
     static int current_precision = 0;
     const static char* precisions[] = {"int", "float", "double"};
 
-    if (ImGui::BeginCombo("Solver Type", solvers[current_solver], false))
-    {
-        for (int n = 0; n < IM_ARRAYSIZE(solvers); n++)
-        {
+    if (ImGui::BeginCombo("Solver Type", solvers[current_solver], false)) {
+        for (int n = 0; n < IM_ARRAYSIZE(solvers); n++) {
             bool is_selected = (current_precision == n);
-            if (ImGui::Selectable(solvers[n], is_selected))
-            {
+            if (ImGui::Selectable(solvers[n], is_selected)) {
                 current_solver = n;
                 this->solverName = solvers[n];
             }
             if (is_selected)
-            {
                 ImGui::SetItemDefaultFocus();
-            }
         }
         ImGui::EndCombo();
     }
 
-    if (ImGui::BeginCombo("Precision Type", precisions[current_precision], false))
-    {
-        for (int i = 0; i < IM_ARRAYSIZE(precisions); i++)
-        {
+    if (ImGui::BeginCombo("Precision Type", precisions[current_precision], false)) {
+        for (int i = 0; i < IM_ARRAYSIZE(precisions); i++) {
             bool is_selected = (current_precision == i);
-            if (ImGui::Selectable(precisions[i], is_selected))
-            {
+            if (ImGui::Selectable(precisions[i], is_selected)) {
                 current_precision = i;
                 this->solverPrecison = precisions[i];
             }
             if (is_selected)
-            {
                 ImGui::SetItemDefaultFocus();
-            }
         }
         ImGui::EndCombo();
+    }
+
+
+    // przycisk do undocking
+    if (settingsWindow.isDocked) {
+        if (ImGui::Button("Undock Menu")) {
+            settingsWindow.isDocked = false;
+            settingsWindow.position = DockPosition::None;
+
+            // przesuń okno z dala od krawędzi i zresetuj rozmiar
+            ImGuiIO& io = ImGui::GetIO();
+            ImVec2 displaySize = io.DisplaySize;
+            settingsWindow.undockedPos = ImVec2(displaySize.x * 0.6f, displaySize.y * 0.6f);
+        }
+    }
+
+    // sprawdź docking tylko jeśli okno nie jest zadockowane
+    if (!settingsWindow.isDocked) {
+        ImVec2 currentPos = ImGui::GetWindowPos();
+        ImVec2 currentSize = ImGui::GetWindowSize();
+
+        // zapisz pozycję jako undocked
+        settingsWindow.undockedPos = currentPos;
+
+        // sprawdź czy powinno się zadockować
+        static bool wasDragging = false;
+        bool isDragging = ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowFocused();
+
+        if (wasDragging && !isDragging) {
+            DockPosition newDockPos = checkDockPosition(currentPos, currentSize);
+            if (newDockPos != DockPosition::None) {
+                settingsWindow.isDocked = true;
+                settingsWindow.position = newDockPos;
+            }
+        }
+
+        wasDragging = isDragging;
     }
     ImGui::End();
 };
 
 void guiClass::drawStartButton() {
     ImVec2 startPos, startSize;
-    ImGuiWindowFlags startFlags = ImGuiWindowFlags_None;
+    ImGuiWindowFlags startFlags = ImGuiWindowFlags_AlwaysAutoResize;
 
     if (startWindow.isDocked) {
-        startSize = calculateDockedSize(startWindow.position, true);
-        startPos = calculateDockedPosition(startWindow.position, startSize, true);
+        startSize = calculateDockedSize(startWindow.position, DockableWindowType::Start);
+        startPos = calculateDockedPosition(startWindow.position, startSize, DockableWindowType::Start);
         startFlags |= ImGuiWindowFlags_NoMove;
     } else {
         startPos = startWindow.undockedPos;
-        startSize = startWindow.undockedSize;
     }
 
     ImGui::SetNextWindowPos(startPos, startWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
@@ -957,12 +1091,12 @@ void guiClass::drawStartButton() {
                 simulationRunning = true;
                 // uruchom w osobnym wątku i nie czekaj na niego:
                 std::thread([this]() {
-                    // cleanup w bloczkach jeśli jest potrzeb
-                    for (auto& b: model.getBlocks())
-                    {
+                    for (auto& b: model.getBlocks()) {
                         b->setsimTime(this->simTime);
                         b->settimeStep(this->samplingTime);
                     }
+
+                    // cleanup w bloczkach jeśli jest potrzeb
                     model.cleanupBefore();
                     model.makeConnections();
                     // TODO: tu na ogół nie ma być na stałe pętli do 1000
@@ -989,7 +1123,6 @@ void guiClass::drawStartButton() {
                 ImVec2 displaySize = io.DisplaySize;
                 startWindow.undockedPos = ImVec2(displaySize.x * 0.5f, displaySize.y * 0.4f);
                 // domyślny rozmiar
-                startWindow.undockedSize = DEFAULT_UNDOCKED_RUN_SIZE;
             }
         }
 
@@ -998,7 +1131,6 @@ void guiClass::drawStartButton() {
             ImVec2 currentSize = ImGui::GetWindowSize();
 
             startWindow.undockedPos = currentPos;
-            startWindow.undockedSize = currentSize;
 
             // taka sama logika jak dla menu window
             static bool wasDraggingStart = false;
@@ -1017,7 +1149,6 @@ void guiClass::drawStartButton() {
     }
     ImGui::End();
 }
-
 
 void guiClass::render() {
     ImGui::Render();

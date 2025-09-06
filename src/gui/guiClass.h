@@ -1,8 +1,6 @@
 //
 // Created by tajbe on 18.04.2025.
 //
-
-
 #ifndef GUICLASS_H
 #define GUICLASS_H
 
@@ -19,10 +17,18 @@
 #include <thread>
 #include <algorithm>
 
+
+
 const ImVec2 DEFAULT_DOCKED_RUN_SIZE = ImVec2(125, 85);
-const ImVec2 DEFAULT_DOCKED_MENU_SIZE = ImVec2(160, 245);
-const ImVec2 DEFAULT_UNDOCKED_RUN_SIZE = ImVec2(125, 85);
-const ImVec2 DEFAULT_UNDOCKED_MENU_SIZE = ImVec2(160, 245);
+const ImVec2 DEFAULT_DOCKED_MENU_SIZE = ImVec2(245, 200);
+const ImVec2 DEFAULT_DOCKED_SETTINGS_SIZE = ImVec2(315, 120);
+
+enum class DockableWindowType {
+    Menu,
+    Start,
+    Settings
+};
+
 
 static float LengthSqr(const ImVec2& a, const ImVec2& b) {
     ImVec2 d = ImVec2(a.x - b.x, a.y - b.y);
@@ -71,7 +77,6 @@ public:
     struct DockableWindow {
         DockPosition position = DockPosition::None;
         ImVec2 undockedPos = ImVec2(100, 100);
-        ImVec2 undockedSize = ImVec2(200, 150);
         bool isDocked = false;
     };
 
@@ -80,13 +85,14 @@ private:
     void drawConnections();
     void drawStartButton();
     void drawMenu();
+    void drawMenuBar();
     void drawSettings();
     void zoom();
     void applyCanvasTransform();
 
     // funkcje pomocnicze dla dockingu
-    ImVec2 calculateDockedPosition(DockPosition position, ImVec2 size, bool isStartWindow = false);
-    ImVec2 calculateDockedSize(DockPosition position, bool isStartWindow = false);
+    ImVec2 calculateDockedPosition(DockPosition position, ImVec2 size, DockableWindowType type = DockableWindowType::Menu);
+    ImVec2 calculateDockedSize(DockPosition position, DockableWindowType type = DockableWindowType::Menu);
     DockPosition checkDockPosition(ImVec2 windowPos, ImVec2 windowSize);
 
 
@@ -114,6 +120,7 @@ private:
     // zmienne dla dockingu
     DockableWindow menuWindow;
     DockableWindow startWindow;
+    DockableWindow settingsWindow;
     // odległość od krawędzi do snap'owania
     float dockSnapDistance = 50.0f;
 
@@ -123,6 +130,7 @@ private:
 
     std::string solverName;
     std::string solverPrecison;
+
 
     Model model;
 };
