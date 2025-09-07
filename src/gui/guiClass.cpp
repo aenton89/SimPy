@@ -783,8 +783,8 @@ void guiClass::drawStartButton() {
         ImGui::InputFloat("Simulation Time", &simTime);
 
         // combo odpowiedialne za wybor solver i precyzje obliczen (musisz Antek zrobic templeta do tego bo ja nie umim XD)
-        static int current_solver = 0;
-        const static char* solvers[] = {"RK1", "RK2", "RK4", "RK8", "CN", "GL", "Gear"};
+        static int current_solver = 2;
+        const static char* solvers[] = {"RK1", "RK2", "RK4", "CN", "GL", "Gear"};
 
         static int current_precision = 0;
         const static char* precisions[] = {"int", "float", "double"};
@@ -817,6 +817,16 @@ void guiClass::drawStartButton() {
 
         ImGui::Separator();
 
+        // Mapa do wyboru Solvera
+        std::unordered_map<std::string, std::function<std::shared_ptr<ISolverMethod>()>> solverMap = {
+            {"RK1", [](){ return std::make_shared<RK1Method>(); }},
+            {"RK2", [](){ return std::make_shared<RK2Method>(); }},
+            {"RK4", [](){ return std::make_shared<RK4Method>(); }},
+            {"CN",  [](){ return std::make_shared<RK1Method>(); }},
+            {"GL",  [](){ return std::make_shared<RK1Method>(); }},
+            {"Gear",[](){ return std::make_shared<RK1Method>(); }}
+        };
+
         if (simulationRunning) {
             ImGui::BeginDisabled();
             ImGui::Button("Running...");
@@ -824,7 +834,7 @@ void guiClass::drawStartButton() {
         } else {
             if (ImGui::Button("Run Simulation")) {
                 simulationRunning = true;
-                auto method = std::make_shared<RK4Method>();
+                auto method = solverMap[this->solverName]();
                 SolverManager::initSolver(this->samplingTime, method);
                 // uruchom w osobnym wątku i nie czekaj na niego:
                 std::thread([this]() {

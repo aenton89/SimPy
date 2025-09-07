@@ -20,4 +20,10 @@ public:
     std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt) override;
 };
 
+// RK2
+class RK2Method : public ISolverMethod
+{
+public:
+    std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt) override;
+};
 #endif //SOLVERMETHOD_H

@@ -130,7 +130,7 @@ private:
     float samplingTime = 0.01f;
     float simTime = 10.f;
 
-    std::string solverName;
+    std::string solverName = "RK4";
     std::string solverPrecison;
 
     bool lightMode = false;
