@@ -264,3 +264,14 @@ void Model::cleanupBefore() {
         block->resetBefore();  // resetujemy stan każdego bloku
     }
 }
+
+// Metody dla solvera
+void Model::setSolver(std::shared_ptr<Solver> s) {
+    solver = std::move(s);
+}
+
+void Model::cleanSolver() {
+    solver.reset();
+}
+
+

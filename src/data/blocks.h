@@ -10,6 +10,7 @@
 #include <array>
 #include <random>
 #include "data_sender/data_channel_manager.h"
+#include "math/matrix_operation/matrix_op.h"
 
 // w tym pliku są deklaracje specyficznych bloków (narazie testowe)
 
@@ -98,22 +99,25 @@ public:
 
     TransferFuncionContinous(int _id);
 
-    struct StateSpace {
-        std::vector<std::vector<double>> A;
-        std::vector<double> B;
-        std::vector<double> C;
-        double D;
-    };
-
     void process() override;
     void drawMenu() override;
     void drawContent() override;
     void resetBefore() override;
     std::vector<float> stringToVector(const std::string& s);
-    StateSpace tf2ss(std::vector<float> numerator, std::vector<float> denominator);
+    MatOp::StateSpace tf2ss(std::vector<float> numerator, std::vector<float> denominator);
 private:
     bool run_tf2ss;
-    StateSpace ss;
+    MatOp::StateSpace ss;
+};
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------
+// blok kwadratu sygnalu wejsciwoego
+class squaredBlock : public Block {
+public:
+    squaredBlock(int id_);
+    void process() override;
+    void drawContent() override;
 };
 
 
@@ -125,6 +129,9 @@ public:
     sqrtBlock(int id_);
     void process() override;
     void drawContent() override;
+    void drawMenu() override;
+
+    std::string mode = "absolut value";
 };
 
 

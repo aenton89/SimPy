@@ -22,6 +22,13 @@ add_executable(patrykcpp
         src/data/structures.cpp
         src/data/data_sender/data_channel_manager.cpp
         resources.rc
+        src/data/math/matrix_operation/matrix_op.h
+        src/data/math/matrix_operation/matrix_op.cpp
+        src/data/math/solvers/solver.h
+        src/data/math/solvers/ISolverMethod.h
+        src/data/math/solvers/solverMethod.h
+        src/data/math/solvers/solverMethod.cpp
+        src/data/math/solvers/solverManager.h
 )
 
 target_compile_definitions(patrykcpp PRIVATE

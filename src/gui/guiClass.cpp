@@ -9,7 +9,7 @@
 #include "GLFW/glfw3.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
+#include "math/solvers/solverMethod.h"
 
 
 // initialization of evertything regarding ImGui
@@ -661,6 +661,8 @@ void guiClass::drawMenu() {
                 model.getBlocks().push_back(std::make_unique<TrigonometricFunctionBlock>(next_id++));
             if (ImGui::Button("Add Sqrt Box"))
                 model.getBlocks().push_back(std::make_unique<sqrtBlock>(next_id++));
+            if (ImGui::Button("Add Squered Box"))
+                model.getBlocks().push_back(std::make_unique<squaredBlock>(next_id++));
         }
 
         // modul contorl
@@ -822,6 +824,8 @@ void guiClass::drawStartButton() {
         } else {
             if (ImGui::Button("Run Simulation")) {
                 simulationRunning = true;
+                auto method = std::make_shared<RK4Method>();
+                SolverManager::initSolver(this->samplingTime, method);
                 // uruchom w osobnym wątku i nie czekaj na niego:
                 std::thread([this]() {
                     for (auto& b: model.getBlocks()) {
@@ -838,6 +842,7 @@ void guiClass::drawStartButton() {
                         model.simulate();
                     }
                     model.cleanupAfter();
+                    model.cleanSolver();
                     //model.getBlocks().clear();
                     simulationRunning = false;
                 }).detach();

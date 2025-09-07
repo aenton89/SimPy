@@ -1,0 +1,18 @@
+//
+// Created by patryk on 07.09.25.
+//
+
+#ifndef BASESOLVER_H
+#define BASESOLVER_H
+
+#include <vector>
+#include <math/matrix_operation/matrix_op.h>
+
+class ISolverMethod {
+public:
+    virtual ~ISolverMethod() = default;
+    virtual std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt)  = 0;
+};
+
+
+#endif //BASESOLVER_H

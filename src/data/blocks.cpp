@@ -155,18 +155,57 @@ void IntegratorBlock::drawMenu() {
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 // blok pierwsikaonia
-sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, false) {
+sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, true)
+{
     size = ImVec2(150, 80);
 }
 
-void sqrtBlock::process() {
-    outputValues[0] = std::sqrt(inputValues[0]);
+void sqrtBlock::process()
+{
+    if (mode == "absolut value")
+        outputValues[0] = std::sqrt(std::abs(inputValues[0]));
+    else if (mode == "equal 0")
+    {
+        if (inputValues[0] < 0.0)
+            inputValues[0] = 0.0;
+        outputValues[0] = std::sqrt(inputValues[0]);
+    }
+    // TODO Trzeba dorobic takz zeby prznosl sie wartosc rzeczywista i zeoslona i zeby te wartsoci byly np ploktowane na wykresie jako dwie ine wykresy
+    else if (mode == "complex value")
+    {
+
+    }
 }
 
-void sqrtBlock::drawContent() {
+void sqrtBlock::drawContent()
+{
     ImGui::Text("Sqrt");
+    Block::drawContent();
 }
 
+void sqrtBlock::drawMenu()
+{
+    const static char* sqrt_mode[] = {"absolut value", "equal 0", "complex value"};
+    static int current_selected = 0;
+
+    if (ImGui::BeginCombo("Sqrt mode", sqrt_mode[current_selected]))
+    {
+        for (int i = 0; i < IM_ARRAYSIZE(sqrt_mode); i++)
+        {
+            bool is_selected = (current_selected == i);
+            if (ImGui::Selectable(sqrt_mode[i], is_selected))
+            {
+                current_selected = i;
+                this->mode = sqrt_mode[i];
+            }
+            if (is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+}
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -612,14 +651,48 @@ std::vector<float> TransferFuncionContinous::stringToVector(const std::string& s
     return result;
 }
 
-TransferFuncionContinous::StateSpace TransferFuncionContinous::tf2ss(std::vector<float> numerator, std::vector<float> denominator) {
+
+void printStateSpace(const MatOp::StateSpace& ss) {
+    std::cout << "A:\n";
+    for (const auto& row : ss.A) {
+        for (double v : row) std::cout << v << " ";
+        std::cout << "\n";
+    }
+
+    std::cout << "B:\n";
+    for (const auto& row : ss.B) {
+        for (double v : row) std::cout << v << " ";
+        std::cout << "\n";
+    }
+
+    std::cout << "C:\n";
+    for (const auto& row : ss.C) {
+        for (double v : row) std::cout << v << " ";
+        std::cout << "\n";
+    }
+
+    std::cout << "D:\n";
+    for (const auto& row : ss.D) {
+        for (double v : row) std::cout << v << " ";
+        std::cout << "\n";
+    }
+
+    std::cout << "x (stan początkowy): ";
+    for (double v : ss.x) std::cout << v << " ";
+    std::cout << "\n";
+}
+
+MatOp::StateSpace TransferFuncionContinous::tf2ss(std::vector<float> numerator, std::vector<float> denominator) {
+
     if (denominator.empty()) {
         throw std::invalid_argument("Mianownik nie może być pusty.");
     }
 
+    // konwersja float -> double
     std::vector<double> num(numerator.begin(), numerator.end());
     std::vector<double> den(denominator.begin(), denominator.end());
 
+    // usunięcie zer wiodących
     while (!num.empty() && std::fabs(num.front()) < 1e-12) num.erase(num.begin());
     while (!den.empty() && std::fabs(den.front()) < 1e-12) den.erase(den.begin());
 
@@ -629,13 +702,14 @@ TransferFuncionContinous::StateSpace TransferFuncionContinous::tf2ss(std::vector
 
     int deg_num = (int)num.size() - 1;
     int deg_den = (int)den.size() - 1;
+    int n = deg_den;
 
+    // normalizacja do wiodącego 1 w mianowniku
     double lead = den[0];
     for (auto &v : den) v /= lead;
     for (auto &v : num) v /= lead;
 
-    int n = deg_den;
-
+    // wyzerowanie wektora num do długości n+1
     std::vector<double> num_padded(n+1, 0.0);
     for (int i = 0; i < (int)num.size(); i++) {
         num_padded[n+1 - num.size() + i] = num[i];
@@ -650,6 +724,7 @@ TransferFuncionContinous::StateSpace TransferFuncionContinous::tf2ss(std::vector
         cvec[i] = num_padded[i+1] - a[i] * Dval;
     }
 
+    // macierz A (n x n)
     std::vector<std::vector<double>> A(n, std::vector<double>(n, 0.0));
     for (int i = 0; i < n-1; i++) {
         A[i][i+1] = 1.0;
@@ -658,17 +733,28 @@ TransferFuncionContinous::StateSpace TransferFuncionContinous::tf2ss(std::vector
         A[n-1][j] = -a[n-1-j];
     }
 
-    std::vector<double> B(n, 0.0);
-    B[n-1] = 1.0;
+    // macierz B (n x 1)
+    std::vector<std::vector<double>> B(n, std::vector<double>(1, 0.0));
+    B[n-1][0] = 1.0;
 
-    std::vector<double> C(n, 0.0);
+    // macierz C (1 x n)
+    std::vector<std::vector<double>> C(1, std::vector<double>(n, 0.0));
     for (int i = 0; i < n; i++) {
-        C[i] = cvec[n-1-i];
+        C[0][i] = cvec[n-1-i];
     }
 
-    TransferFuncionContinous::StateSpace ss{A, B, C, Dval};
+    // macierz D (1 x 1)
+    std::vector<std::vector<double>> D(1, std::vector<double>(1, Dval));
+
+    // wektor stanu x (n x 1), inicjalizacja zerami
+    std::vector<double> x(n, 0.0);
+
+    MatOp::StateSpace ss{A, B, C, D, x};
+
+    printStateSpace(ss);
     return ss;
 }
+
 
 // zapsianie wetora do postaci wielomainu
 std::string polyToString(std::vector<float>& coeffs) {
@@ -720,24 +806,6 @@ void TransferFuncionContinous::drawContent() {
         ss = TransferFuncionContinous::tf2ss(this->numerator, this->denominator);
         this->run_tf2ss = false;
 
-        std::cout << "A matrix:\n";
-        for (auto& row : ss.A) {
-            for (auto val : row)
-                std::cout << val << " ";
-            std::cout << "\n";
-        }
-
-        std::cout << "B vector:\n";
-        for (auto val : ss.B)
-            std::cout << val << " ";
-        std::cout << "\n";
-
-        std::cout << "C vector:\n";
-        for (auto val : ss.C)
-            std::cout << val << " ";
-        std::cout << "\n";
-
-        std::cout << "D: " << ss.D << "\n";
     }
     Block::drawContent();
 }
@@ -758,76 +826,44 @@ void TransferFuncionContinous::drawMenu() {
     this->run_tf2ss = true;
 }
 
-// funkcja mnożenia macierzy przez wektor
-std::vector<double> matVecMul(const std::vector<std::vector<double>>& M, const std::vector<double>& v) {
-    std::vector<double> result(M.size(), 0.0);
-    for (size_t i = 0; i < M.size(); i++) {
-        for (size_t j = 0; j < v.size(); j++) {
-            result[i] += M[i][j] * v[j];
-        }
-    }
-    return result;
-}
-
-// dodawanie dwóch wektorów
-std::vector<double> vecAdd(const std::vector<double>& v1, const std::vector<double>& v2) {
-    std::vector<double> result(v1.size());
-    for (size_t i = 0; i < v1.size(); i++) {
-        result[i] = v1[i] + v2[i];
-    }
-    return result;
-}
-
-// mnożenie wektora przez skalar
-std::vector<double> scalarVecMul(double s, const std::vector<double>& v) {
-    std::vector<double> result(v.size());
-    for (size_t i = 0; i < v.size(); i++) {
-        result[i] = s * v[i];
-    }
-    return result;
-}
-
 void TransferFuncionContinous::process() {
-    if (state.empty()) {
-        state.resize(ss.A.size(), 0.0);
-    }
+    // 1. pobierz globalny solver
+    auto solver = SolverManager::solver();
+    if (!solver) return;
 
-    // dx/dt = A*x + B*u
-    std::vector<double> Ax = matVecMul(ss.A, state);     // A*x
-    std::vector<double> Bu = scalarVecMul(inputValues[0], ss.B); // B*u
-    std::vector<double> dx = vecAdd(Ax, Bu);
+    std::vector<double> uvec = { inputValues[0] };
+    solver->step(ss, uvec);
 
-    // Euler
-    for (size_t i = 0; i < state.size(); i++) {
-        state[i] += dx[i] * timeStep;
-    }
-
-    // y = C*x + D*u
-    double y = 0.0;
-    for (size_t i = 0; i < state.size(); i++) {
-        y += ss.C[i] * state[i];
-    }
-    y += ss.D * inputValues[0];
-
+    std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
+    double y = yvec[0] + ss.D[0][0] * inputValues[0];
     outputValues[0] = y;
-
-    // debug
-    std::cout << "state: ";
-    for (auto s : state)
-        std::cout << s << " ";
-    std::cout << "\noutput: " << y << std::endl;
 }
+
+
 
 void TransferFuncionContinous::resetBefore() {
     for (int i = 0; i < outputValues.size(); i++) {
         outputValues[i] = 0.0;
     }
-    for (int i = 0; i < state.size(); i++) {
-        state[i] = 0.0;
-    }
+    std::fill(ss.x.begin(), ss.x.end(), 0.0);
 }
 
+// -------------------------------------------------------------------------------------------------------------------------------------------
+// kwadrat liczby
+squaredBlock::squaredBlock(int id_) : Block(id_, 1, 1, false)
+{
+    size = ImVec2(200, 120);
+}
 
+void squaredBlock::process()
+{
+    outputValues[0] = std::pow(inputValues[0], 2);
+}
+
+void squaredBlock::drawContent()
+{
+    ImGui::Text("Squared");
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // tranformacja pkt na jego wartosc funkji trygonometrycznej

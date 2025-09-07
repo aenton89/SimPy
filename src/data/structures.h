@@ -11,6 +11,7 @@
 #include <iostream>
 #include <cmath>
 #include <imgui.h>
+#include "math/solvers/solverManager.h"
 
 
 /* klasa z której dziedziczą wszystkie bloki, odpowiada za:
@@ -122,6 +123,9 @@ private:
     // znalezienie indeksu bloku
     int getBlockIndex(Block* block) const;
 
+    // solver dla modelu
+    std::shared_ptr<Solver> solver;
+
 public:
     // dodanie bloku do modelu
     template<typename BlockType, typename... Args>
@@ -160,6 +164,11 @@ public:
     // dodawanie i usuwanie bloków
     void addBlock(std::unique_ptr<Block> block);
     void removeBlock(int removeId);
+
+    // inplentacja solvera dla symulacji
+    void setSolver(std::shared_ptr<Solver> solver);
+    void cleanSolver();
+
 };
 
 
