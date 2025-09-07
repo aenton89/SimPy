@@ -1106,76 +1106,67 @@ void logicNORBlock::drawMenu() {
     }
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // python block
-pythonBlock::pythonBlock(int _id) : Block(_id, 1, 1, true)
-{
+pythonBlock::pythonBlock(int _id) : Block(_id, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
-void pythonBlock::process()
-{
-    // tu trzeba dodab ten bytcode ale to poniej jak sie zainsluje pybinda
+// tu trzeba dodac ten bytcode ale to poniej jak sie zainstaluje pybinda
+void pythonBlock::process() {
     outputValues[0] = inputValues[0];
 }
 
-void pythonBlock::drawContent()
-{
+void pythonBlock::drawContent() {
     ImGui::Text("Python Block");
     Block::drawContent();
 }
 
-void pythonBlock::drawMenu()
-{
-    if (ImGui::InputInt("Number of inputs", &numInputs))
-    {
-        // TODO tu jescze ma sie zmainac wewntrzna funjja ze wzgledu an inplentacje
+void pythonBlock::drawMenu() {
+    // TODO: tu jescze ma sie zmainac wewntrzna funjja ze wzgledu an inplentacje
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
         inputValues.resize(numInputs);
     }
     ImGui::SameLine();
-    if (ImGui::InputInt("Number of outputs", &numOutputs))
-    {
+    if (ImGui::InputInt("Number of outputs", &numOutputs)) {
         outputValues.resize(numOutputs);
     }
 
     ImGui::InputTextMultiline("Python Code", this->pythonCode, IM_ARRAYSIZE(this->pythonCode), ImVec2(400, 240));
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // cpp block
-cppBlock::cppBlock(int _id) : Block(_id, 1, 1, true)
-{
+cppBlock::cppBlock(int _id) : Block(_id, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
-void cppBlock::process()
-{
-    // tu trzeba dodab ten bytcode ale to poniej jak sie zainsluje pybinda
+// tu trzeba dodac ten bytcode ale to poniej jak sie zainstaluje pybinda
+void cppBlock::process() {
     outputValues[0] = inputValues[0];
 }
 
-void cppBlock::drawContent()
-{
+void cppBlock::drawContent() {
     ImGui::Text("Python Block");
     Block::drawContent();
 }
 
-void cppBlock::drawMenu()
-{
-    if (ImGui::InputInt("Number of inputs", &numInputs))
-    {
-        // TODO tu jescze ma sie zmainac wewntrzna funjja ze wzgledu an inplentacje
+void cppBlock::drawMenu() {
+    // TODO: tu jescze ma sie zmienic wewnetrzna funkcja ze wzgledu an implementacje
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
         inputValues.resize(numInputs);
     }
     ImGui::SameLine();
-    if (ImGui::InputInt("Number of outputs", &numOutputs))
-    {
+    if (ImGui::InputInt("Number of outputs", &numOutputs)) {
         outputValues.resize(numOutputs);
     }
 
     ImGui::InputTextMultiline("Cpp Code", this->cppCode, IM_ARRAYSIZE(this->cppCode), ImVec2(400, 240));
 }
-
 
 
 
