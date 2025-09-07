@@ -19,15 +19,14 @@
 
 
 
-const ImVec2 DEFAULT_DOCKED_RUN_SIZE = ImVec2(125, 85);
+const ImVec2 DEFAULT_DOCKED_START_SIZE = ImVec2(195, 180);
 const ImVec2 DEFAULT_DOCKED_MENU_SIZE = ImVec2(245, 200);
-const ImVec2 DEFAULT_DOCKED_SETTINGS_SIZE = ImVec2(315, 120);
 
-enum class DockableWindowType {
+enum DockableWindowType {
     Menu,
-    Start,
-    Settings
+    Start
 };
+
 
 
 static float LengthSqr(const ImVec2& a, const ImVec2& b) {
@@ -77,6 +76,7 @@ public:
     struct DockableWindow {
         DockPosition position = DockPosition::None;
         ImVec2 undockedPos = ImVec2(100, 100);
+        ImVec2 dockedPos = ImVec2(100, 100);
         bool isDocked = false;
     };
 
@@ -86,13 +86,12 @@ private:
     void drawStartButton();
     void drawMenu();
     void drawMenuBar();
-    void drawSettings();
     void zoom();
     void applyCanvasTransform();
 
     // funkcje pomocnicze dla dockingu
-    ImVec2 calculateDockedPosition(DockPosition position, ImVec2 size, DockableWindowType type = DockableWindowType::Menu);
-    ImVec2 calculateDockedSize(DockPosition position, DockableWindowType type = DockableWindowType::Menu);
+    ImVec2 calculateDockedPosition(DockPosition position, DockableWindowType windowType);
+    ImVec2 calculateDockedSize(DockPosition position, DockableWindowType windowType);
     DockPosition checkDockPosition(ImVec2 windowPos, ImVec2 windowSize);
 
 
@@ -121,6 +120,7 @@ private:
     DockableWindow menuWindow;
     DockableWindow startWindow;
     DockableWindow settingsWindow;
+    std::vector<DockableWindow> dockedWindows;
     // odległość od krawędzi do snap'owania
     float dockSnapDistance = 50.0f;
 
