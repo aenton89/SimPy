@@ -335,8 +335,7 @@ public:
 };
 
 // bloki zwazane z inpelntacja kodu pythona i cpp w symualaci. Rozwazam uzycie pybinda
-class pythonBlock : public Block
-{
+class pythonBlock : public Block {
 public:
     pythonBlock(int _id);
     void process() override;
@@ -349,8 +348,7 @@ private:
                            "   return num \n";
 };
 
-class cppBlock : public Block
-{
+class cppBlock : public Block {
 public:
     cppBlock(int _id);
     void process() override;
