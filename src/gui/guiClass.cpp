@@ -251,9 +251,8 @@ void guiClass::drawGrid() {
 void guiClass::noLightMode() {
     if (lightMode) {
         if (ImGui::Begin("the WHAT mode!?", nullptr, ImGuiWindowFlags_NoResize)) {
-            if (ImGui::IsWindowAppearing()) {
+            if (ImGui::IsWindowAppearing())
                 ImGui::SetWindowSize(ImVec2(200, 100));
-            }
 
             float windowWidth = ImGui::GetWindowSize().x;
 
