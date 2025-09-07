@@ -86,6 +86,8 @@ private:
     void drawStartButton();
     void drawMenu();
     void drawMenuBar();
+    void drawGrid();
+    void noLightMode();
     void zoom();
     void applyCanvasTransform();
 
@@ -130,6 +132,14 @@ private:
 
     std::string solverName;
     std::string solverPrecison;
+
+    bool lightMode = false;
+
+    // grid settings
+    bool gridEnabled = true;
+    float gridSpacing = 50.0f;
+    float gridThickness = 1.0f;
+    ImU32 gridColor = IM_COL32(0, 0, 0, 100);
 
 
     Model model;

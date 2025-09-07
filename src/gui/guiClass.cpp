@@ -60,7 +60,7 @@ void guiClass::update() {
     drawMenu();
     drawStartButton();
     drawMenuBar();
-
+    noLightMode();
 
     // Reszta kodu pozostaje bez zmian
     for (auto& box : model.getBlocks()) {
@@ -93,6 +93,9 @@ void guiClass::update() {
         [](const std::unique_ptr<Block>& box) {
             return !box->open;
         }), model.getBlocks().end());
+
+    // MAMMA MIA last time i forgor about de grid
+    drawGrid();
 }
 
 // funkcja pomocnicza do obliczania pozycji zadockowanego okna
@@ -167,6 +170,113 @@ guiClass::DockPosition guiClass::checkDockPosition(ImVec2 windowPos, ImVec2 wind
 
     return DockPosition::None;
 }
+
+void guiClass::drawGrid() {
+    if (!gridEnabled)
+        return;
+
+    ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
+    ImGuiIO& io = ImGui::GetIO();
+    ImVec2 canvas_pos = ImVec2(0, 20);
+    ImVec2 canvas_size = ImVec2(io.DisplaySize.x, io.DisplaySize.y - 20);
+
+    // calculate world space bounds visible on screen
+    ImVec2 world_min = ImVec2(
+        (canvas_pos.x - viewOffset.x) / zoomAmount,
+        (canvas_pos.y - viewOffset.y) / zoomAmount
+    );
+    ImVec2 world_max = ImVec2(
+        (canvas_pos.x + canvas_size.x - viewOffset.x) / zoomAmount,
+        (canvas_pos.y + canvas_size.y - viewOffset.y) / zoomAmount
+    );
+
+    // use fixed grid spacing in world coordinates (like Blender [yupii blender mentioned])
+    float world_spacing = gridSpacing;
+
+    // calculate grid start positions
+    float start_x = floor(world_min.x / world_spacing) * world_spacing;
+    float start_y = floor(world_min.y / world_spacing) * world_spacing;
+
+    // make grid lines fade out when too close or far
+    float screen_spacing = world_spacing * zoomAmount;
+    float alpha_factor = 1.0f;
+
+    // fade out when too dense
+    if (screen_spacing < 10.0f) {
+        alpha_factor = screen_spacing / 10.0f;
+    }
+    // fade out when too far
+    else if (screen_spacing > 200.0f) {
+        alpha_factor = 200.0f / screen_spacing;
+    }
+
+    // apply alpha to grid color
+    ImU32 faded_color = (gridColor & 0x00FFFFFF) | ((int)(((gridColor >> 24) & 0xFF) * alpha_factor) << 24);
+
+    // skip drawing if too faded
+    if (alpha_factor < 0.1f)
+        return;
+
+    // vertical lines
+    for (float x = start_x; x <= world_max.x + world_spacing; x += world_spacing) {
+        float screen_x = x * zoomAmount + viewOffset.x;
+
+        if (screen_x < canvas_pos.x - 1 || screen_x > canvas_pos.x + canvas_size.x + 1)
+            continue;
+
+        draw_list->AddLine(
+            ImVec2(screen_x, canvas_pos.y),
+            ImVec2(screen_x, canvas_pos.y + canvas_size.y),
+            faded_color,
+            gridThickness
+        );
+    }
+
+    // horizontal lines
+    for (float y = start_y; y <= world_max.y + world_spacing; y += world_spacing) {
+        float screen_y = y * zoomAmount + viewOffset.y;
+
+        if (screen_y < canvas_pos.y - 1 || screen_y > canvas_pos.y + canvas_size.y + 1)
+            continue;
+
+        draw_list->AddLine(
+            ImVec2(canvas_pos.x, screen_y),
+            ImVec2(canvas_pos.x + canvas_size.x, screen_y),
+            faded_color,
+            gridThickness
+        );
+    }
+}
+
+void guiClass::noLightMode() {
+    if (lightMode) {
+        if (ImGui::Begin("the WHAT mode!?", nullptr, ImGuiWindowFlags_NoResize)) {
+            if (ImGui::IsWindowAppearing()) {
+                ImGui::SetWindowSize(ImVec2(200, 100));
+            }
+
+            float windowWidth = ImGui::GetWindowSize().x;
+
+            const char* title = "bitch PLEASE";
+            ImVec2 textSize = ImGui::CalcTextSize(title);
+            ImGui::SetCursorPosX((windowWidth - textSize.x) * 0.5f);
+            ImGui::Text("%s", title);
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            const char* label = "Light Mode";
+            ImVec2 checkSize = ImGui::CalcTextSize(label);
+            ImGui::SetCursorPosX((windowWidth - checkSize.x - ImGui::GetFrameHeight()) * 0.5f);
+            ImGui::Checkbox(label, &lightMode);
+
+            ImGui::End();
+        }
+    }
+}
+
+
 
 
 void guiClass::zoom() {
@@ -658,11 +768,21 @@ void guiClass::drawMenuBar() {
         }
 
         if (ImGui::BeginMenu("Settings")) {
-            static bool darkMode = true;
-            static bool gridEnabled = false;
-
-            ImGui::MenuItem("Dark mode", "", &darkMode);
+            ImGui::MenuItem("Light mode", "", &lightMode);
             ImGui::MenuItem("Show grid", "", &gridEnabled);
+
+            if (ImGui::BeginMenu("Grid Settings")) {
+                ImGui::SliderFloat("Grid Spacing", &gridSpacing, 10.0f, 200.0f);
+                ImGui::SliderFloat("Line Thickness", &gridThickness, 0.5f, 5.0f);
+
+                // color picker for grid
+                ImVec4 grid_color = ImGui::ColorConvertU32ToFloat4(gridColor);
+                if (ImGui::ColorEdit4("Grid Color", (float*)&grid_color, ImGuiColorEditFlags_AlphaPreview)) {
+                    gridColor = ImGui::ColorConvertFloat4ToU32(grid_color);
+                }
+
+                ImGui::EndMenu();
+            }
 
             ImGui::EndMenu();
         }
@@ -926,6 +1046,7 @@ void guiClass::drawStartButton() {
     }
     ImGui::End();
 }
+
 
 void guiClass::render() {
     ImGui::Render();
