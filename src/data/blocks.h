@@ -334,6 +334,34 @@ public:
     int getSendCounter() const;
 };
 
+// bloki zwazane z inpelntacja kodu pythona i cpp w symualaci. Rozwazam uzycie pybinda
+class pythonBlock : public Block
+{
+public:
+    pythonBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+
+private:
+    char pythonCode[512] = "def add(a, b): \n"
+                           "   num = a + b \n"
+                           "   return num \n";
+};
+
+class cppBlock : public Block
+{
+public:
+    cppBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+private:
+    char cppCode[512] = "int add(int a, int b) { \n"
+                        "   int num = a + b; \n"
+                        "   return num; }; \n";
+};
+
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------

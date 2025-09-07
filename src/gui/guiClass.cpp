@@ -698,6 +698,13 @@ void guiClass::drawMenu() {
             if (ImGui::Button("Add Plot XY Box"))
                 model.getBlocks().push_back(std::make_unique<PLotXYBlock>(next_id++));
         }
+        if (ImGui::CollapsingHeader("Code Box"))
+        {
+            if (ImGui::Button("Add Python Box"))
+                model.getBlocks().push_back(std::make_unique<pythonBlock>(next_id++));
+            if (ImGui::Button("Add Cpp Box"))
+                model.getBlocks().push_back(std::make_unique<cppBlock>(next_id++));
+        }
 
         // Bloki logicvzne (sprawdzenie czy akhualnia strutra sie do tego nadaje)
         if (ImGui::CollapsingHeader("Logick")) {
