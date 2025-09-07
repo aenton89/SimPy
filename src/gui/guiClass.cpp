@@ -339,73 +339,6 @@ void guiClass::applyCanvasTransform() {
     draw_list->_VtxCurrentIdx = 0;
 }
 
-// void guiClass::drawBox(Block& box) {
-//     std::string title = "Box #" + std::to_string(box.id);
-//     ImGui::SetNextWindowPos(box.position, ImGuiCond_Once);
-//     ImGui::SetNextWindowSize(ImVec2(box.size.x, box.size.y), ImGuiCond_Once);
-//
-//     bool is_hovered = false;
-//
-//     if (!ImGui::Begin(title.c_str(), &box.open)) {
-//         ImGui::End();
-//         return;
-//     }
-//
-//     box.drawContent();
-//
-//     // znak + po lewej stronie box'a
-//     // pozycję i rozmiar okna boxa
-//     ImVec2 windowPos = ImGui::GetWindowPos();
-//     ImVec2 windowSize = ImGui::GetWindowSize();
-//
-//     // TODO: wziąć w pętle w zależności od ilości outputów
-//     // środek po prawej krawędzi
-//     ImVec2 center = ImVec2(windowPos.x + windowSize.x - 15, windowPos.y + windowSize.y * 0.5f);
-//
-//     // kursor do InvisibleButton tak, żeby kółko dało się kliknąć
-//     ImGui::SetCursorScreenPos(ImVec2(center.x - 10, center.y - 10));
-//     ImGui::InvisibleButton(("##link" + std::to_string(box.id)).c_str(), ImVec2(20, 20));
-//
-//     bool isHovered = ImGui::IsItemHovered();
-//     bool isClicked = ImGui::IsItemClicked();
-//
-//     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-//
-//     // kolor przycisku w zależności od stanu
-//     if (box.getNumOutputs() > 0) {
-//         ImU32 buttonColor = isClicked ? IM_COL32(255, 0, 0, 255) : (isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(200, 200, 0, 255));
-//         draw_list->AddCircleFilled(center, 8.0f, buttonColor);
-//         draw_list->AddText(ImVec2(center.x - 4, center.y - 7), IM_COL32(0, 0, 0, 255), "+");
-//     }
-//     // TODO: aż do tąd pętle
-//
-//
-//     // zaczynamy przeciąganie
-//     if (isClicked && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-//         if (box.getNumOutputs() > 0)
-//             dragging_from = box.id;
-//     }
-//
-//     // zaczynamy przeciąganie
-//     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-//         if (box.getNumOutputs() > 0)
-//             dragging_from = box.id;
-//     }
-//
-//     // zbieramy pozycję i czy box jest pod myszą
-//     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
-//         is_hovered = true;
-//     }
-//
-//     box.position = ImGui::GetWindowPos();
-//
-//     // naprawa linii po resize'ie
-//     box.size = ImGui::GetWindowSize();
-//
-//     ImGui::End();
-// }
-
-// TODO: przenieść komentarze w wolnej chwili
 void guiClass::drawBox(Block& box) {
     std::string title = "Box #" + std::to_string(box.id);
 
@@ -471,10 +404,11 @@ void guiClass::drawBox(Block& box) {
         draggedWindowId = -1;
     }
 
-    // punkt połączenia (output)
-    ImVec2 center = ImVec2(current_screen_pos.x + current_screen_size.x - 15,
-                          current_screen_pos.y + current_screen_size.y * 0.5f);
+    // punkt połączenia (output) - znaczek "+"
+    // TODO: wziąć w pętle w zależności od ilości outputów
+    ImVec2 center = ImVec2(current_screen_pos.x + current_screen_size.x - 15, current_screen_pos.y + current_screen_size.y * 0.5f);
 
+    // kursor do InvisibleButton tak, żeby kółko dało się kliknąć
     ImGui::SetCursorScreenPos(ImVec2(center.x - 10, center.y - 10));
     ImGui::InvisibleButton(("##link" + std::to_string(box.id)).c_str(), ImVec2(20, 20));
 
@@ -483,11 +417,13 @@ void guiClass::drawBox(Block& box) {
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
+    // kolor przycisku w zależności od stanu
     if (box.getNumOutputs() > 0) {
         ImU32 buttonColor = isClicked ? IM_COL32(255, 0, 0, 255) : (isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(200, 200, 0, 255));
         draw_list->AddCircleFilled(center, 8.0f, buttonColor);
         draw_list->AddText(ImVec2(center.x - 4, center.y - 7), IM_COL32(0, 0, 0, 255), "+");
     }
+    // TODO: aż do tąd pętle
 
     // obsługa przeciągania połączeń - tylko gdy nie przeciągamy okna
     if (!isDraggingWindow || draggedWindowId != box.id) {
@@ -517,110 +453,6 @@ void guiClass::drawBox(Block& box) {
     ImGui::End();
 }
 
-// void guiClass::drawConnections() {
-//     ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
-//     ImVec2 mousePos = ImGui::GetMousePos();
-//
-//     for (auto& box : model.getBlocks()) {
-//         for (auto it = box->connections.begin(); it != box->connections.end();) {
-//             // Szukamy boxa docelowego (target)
-//             auto targetIt = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b) { return b->id == *it; });
-//             if (targetIt != model.getBlocks().end()) {
-//                 // naprawa linii po resize'ie
-//                 ImVec2 p1 = (*targetIt)->position;
-//                 ImVec2 size1 = (*targetIt)->size;
-//                 ImVec2 p2 = box->position;
-//                 ImVec2 size2 = box->size;
-//
-//                 // target: prawa krawędź, środek pionowo
-//                 p1.x += size1.x;
-//                 p1.y += size1.y * 0.5f;
-//                 // source: lewa krawędź, środek pionowo
-//                 p2.x += 0;
-//                 p2.y += size2.y * 0.5f;
-//
-//
-//                 // sprawdzamy "hoverowanie"
-//                 const float detect_radius = 10.0f;
-//                 bool hovered = false;
-//
-//                 // sample line geometry in 20 steps and check distance to mouse
-//                 for (int step = 0; step <= 20; ++step) {
-//                     float t = step / 20.0f;
-//                     ImVec2 pt = BezierCubicCalc(p1, ImVec2(p1.x + 50, p1.y), ImVec2(p2.x - 50, p2.y), p2, t);
-//                     if (LengthSqr(pt, mousePos) < detect_radius * detect_radius) {
-//                         hovered = true;
-//                         break;
-//                     }
-//                 }
-//
-//                 // kolor w zależności od "hoverowania"
-//                 ImU32 color = hovered ? IM_COL32(255, 100, 100, 255) : IM_COL32(255, 255, 0, 255);
-//                 float thickness = hovered ? 5.0f : 3.0f;
-//
-//                 // rysowanie krzywej
-//                 draw_list->AddBezierCubic(
-//                     p1,
-//                     ImVec2(p1.x + 50, p1.y),
-//                     ImVec2(p2.x - 50, p2.y),
-//                     p2,
-//                     color,
-//                     thickness
-//                 );
-//
-//                 // kliknięcie PPM = rozłączenie
-//                 if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-//                     it = box->connections.erase(it);
-//                     // nie inkrementujemy
-//                     continue;
-//                 }
-//             }
-//             ++it;
-//         }
-//     }
-//
-//     // rysowanie dynamicznej linki (w trakcie przeciągania)
-//     if (dragging_from) {
-//         auto it = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b) { return b->id == *dragging_from; });
-//         if (it != model.getBlocks().end()) {
-//             // P1 to początek (box źródłowy)
-//             ImVec2 p1 = (*it)->position;
-//
-//             // naprawa linii po resize'ie
-//             ImVec2 size = (*it)->size;
-//             p1.x += size.x; p1.y += size.y * 0.5f;
-//
-//             // P2 to koniec (mysz)
-//             ImVec2 p2 = ImGui::GetMousePos();
-//             draw_list->AddBezierCubic(p1, ImVec2(p1.x + 50, p1.y), ImVec2(p2.x - 50, p2.y), p2, IM_COL32(255, 255, 0, 100), 2.0f);
-//         }
-//     }
-//
-//     // próbujemy zakończyć przeciąganie – jeśli mysz została puszczona
-//     if (dragging_from && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-//         ImVec2 mousePos = ImGui::GetMousePos();
-//         bool connected = false;
-//
-//         for (auto& box : model.getBlocks()) {
-//             ImVec2 boxMin = box->position;
-//             ImVec2 boxMax = ImVec2(boxMin.x + 300, boxMin.y + 120);
-//
-//             if (mousePos.x >= boxMin.x && mousePos.x <= boxMax.x && mousePos.y >= boxMin.y && mousePos.y <= boxMax.y) {
-//                 // zmieniamy kierunek połączenia
-//                 if (box->id != *dragging_from) {
-//                     if (box->getNumInputs() > 0)
-//                         box->connections.push_back(*dragging_from);
-//                 }
-//                 connected = true;
-//                 break;
-//             }
-//         }
-//
-//         dragging_from = std::nullopt;
-//     }
-// }
-
-// TODO: przenieść komentarze
 void guiClass::drawConnections() {
     // dodaj tę linię na początku
     ImGuiIO& io = ImGui::GetIO();
@@ -629,6 +461,7 @@ void guiClass::drawConnections() {
 
     for (auto& box : model.getBlocks()) {
         for (auto it = box->connections.begin(); it != box->connections.end();) {
+            // Szukamy boxa docelowego (target)
             auto targetIt = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b) { return b->id == *it; });
             if (targetIt != model.getBlocks().end()) {
                 // oblicz pozycje w przestrzeni ekranu (po transformacji)
@@ -658,6 +491,7 @@ void guiClass::drawConnections() {
                 const float detect_radius = 10.0f * zoomAmount;
                 bool hovered = false;
 
+                // sample line geometry in 20 steps and check distance to mouse
                 for (int step = 0; step <= 20; ++step) {
                     float t = step / 20.0f;
                     ImVec2 pt = BezierCubicCalc(p1, ImVec2(p1.x + 50 * zoomAmount, p1.y), ImVec2(p2.x - 50 * zoomAmount, p2.y), p2, t);
@@ -671,6 +505,7 @@ void guiClass::drawConnections() {
                 ImU32 color = hovered ? IM_COL32(255, 100, 100, 255) : IM_COL32(255, 255, 0, 255);
                 float thickness = (hovered ? 5.0f : 3.0f) * zoomAmount;
 
+                // rysowanie krzywej
                 draw_list->AddBezierCubic(
                     p1,
                     ImVec2(p1.x + 50 * zoomAmount, p1.y),
@@ -680,6 +515,7 @@ void guiClass::drawConnections() {
                     thickness
                 );
 
+                // kliknięcie PPM = rozłączenie
                 if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
                     it = box->connections.erase(it);
                     continue;
@@ -703,6 +539,7 @@ void guiClass::drawConnections() {
             );
 
             ImVec2 p1 = ImVec2(source_pos.x + source_size.x, source_pos.y + source_size.y * 0.5f);
+            // P2 to koniec (mysz)
             ImVec2 p2 = ImGui::GetMousePos();
 
             draw_list->AddBezierCubic(
@@ -735,8 +572,8 @@ void guiClass::drawConnections() {
             ImVec2 boxMin = transformed_pos;
             ImVec2 boxMax = ImVec2(boxMin.x + transformed_size.x, boxMin.y + transformed_size.y);
 
-            if (mousePos.x >= boxMin.x && mousePos.x <= boxMax.x &&
-                mousePos.y >= boxMin.y && mousePos.y <= boxMax.y) {
+            if (mousePos.x >= boxMin.x && mousePos.x <= boxMax.x && mousePos.y >= boxMin.y && mousePos.y <= boxMax.y) {
+                // zmieniamy kierunek połączenia
                 if (box->id != *dragging_from) {
                     if (box->getNumInputs() > 0)
                         box->connections.push_back(*dragging_from);
