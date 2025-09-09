@@ -4,6 +4,8 @@
 
 
 #include "guiClass.h"
+#include "structures.h"
+#include <functional>
 #include <iostream>
 #include <thread>
 #include "GLFW/glfw3.h"
@@ -19,12 +21,14 @@ void guiClass::init(GLFWwindow* win, const char* version) {
 
     // jakaś defaultowa ikonka, potem zmienie
     GLFWimage images[1];
-    images[0].pixels = stbi_load("../../icon_v3.png", &images[0].width, &images[0].height, 0, 4);
+    images[0].pixels = stbi_load("../../assets/app_icon/icon_v3.png", &images[0].width, &images[0].height, 0, 4);
     glfwSetWindowIcon(window, 1, images);
     stbi_image_free(images[0].pixels);
     if (!images[0].pixels) {
         std::cerr << "ERROR: couldn't load icon.png!" << std::endl;
     }
+
+    Model::timeStep = 0.01;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -699,7 +703,7 @@ void guiClass::drawMenu() {
                 model.getBlocks().push_back(std::make_unique<PLotXYBlock>(next_id++));
         }
 
-        // mo
+        // moduł code
         if (ImGui::CollapsingHeader("Code Box")) {
             if (ImGui::Button("Add Python Box"))
                 model.getBlocks().push_back(std::make_unique<pythonBlock>(next_id++));
@@ -707,7 +711,7 @@ void guiClass::drawMenu() {
                 model.getBlocks().push_back(std::make_unique<cppBlock>(next_id++));
         }
 
-        // Bloki logiczzne (sprawdzenie czy aktualna struktra sie do tego nadaje)
+        // bloki logiczne (sprawdzenie czy aktualna struktra sie do tego nadaje)
         if (ImGui::CollapsingHeader("Logic")) {
             if (ImGui::Button("Add OR Box"))
                 model.getBlocks().push_back(std::make_unique<logicORBlock>(next_id++));
@@ -825,7 +829,7 @@ void guiClass::drawStartButton() {
 
         ImGui::Separator();
 
-        // Mapa do wyboru Solvera
+        // mapa do wyboru Solvera
         std::unordered_map<std::string, std::function<std::shared_ptr<ISolverMethod>()>> solverMap = {
             {"RK1", [](){ return std::make_shared<RK1Method>(); }},
             {"RK2", [](){ return std::make_shared<RK2Method>(); }},
@@ -846,11 +850,6 @@ void guiClass::drawStartButton() {
                 SolverManager::initSolver(this->samplingTime, method);
                 // uruchom w osobnym wątku i nie czekaj na niego:
                 std::thread([this]() {
-                    for (auto& b: model.getBlocks()) {
-                        b->setsimTime(this->simTime);
-                        b->settimeStep(this->samplingTime);
-                    }
-
                     // cleanup w bloczkach jeśli jest potrzeb
                     model.cleanupBefore();
                     model.makeConnections();

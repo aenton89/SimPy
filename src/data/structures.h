@@ -28,11 +28,6 @@ protected:
     // TODO: potem wrócić to do protected
     std::vector<double> inputValues;
     std::vector<double> outputValues;
-
-    // Te dwie zmainne zeby po przez menu mozna bylo ustawiac czas symuliociu i dt
-    double timeStep = 0.01;
-    double simTime;
-
 public:
     // TODO: GUI - zmienne od GUI
     int id;
@@ -49,6 +44,7 @@ public:
     virtual void drawContent();
     // tu stricte odpowiada za to co będzie narysowane w menu
     virtual void drawMenu() {};
+    void drawIcon();
 
     // metoda do przetwarzania danych wejściowych i generowania danych wyjściowych
     virtual void process() = 0;
@@ -67,9 +63,6 @@ public:
     // resetowanie stanu bloku - jeśli jest potrzebne
     virtual void resetBefore() {};
     virtual void resetAfter() {};
-
-    void settimeStep(double dt);
-    void setsimTime(double simTime);
 
     #ifdef UNIT_TESTS
     public:
@@ -127,6 +120,9 @@ private:
     std::shared_ptr<Solver> solver;
 
 public:
+    // te dwie zmainne zeby po przez menu mozna bylo ustawiac czas symuliociu i dt
+    static double timeStep;
+    static double simTime;
     // dodanie bloku do modelu
     template<typename BlockType, typename... Args>
     BlockType* addBlock(Args&&... args) {

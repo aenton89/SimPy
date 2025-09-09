@@ -20,22 +20,9 @@ void Block::setInput(int port, double value) {
     }
 }
 
-void Block::setsimTime(double simTime)
-{
-    this->simTime = simTime;
-}
-
-void Block::settimeStep(double dt)
-{
-    this->timeStep = dt;
-}
-
-
-
 double Block::getOutput(int port) const {
-    if (port >= 0 && port < outputValues.size()) {
+    if (port >= 0 && port < outputValues.size())
         return outputValues[port];
-    }
     return 0.0;
 }
 
@@ -54,20 +41,24 @@ int Block::getId() const {
 void Block::drawContent() {
     if (has_menu) {
         // przycisk rozwijający menu
-        if (ImGui::Button(">", ImVec2(20.0, 20.0))) {
+        if (ImGui::Button(">", ImVec2(20.0, 20.0)))
             ImGui::OpenPopup("MoreOptionsPopup");
-        }
 
         // samo menu
         if (ImGui::BeginPopup("MoreOptionsPopup")) {
             drawMenu();
 
-            if (ImGui::Button("Close")) {
+            if (ImGui::Button("Close"))
                 ImGui::CloseCurrentPopup();
-            }
+
             ImGui::EndPopup();
         }
     }
+}
+
+// TODO: tu sobie patryk nadpisz dla ikonek
+void Block::drawIcon() {
+    // cośtam cośtam
 }
 
 
@@ -82,6 +73,9 @@ Connection::Connection(Block* src, int srcPort, Block* tgt, int tgtPort)
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // implementacja metod klasy Model
+double Model::timeStep = 0.1;
+double Model::simTime = 10.0;
+
 bool Model::hasCycleDFS(int v) {
     visited[v] = true;
     inStack[v] = true;

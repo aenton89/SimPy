@@ -10,13 +10,10 @@
 
 class Solver {
 public:
-    Solver(double dt, std::shared_ptr<ISolverMethod> method)
-        : dt(dt), method(std::move(method)) {}
+    Solver(double dt, std::shared_ptr<ISolverMethod> method) : dt(dt), method(std::move(method)) {}
 
     // krok solvera dla danego układu
-    std::vector<double> step(MatOp::StateSpace& ss,
-                             const std::vector<double>& u)
-    {
+    std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u) {
         ss.x = method->step(ss, u, dt);
         return ss.x;
     }

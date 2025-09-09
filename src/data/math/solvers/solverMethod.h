@@ -14,16 +14,15 @@ public:
 };
 
 // RK4
-class RK4Method : public ISolverMethod
-{
+class RK4Method : public ISolverMethod {
 public:
     std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt) override;
 };
 
 // RK2
-class RK2Method : public ISolverMethod
-{
+class RK2Method : public ISolverMethod {
 public:
     std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt) override;
 };
+
 #endif //SOLVERMETHOD_H

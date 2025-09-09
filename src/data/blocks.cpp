@@ -3,6 +3,7 @@
 //
 
 #include "blocks.h"
+#include "data_sender/data_channel_manager.h"
 #include <sstream>
 #include <cmath>
 #include <numbers>
@@ -119,15 +120,15 @@ IntegratorBlock::IntegratorBlock(int _id) : Block(_id, 1, 1, true), initial_stat
 }
 
 void IntegratorBlock::process() {
-    state += inputValues[0] * timeStep;
+    state += inputValues[0] * Model::timeStep;
     outputValues[0] = state;
-    std::cout<<"integrator: "<<inputValues[0]<<" * "<<timeStep<<" = "<<outputValues[0]<<std::endl;
+    std::cout<<"integrator: "<<inputValues[0]<<" * "<<Model::timeStep<<" = "<<outputValues[0]<<std::endl;
 }
 
 // TODO: GUI
 void IntegratorBlock::drawContent() {
     ImGui::Text("Time step: ");
-    ImGui::InputDouble("", &timeStep);
+    ImGui::InputDouble("", &Model::timeStep);
     ImGui::Text("Integrator: %f", outputValues[0]);
 
     Block::drawContent();
@@ -220,7 +221,7 @@ void StepBlock::process() {
         outputValues[0] = 0;
     else
         outputValues[0] = inputValue;
-    currentTime += this->timeStep;
+    currentTime += Model::timeStep;
     //std::cout<<"input: "<<outputValues[0]<<std::endl;
 }
 
@@ -251,7 +252,7 @@ SinusInputBlock::SinusInputBlock(int id_) : Block(id_, 0, 1, true) {
 void SinusInputBlock::process() {
     // A*sin(2*pi*f + phase)
     outputValues[0] = amplitude*std::sin(2*std::numbers::pi*frequency*currentTime + shiftPhase);
-    currentTime += this->timeStep;
+    currentTime += Model::timeStep;
 }
 
 void SinusInputBlock::resetBefore() {
@@ -301,7 +302,7 @@ void PWMInputBlock::process() {
     else
         this->outputValues[0] = 0;
 
-    this->currentTime += this->timeStep;
+    this->currentTime += Model::timeStep;
 }
 
 
@@ -383,7 +384,7 @@ void PlotBlock::process() {
     }
 
     // x_limMax teraz jest po prostu długością danych
-    x_limMax = this->simTime;
+    x_limMax = Model::simTime;
 }
 
 
@@ -414,7 +415,7 @@ void PlotBlock::drawContent() {
             if (i >= data.size()) continue;
             ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
             std::string label = "Input " + std::to_string(i + 1);
-            ImPlot::PlotLine(label.c_str(), data[i].data(), data[i].size(), this->timeStep);
+            ImPlot::PlotLine(label.c_str(), data[i].data(), data[i].size(), Model::timeStep);
             ImPlot::PopStyleVar();
         }
 
@@ -560,17 +561,17 @@ void PLotXYBlock::drawMenu() {
 DifferentiatorBlock::DifferentiatorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {}
 
 void DifferentiatorBlock::process() {
-    double derivative = (inputValues[0] - initial_state) / timeStep;
+    double derivative = (inputValues[0] - initial_state) / Model::timeStep;
     initial_state = inputValues[0];
     outputValues[0] = derivative;
 
-    std::cout << "differentiator: (" << inputValues[0] << " - " << initial_state << ") / " << timeStep << " = " << outputValues[0] << std::endl;
+    std::cout << "differentiator: (" << inputValues[0] << " - " << initial_state << ") / " << Model::timeStep << " = " << outputValues[0] << std::endl;
 }
 
 // TODO: GUI
 void DifferentiatorBlock::drawContent() {
     ImGui::Text("Time step: ");
-    ImGui::InputDouble("", &timeStep);
+    ImGui::InputDouble("", &Model::timeStep);
     ImGui::Text("Different: %f", outputValues[0]);
 
     Block::drawContent();
@@ -1172,95 +1173,87 @@ void cppBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // data sending
-DataSenderBlock::DataSenderBlock(int id, const std::string& channel)
-    : Block(id, 1, 0), channelName(channel), dataTypeName("float"), sendEnabled(true), sendCounter(0) {
-    size = ImVec2(250, 150);
+DataSenderBlock::DataSenderBlock(int _id) : Block(_id, 1, 0, true), isInitialized(false), pipeName(R"(\\.\pipe\simulink_data)"), bufferSize(1000) {
+    // rezerwacja miejsca dla bufora danych
+    data.reserve(bufferSize);
+    // instancja managera
+    dataManager = DataChannelManager::getInstance();
+}
+
+DataSenderBlock::~DataSenderBlock() {
+    if (dataManager && dataManager->isConnected())
+        dataManager->close();
 }
 
 void DataSenderBlock::process() {
-    if (!sendEnabled) return;
+    if (!isInitialized) {
+        // TODO: dodać pobranie wartości simTime i dt
+        simTime = Model::simTime;
+        dt = Model::timeStep;
 
-    // wysyłanie w zależności od wybranego typu
-    if (dataTypeName == "float") {
-        DataChannelManager::sendData<float>(channelName, inputValues[0], "float");
-    }
-    else if (dataTypeName == "int") {
-        DataChannelManager::sendData<int>(channelName, static_cast<int>(inputValues[0]), "int");
-    }
-    else if (dataTypeName == "double") {
-        DataChannelManager::sendData<double>(channelName, static_cast<double>(inputValues[0]), "double");
+        // inicjalizacja połączenia przy pierwszym uruchomieniu
+        if (dataManager->initialize(pipeName)) {
+            isInitialized = true;
+            std::cout << "[DataSender " << id << "] Connected to Python receiver" << std::endl;
+        }
+        else {
+            std::cerr << "[DataSender " << id << "] Failed to connect to Python receiver" << std::endl;
+            return;
+        }
     }
 
-    sendCounter++;
-    std::cout << "Sent to '" << channelName << "': " << inputValues[0]
-              << " (type: " << dataTypeName << ", count: " << sendCounter << ")" << std::endl;
+    data.push_back(inputValues[0]);
 }
 
 void DataSenderBlock::drawContent() {
     ImGui::Text("Data Sender");
-
-    // nazwa kanału
-    char channelBuffer[128];
-    strcpy(channelBuffer, channelName.c_str());
-    if (ImGui::InputText("Channel", channelBuffer, sizeof(channelBuffer))) {
-        channelName = std::string(channelBuffer);
-    }
-
-    // typ danych
-    const char* types[] = {"float", "int", "double"};
-    static int currentType = 0;
-    if (ImGui::Combo("Data Type", &currentType, types, IM_ARRAYSIZE(types))) {
-        dataTypeName = types[currentType];
-    }
-
-    // kontrolki
-    ImGui::Checkbox("Send enabled", &sendEnabled);
-
-    // informacje
     ImGui::Separator();
-    ImGui::Text("Queue size: %d", DataChannelManager::getChannelSize(channelName));
-    ImGui::Text("Sent count: %d", sendCounter);
 
-    // lista dostępnych kanałów
-    ImGui::Text("Available channels:");
-    auto channels = DataChannelManager::getAvailableChannels();
-    for (const auto& ch : channels) {
-        ImGui::Text("  - %s (%d)", ch.c_str(), DataChannelManager::getChannelSize(ch));
+    if (isInitialized && dataManager->isConnected())
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Connected");
+    else
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Disconnected");
+}
+
+void DataSenderBlock::drawMenu() {
+    if (ImGui::BeginPopup(("BlockMenu" + std::to_string(id)).c_str())) {
+        ImGui::Text("Data Sender Settings");
+        ImGui::Separator();
+
+        // ustawienia pipe'a
+        char pipeNameBuf[256];
+        strcpy(pipeNameBuf, pipeName.c_str());
+        if (ImGui::InputText("Pipe Name", pipeNameBuf, sizeof(pipeNameBuf))) {
+            pipeName = pipeNameBuf;
+            // jeśli zmieniono nazwę, rozłącz i pozwól na ponowne połączenie
+            if (isInitialized) {
+                dataManager->close();
+                isInitialized = false;
+            }
+        }
+        ImGui::EndPopup();
+    }
+}
+
+void DataSenderBlock::resetBefore() {
+    data.clear();
+}
+
+void DataSenderBlock::resetAfter() {
+    // wyślij dane do Pythona
+    if (dataManager && dataManager->isConnected()) {
+        if (!dataManager->sendData(data, dt, simTime)) {
+            std::cerr << "[DataSender " << id << "] Failed to send data" << std::endl;
+            // spróbuj ponownie połączyć przy następnym wywołaniu
+            isInitialized = false;
+        }
     }
 
-    // przycisk czyszczenia
-    if (ImGui::Button("Clear Channel")) {
-        DataChannelManager::clearChannel(channelName);
-    }
-
-    Block::drawContent();
+    // // nie wiem czy będzie potrzebne, ale - wysyłanie pustego pakietu jako reset
+    // if (isInitialized && dataManager->isConnected()) {
+    //     std::vector<float> emptyData;
+    //     // -1 jako sygnał resetu
+    //     dataManager->sendData(emptyData, dt, -1.0f);
+    // }
 }
 
-// getters/setters
-void DataSenderBlock::setChannelName(const std::string& name) {
-    channelName = name;
-}
-
-std::string DataSenderBlock::getChannelName() const {
-    return channelName;
-}
-
-void DataSenderBlock::setDataType(const std::string& type) {
-    dataTypeName = type;
-}
-
-std::string DataSenderBlock::getDataType() const {
-    return dataTypeName;
-}
-
-bool DataSenderBlock::isSendEnabled() const {
-    return sendEnabled;
-}
-
-void DataSenderBlock::setSendEnabled(bool enabled) {
-    sendEnabled = enabled;
-}
-
-int DataSenderBlock::getSendCounter() const {
-    return sendCounter;
-}
