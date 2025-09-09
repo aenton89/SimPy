@@ -12,8 +12,6 @@
 #include "data_sender/data_channel_manager.h"
 #include "math/matrix_operation/matrix_op.h"
 
-// w tym pliku są deklaracje specyficznych bloków (narazie testowe)
-
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,8 +28,6 @@ public:
     void resetBefore() override;
 };
 
-
-
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek mnożący
 class MultiplyBlock : public Block {
@@ -43,8 +39,6 @@ public:
     void drawMenu() override;
     void resetBefore() override;
 };
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek całkujący
@@ -66,8 +60,6 @@ public:
     void drawMenu() override;
 };
 
-
-
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek rozniczkujacy
 class DifferentiatorBlock : public Block {
@@ -85,8 +77,6 @@ public:
     void setState(double initialState);
     void drawMenu() override;
 };
-
-
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // transmitacja operatorowa
@@ -112,17 +102,6 @@ private:
     MatOp::StateSpace ss;
 };
 
-
-// ----------------------------------------------------------------------------------------------------------------------------------------
-// blok kwadratu sygnalu wejsciwoego
-class squaredBlock : public Block {
-public:
-    squaredBlock(int id_);
-    void process() override;
-    void drawContent() override;
-};
-
-
 // -----------------------------------------------------------------------------------------------------------------------------------------
 // regulator PID
 class PID_regulator : public Block
@@ -146,7 +125,14 @@ public:
     void resetBefore() override;
 };
 
-
+// ----------------------------------------------------------------------------------------------------------------------------------------
+// blok kwadratu sygnalu wejsciwoego
+class squaredBlock : public Block {
+public:
+    squaredBlock(int id_);
+    void process() override;
+    void drawContent() override;
+};
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // blok pierwiskownaia
@@ -159,8 +145,6 @@ public:
 
     std::string mode = "absolut value";
 };
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek input'u
@@ -176,8 +160,6 @@ public:
     void drawMenu() override;
     void resetBefore() override;
 };
-
-
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postaci Sinusa
@@ -196,8 +178,6 @@ public:
     void resetBefore() override;
 };
 
-
-
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postac PWM
 class PWMInputBlock : public Block {
@@ -214,8 +194,6 @@ public:
     void drawMenu() override;
     void resetBefore() override;
 };
-
-
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postaci bialego szumu
@@ -234,8 +212,6 @@ public:
     void drawMenu() override;
 };
 
-
-
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek print'a
 class PrintBlock : public Block {
@@ -245,8 +221,6 @@ public:
     // TODO: GUI
     void drawContent() override;
 };
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek robiący wykres
@@ -336,47 +310,43 @@ public:
 };
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
-// data sending
+// data sending - POKI CO WYSYLANIE NASTEPUJE W RESETAFTER(), ale to trzeba bedzie przeniesc
 class DataSenderBlock : public Block {
 private:
-    std::string channelName;
-    std::string dataTypeName;
-    bool sendEnabled;
-    int sendCounter;
-
+    std::vector<float> data;
+    double dt;
+    double simTime;
+    DataChannelManager* dataManager;
+    bool isInitialized;
+    std::string pipeName;
+    int bufferSize;
 public:
-    DataSenderBlock(int id, const std::string& channel = "default_channel");
-
+    DataSenderBlock(int _id);
+    ~DataSenderBlock();
     void process() override;
     void drawContent() override;
-
-    // getters/setters
-    void setChannelName(const std::string& name);
-    std::string getChannelName() const;
-    void setDataType(const std::string& type);
-    std::string getDataType() const;
-    bool isSendEnabled() const;
-    void setSendEnabled(bool enabled);
-    int getSendCounter() const;
+    void drawMenu() override;
+    void resetBefore() override;
+    void resetAfter() override;
 };
 
-// bloki zwazane z inpelntacja kodu pythona i cpp w symualaci. Rozwazam uzycie pybinda
-class pythonBlock : public Block
-{
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// bloki zwazane z inpelntacja kodu pythona i cpp w symualaci, rozwazam uzycie pybinda
+class pythonBlock : public Block {
 public:
     pythonBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
-
 private:
     char pythonCode[512] = "def add(a, b): \n"
                            "   num = a + b \n"
                            "   return num \n";
 };
 
-class cppBlock : public Block
-{
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// cpp tu
+class cppBlock : public Block {
 public:
     cppBlock(int _id);
     void process() override;
@@ -387,8 +357,6 @@ private:
                         "   int num = a + b; \n"
                         "   return num; }; \n";
 };
-
-
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // OR block

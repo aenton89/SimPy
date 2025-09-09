@@ -25,7 +25,7 @@ int main() {
 
 
     // create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Hello World", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "SimPy", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);

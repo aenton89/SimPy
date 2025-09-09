@@ -4,6 +4,8 @@
 
 
 #include "guiClass.h"
+#include "structures.h"
+#include <functional>
 #include <iostream>
 #include <thread>
 #include "GLFW/glfw3.h"
@@ -19,12 +21,14 @@ void guiClass::init(GLFWwindow* win, const char* version) {
 
     // jakaś defaultowa ikonka, potem zmienie
     GLFWimage images[1];
-    images[0].pixels = stbi_load("../../icon_v3.png", &images[0].width, &images[0].height, 0, 4);
+    images[0].pixels = stbi_load("../../assets/app_icon/icon_v3.png", &images[0].width, &images[0].height, 0, 4);
     glfwSetWindowIcon(window, 1, images);
     stbi_image_free(images[0].pixels);
     if (!images[0].pixels) {
         std::cerr << "ERROR: couldn't load icon.png!" << std::endl;
     }
+
+    Model::timeStep = 0.01;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -700,16 +704,17 @@ void guiClass::drawMenu() {
             if (ImGui::Button("Add Plot XY Box"))
                 model.getBlocks().push_back(std::make_unique<PLotXYBlock>(next_id++));
         }
-        if (ImGui::CollapsingHeader("Code Box"))
-        {
+
+        // moduł code
+        if (ImGui::CollapsingHeader("Code Box")) {
             if (ImGui::Button("Add Python Box"))
                 model.getBlocks().push_back(std::make_unique<pythonBlock>(next_id++));
-            if (ImGui::Button("Add Cpp Box"))
+            if (ImGui::Button("Add C++ Box"))
                 model.getBlocks().push_back(std::make_unique<cppBlock>(next_id++));
         }
 
-        // Bloki logicvzne (sprawdzenie czy akhualnia strutra sie do tego nadaje)
-        if (ImGui::CollapsingHeader("Logick")) {
+        // bloki logiczne (sprawdzenie czy aktualna struktra sie do tego nadaje)
+        if (ImGui::CollapsingHeader("Logic")) {
             if (ImGui::Button("Add OR Box"))
                 model.getBlocks().push_back(std::make_unique<logicORBlock>(next_id++));
             if (ImGui::Button("Add AND Box"))
@@ -788,8 +793,8 @@ void guiClass::drawStartButton() {
     if (ImGui::Begin("Start / Stop", nullptr, startFlags)) {
         // szerokość w pikselach
         ImGui::PushItemWidth(70.0);
-        ImGui::InputFloat("Sampling Time", &samplingTime);
-        ImGui::InputFloat("Simulation Time", &simTime);
+        ImGui::InputDouble("Sampling Time", &Model::timeStep);
+        ImGui::InputDouble("Simulation Time", &Model::simTime);
 
         // combo odpowiedialne za wybor solver i precyzje obliczen (musisz Antek zrobic templeta do tego bo ja nie umim XD)
         static int current_solver = 2;
@@ -826,7 +831,7 @@ void guiClass::drawStartButton() {
 
         ImGui::Separator();
 
-        // Mapa do wyboru Solvera
+        // mapa do wyboru Solvera
         std::unordered_map<std::string, std::function<std::shared_ptr<ISolverMethod>()>> solverMap = {
             {"RK1", [](){ return std::make_shared<RK1Method>(); }},
             {"RK2", [](){ return std::make_shared<RK2Method>(); }},
@@ -844,20 +849,15 @@ void guiClass::drawStartButton() {
             if (ImGui::Button("Run Simulation")) {
                 simulationRunning = true;
                 auto method = solverMap[this->solverName]();
-                SolverManager::initSolver(this->samplingTime, method);
+                SolverManager::initSolver(Model::timeStep, method);
                 // uruchom w osobnym wątku i nie czekaj na niego:
                 std::thread([this]() {
-                    for (auto& b: model.getBlocks()) {
-                        b->setsimTime(this->simTime);
-                        b->settimeStep(this->samplingTime);
-                    }
-
                     // cleanup w bloczkach jeśli jest potrzeb
                     model.cleanupBefore();
                     model.makeConnections();
                     // TODO: tu na ogół nie ma być na stałe pętli do 1000
                     // patryk chyba chciał to jakoś ustawiać, idk w sumie nie pamiętam
-                    for (int i = 0; i < (this->simTime / this->samplingTime) + 1; i++) {
+                    for (int i = 0; i < (Model::simTime/ Model::timeStep) + 1; i++) {
                         model.simulate();
                     }
                     model.cleanupAfter();

@@ -3,6 +3,7 @@
 //
 
 #include "blocks.h"
+#include "data_sender/data_channel_manager.h"
 #include <sstream>
 #include <cmath>
 #include <numbers>
@@ -111,6 +112,62 @@ void MultiplyBlock::resetBefore() {
 
 
 
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// całkowania
+IntegratorBlock::IntegratorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {
+    size = ImVec2(200, 120);
+
+    ss.A = {{0.0}};
+    ss.B = {{1.0}};
+    ss.C = {{1.0}};
+    ss.D = {{0.0}};
+    ss.x = {initial_state};
+}
+
+void IntegratorBlock::process() {
+    // state += inputValues[0] * timeStep;
+    // outputValues[0] = state;
+    auto solver = SolverManager::solver();
+    if (!solver) return;
+
+    std::vector<double> uvec = { inputValues[0] };
+    solver->step(ss, uvec);
+    outputValues[0] = ss.x[0];
+
+    std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
+    double y = yvec[0] + ss.D[0][0] * inputValues[0];
+    outputValues[0] = y;
+
+    //std::cout<<"integrator: "<<inputValues[0]<<" * "<<timeStep<<" = "<<outputValues[0]<<std::endl;
+}
+
+// TODO: GUI
+void IntegratorBlock::drawContent() {
+    ImGui::Text("IntegratorBlock");
+    Block::drawContent();
+}
+
+void IntegratorBlock::resetAfter() {
+
+}
+
+void IntegratorBlock::resetBefore() {
+    ss.x = {initial_state};
+    outputValues[0] = initial_state;
+}
+
+void IntegratorBlock::setState(double _initial_state) {
+    initial_state = _initial_state;
+    outputValues[0] = _initial_state;
+}
+
+void IntegratorBlock::drawMenu() {
+    ImGui::InputDouble("Initial state: ", &initial_state);
+    ImGui::InputDouble("Time step: ", &Model::timeStep);
+}
+
+
+
 // ------------------------------------------------------------------------------------------------------------------------------------
 // blok pierwsikaonia
 sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, true)
@@ -178,7 +235,7 @@ void StepBlock::process() {
         outputValues[0] = 0;
     else
         outputValues[0] = inputValue;
-    currentTime += this->timeStep;
+    currentTime += Model::timeStep;
     //std::cout<<"input: "<<outputValues[0]<<std::endl;
 }
 
@@ -209,7 +266,7 @@ SinusInputBlock::SinusInputBlock(int id_) : Block(id_, 0, 1, true) {
 void SinusInputBlock::process() {
     // A*sin(2*pi*f + phase)
     outputValues[0] = amplitude*std::sin(2*std::numbers::pi*frequency*currentTime + shiftPhase);
-    currentTime += this->timeStep;
+    currentTime += Model::timeStep;
 }
 
 void SinusInputBlock::resetBefore() {
@@ -259,7 +316,7 @@ void PWMInputBlock::process() {
     else
         this->outputValues[0] = 0;
 
-    this->currentTime += this->timeStep;
+    this->currentTime += Model::timeStep;
 }
 
 
@@ -341,7 +398,7 @@ void PlotBlock::process() {
     }
 
     // x_limMax teraz jest po prostu długością danych
-    x_limMax = this->simTime;
+    x_limMax = Model::simTime;
 }
 
 
@@ -372,7 +429,7 @@ void PlotBlock::drawContent() {
             if (i >= data.size()) continue;
             ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
             std::string label = "Input " + std::to_string(i + 1);
-            ImPlot::PlotLine(label.c_str(), data[i].data(), data[i].size(), this->timeStep);
+            ImPlot::PlotLine(label.c_str(), data[i].data(), data[i].size(), Model::timeStep);
             ImPlot::PopStyleVar();
         }
 
@@ -511,60 +568,6 @@ void PLotXYBlock::drawMenu() {
     }
 }
 
-// ----------------------------------------------------------------------------------------------------------------------------------------------
-// całkowania
-IntegratorBlock::IntegratorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {
-    size = ImVec2(200, 120);
-
-    ss.A = {{0.0}};
-    ss.B = {{1.0}};
-    ss.C = {{1.0}};
-    ss.D = {{0.0}};
-    ss.x = {initial_state};
-}
-
-void IntegratorBlock::process() {
-    // state += inputValues[0] * timeStep;
-    // outputValues[0] = state;
-    auto solver = SolverManager::solver();
-    if (!solver) return;
-
-    std::vector<double> uvec = { inputValues[0] };
-    solver->step(ss, uvec);
-    outputValues[0] = ss.x[0];
-
-    std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
-    double y = yvec[0] + ss.D[0][0] * inputValues[0];
-    outputValues[0] = y;
-
-    //std::cout<<"integrator: "<<inputValues[0]<<" * "<<timeStep<<" = "<<outputValues[0]<<std::endl;
-}
-
-// TODO: GUI
-void IntegratorBlock::drawContent() {
-    ImGui::Text("IntegratorBlock");
-    Block::drawContent();
-}
-
-void IntegratorBlock::resetAfter() {
-
-}
-
-void IntegratorBlock::resetBefore() {
-    ss.x = {initial_state};
-    outputValues[0] = initial_state;
-}
-
-void IntegratorBlock::setState(double _initial_state) {
-    initial_state = _initial_state;
-    outputValues[0] = _initial_state;
-}
-
-void IntegratorBlock::drawMenu() {
-    ImGui::InputDouble("Initial state: ", &initial_state);
-    ImGui::InputDouble("Time step: ", &timeStep);
-}
-
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -573,7 +576,7 @@ DifferentiatorBlock::DifferentiatorBlock(int _id)
     : Block(_id, 1, 1, true), initial_state(0.0) {}
 
 void DifferentiatorBlock::process() {
-    double derivative = (inputValues[0] - state) / timeStep;
+    double derivative = (inputValues[0] - state) / Model::timeStep;
     state = inputValues[0];
     outputValues[0] = derivative;
 
@@ -606,7 +609,7 @@ void DifferentiatorBlock::setState(double _initial_state) {
 
 void DifferentiatorBlock::drawMenu() {
     ImGui::InputDouble("Initial state: ", &initial_state);
-    ImGui::InputDouble("Time step: ", &timeStep);
+    ImGui::InputDouble("Time step: ", &Model::timeStep);
 }
 
 
@@ -630,113 +633,6 @@ void SaturationBlock::drawMenu() {
     ImGui::InputDouble("Lower limit", &lowerLimit);
 }
 
-
-// -----------------------------------------------------------------------------------------------------------------------------------------
-// regulator PID
-PID_regulator::PID_regulator(int id_) : Block(id_, 1, 1, true) {
-    size = ImVec2(200, 150);
-    ss.A = {{0}};
-    ss.B = {{1}};
-    ss.C = {{Ki}};
-    ss.D = {{Kp}};
-}
-
-void PID_regulator::process() {
-    auto solver = SolverManager::solver();
-
-    if (!solver) return;
-    std::vector<double> uvec = { inputValues[0] };
-    solver->step(ss, uvec);
-
-    std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
-
-    double y = 0.0;
-
-    if (current_mode == 0) {
-        y = yvec[0] + ss.D[0][0] * inputValues[0]
-            + Kd * (inputValues[0] - state) / timeStep;
-        state = inputValues[0];
-    }
-    else {
-        y = yvec[0] + ss.D[0][0] * inputValues[0];
-    }
-
-    outputValues[0] = y;
-}
-
-
-void PID_regulator::drawContent() {
-    ImGui::Text("PID");
-    Block::drawContent();
-};
-
-void PID_regulator::drawMenu() {
-    const static char* PID_type[] = {"Without filter", "With filter"};
-    if (ImGui::BeginCombo("PID type", PID_type[current_mode], false)) {
-        for (int i=0; i < IM_ARRAYSIZE(PID_type); i++) {
-            bool is_selected = (current_mode == i);
-            if (ImGui::Selectable(PID_type[i], is_selected)) {
-                current_mode = i;
-            }
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndCombo();
-    }
-
-    ImGui::InputDouble("Kp", &Kp);
-    ImGui::InputDouble("Kd", &Kd);
-    ImGui::InputDouble("Ki", &Ki);
-
-
-    // TODO trzeba to poprawic
-
-    if (current_mode == 0) {
-        ss.A = {{0}};
-        ss.B = {{1}};
-        ss.C = {{Ki}};
-        ss.D = {{Kp}};
-
-        ImGui::Text("Kd*s^2 + Kp*s + Ki");
-        ImGui::Text("-------------------");
-        ImGui::Text("        s");
-
-    }
-    else {
-        // Tu cos nie dziala idk dlaczego
-        ss.A = {{0, 0}, {0, -1/tau}};
-        ss.B = {{1}, {Kd/tau}};
-        ss.C = {{Ki, 1}};
-        ss.D = {{Kp}};
-        ImGui::InputDouble("tau", &tau);
-
-        ImGui::Text("   Kp   ");         // człon proporcjonalny
-        ImGui::Text("-------");
-        ImGui::Text("        ");         // pusta linia lub spacja
-
-        ImGui::Text("   Ki   ");         // człon całkujący
-        ImGui::Text("-------");
-        ImGui::Text("    s   ");
-
-        ImGui::Text("   Kd   ");         // człon różniczkujący z filtrem
-        ImGui::Text("-------");
-        ImGui::Text(" 1 + tau*s ");
-
-
-    }
-};
-
-void PID_regulator::resetBefore() {
-    if (current_mode == 0) {
-        ss.x = {0};
-    }
-    else {
-        ss.x = {0, 0};
-    }
-
-
-    state = 0;
-};
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -984,6 +880,122 @@ void TransferFuncionContinous::resetBefore() {
     }
     std::fill(ss.x.begin(), ss.x.end(), 0.0);
 }
+
+// -----------------------------------------------------------------------------------------------------------------------------------------
+// regulator PID
+PID_regulator::PID_regulator(int id_) : Block(id_, 1, 1, true) {
+    size = ImVec2(200, 150);
+    ss.A = {{0}};
+    ss.B = {{1}};
+    ss.C = {{Ki}};
+    ss.D = {{Kp}};
+}
+
+void PID_regulator::process() {
+    auto solver = SolverManager::solver();
+
+    if (!solver) return;
+    std::vector<double> uvec = { inputValues[0] };
+    solver->step(ss, uvec);
+
+    std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
+
+    double y = 0.0;
+
+    if (current_mode == 0) {
+        y = yvec[0] + ss.D[0][0] * inputValues[0]
+            + Kd * (inputValues[0] - state) / Model::timeStep;
+        state = inputValues[0];
+    }
+    else {
+        y = yvec[0] + ss.D[0][0] * inputValues[0];
+    }
+
+    outputValues[0] = y;
+}
+
+
+void PID_regulator::drawContent() {
+    ImGui::Text("PID");
+    Block::drawContent();
+};
+
+void PID_regulator::drawMenu() {
+    const static char* PID_type[] = {"Without filter", "With filter"};
+    if (ImGui::BeginCombo("PID type", PID_type[current_mode], false)) {
+        for (int i=0; i < IM_ARRAYSIZE(PID_type); i++) {
+            bool is_selected = (current_mode == i);
+            if (ImGui::Selectable(PID_type[i], is_selected)) {
+                current_mode = i;
+            }
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::InputDouble("Kp", &Kp);
+    ImGui::InputDouble("Kd", &Kd);
+    ImGui::InputDouble("Ki", &Ki);
+
+
+    // TODO trzeba to poprawic
+
+    if (current_mode == 0) {
+        ss.A = {{0}};
+        ss.B = {{1}};
+        ss.C = {{Ki}};
+        ss.D = {{Kp}};
+
+        ImGui::Text("Kd*s^2 + Kp*s + Ki");
+        ImGui::Text("-------------------");
+        ImGui::Text("        s");
+
+    }
+    else {
+        // Tu cos nie dziala idk dlaczego
+        ss.A = {{0, 0}, {0, -tau}};
+        ss.B = {{1}, {tau}};
+        ss.C = {{Kp*Ki, Kp*Kd}};
+        ss.D = {{Kp}};
+        ImGui::InputDouble("tau", &tau);
+
+        ImGui::Text("   Kp   ");         // człon proporcjonalny
+        ImGui::Text("-------");
+        ImGui::Text("        ");         // pusta linia lub spacja
+
+        ImGui::Text("   Ki   ");         // człon całkujący
+        ImGui::Text("-------");
+        ImGui::Text("    s   ");
+
+        ImGui::Text("   Kd   ");         // człon różniczkujący z filtrem
+        ImGui::Text("-------");
+        ImGui::Text(" 1 + tau*s ");
+
+
+    }
+};
+
+void PID_regulator::resetBefore() {
+    if (current_mode == 0) {
+        ss.A = {{0}};
+        ss.B = {{1}};
+        ss.C = {{Ki}};
+        ss.D = {{Kp}};
+        ss.x = {0};
+    }
+    else {
+        ss.A = {{0, 0}, {0, -tau}};
+        ss.B = {{1}, {tau}};
+        ss.C = {{Kp*Ki, Kp*Kd}};
+        ss.D = {{Kp}};
+        ss.x = {0, 0};
+    }
+
+    state = 0;
+}
+
+
 
 // -------------------------------------------------------------------------------------------------------------------------------------------
 // kwadrat liczby
@@ -1243,70 +1255,62 @@ void logicNORBlock::drawMenu() {
     }
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // python block
-pythonBlock::pythonBlock(int _id) : Block(_id, 1, 1, true)
-{
+pythonBlock::pythonBlock(int _id) : Block(_id, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
-void pythonBlock::process()
-{
-    // tu trzeba dodab ten bytcode ale to poniej jak sie zainsluje pybinda
+// tu trzeba dodac ten bytcode ale to poniej jak sie zainstaluje pybinda
+void pythonBlock::process() {
     outputValues[0] = inputValues[0];
 }
 
-void pythonBlock::drawContent()
-{
+void pythonBlock::drawContent() {
     ImGui::Text("Python Block");
     Block::drawContent();
 }
 
-void pythonBlock::drawMenu()
-{
-    if (ImGui::InputInt("Number of inputs", &numInputs))
-    {
-        // TODO tu jescze ma sie zmainac wewntrzna funjja ze wzgledu an inplentacje
+void pythonBlock::drawMenu() {
+    // TODO: tu jescze ma sie zmainac wewntrzna funjja ze wzgledu an inplentacje
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
         inputValues.resize(numInputs);
     }
     ImGui::SameLine();
-    if (ImGui::InputInt("Number of outputs", &numOutputs))
-    {
+    if (ImGui::InputInt("Number of outputs", &numOutputs)) {
         outputValues.resize(numOutputs);
     }
 
     ImGui::InputTextMultiline("Python Code", this->pythonCode, IM_ARRAYSIZE(this->pythonCode), ImVec2(400, 240));
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // cpp block
-cppBlock::cppBlock(int _id) : Block(_id, 1, 1, true)
-{
+cppBlock::cppBlock(int _id) : Block(_id, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
-void cppBlock::process()
-{
-    // tu trzeba dodab ten bytcode ale to poniej jak sie zainsluje pybinda
+// tu trzeba dodac ten bytcode ale to poniej jak sie zainstaluje pybinda
+void cppBlock::process() {
     outputValues[0] = inputValues[0];
 }
 
-void cppBlock::drawContent()
-{
+void cppBlock::drawContent() {
     ImGui::Text("Python Block");
     Block::drawContent();
 }
 
-void cppBlock::drawMenu()
-{
-    if (ImGui::InputInt("Number of inputs", &numInputs))
-    {
-        // TODO tu jescze ma sie zmainac wewntrzna funjja ze wzgledu an inplentacje
+void cppBlock::drawMenu() {
+    // TODO: tu jescze ma sie zmienic wewnetrzna funkcja ze wzgledu an implementacje
+    if (ImGui::InputInt("Number of inputs", &numInputs)) {
         inputValues.resize(numInputs);
     }
     ImGui::SameLine();
-    if (ImGui::InputInt("Number of outputs", &numOutputs))
-    {
+    if (ImGui::InputInt("Number of outputs", &numOutputs)) {
         outputValues.resize(numOutputs);
     }
 
@@ -1315,98 +1319,89 @@ void cppBlock::drawMenu()
 
 
 
-
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // data sending
-DataSenderBlock::DataSenderBlock(int id, const std::string& channel)
-    : Block(id, 1, 0), channelName(channel), dataTypeName("float"), sendEnabled(true), sendCounter(0) {
-    size = ImVec2(250, 150);
+DataSenderBlock::DataSenderBlock(int _id) : Block(_id, 1, 0, true), isInitialized(false), pipeName(R"(\\.\pipe\simulink_data)"), bufferSize(1000) {
+    // rezerwacja miejsca dla bufora danych
+    data.reserve(bufferSize);
+    // instancja managera
+    dataManager = DataChannelManager::getInstance();
+}
+
+DataSenderBlock::~DataSenderBlock() {
+    if (dataManager && dataManager->isConnected())
+        dataManager->close();
 }
 
 void DataSenderBlock::process() {
-    if (!sendEnabled) return;
+    if (!isInitialized) {
+        // TODO: dodać pobranie wartości simTime i dt
+        simTime = Model::simTime;
+        dt = Model::timeStep;
 
-    // wysyłanie w zależności od wybranego typu
-    if (dataTypeName == "float") {
-        DataChannelManager::sendData<float>(channelName, inputValues[0], "float");
-    }
-    else if (dataTypeName == "int") {
-        DataChannelManager::sendData<int>(channelName, static_cast<int>(inputValues[0]), "int");
-    }
-    else if (dataTypeName == "double") {
-        DataChannelManager::sendData<double>(channelName, static_cast<double>(inputValues[0]), "double");
+        // inicjalizacja połączenia przy pierwszym uruchomieniu
+        if (dataManager->initialize(pipeName)) {
+            isInitialized = true;
+            std::cout << "[DataSender " << id << "] Connected to Python receiver" << std::endl;
+        }
+        else {
+            std::cerr << "[DataSender " << id << "] Failed to connect to Python receiver" << std::endl;
+            return;
+        }
     }
 
-    sendCounter++;
-    std::cout << "Sent to '" << channelName << "': " << inputValues[0]
-              << " (type: " << dataTypeName << ", count: " << sendCounter << ")" << std::endl;
+    data.push_back(inputValues[0]);
 }
 
 void DataSenderBlock::drawContent() {
     ImGui::Text("Data Sender");
-
-    // nazwa kanału
-    char channelBuffer[128];
-    strcpy(channelBuffer, channelName.c_str());
-    if (ImGui::InputText("Channel", channelBuffer, sizeof(channelBuffer))) {
-        channelName = std::string(channelBuffer);
-    }
-
-    // typ danych
-    const char* types[] = {"float", "int", "double"};
-    static int currentType = 0;
-    if (ImGui::Combo("Data Type", &currentType, types, IM_ARRAYSIZE(types))) {
-        dataTypeName = types[currentType];
-    }
-
-    // kontrolki
-    ImGui::Checkbox("Send enabled", &sendEnabled);
-
-    // informacje
     ImGui::Separator();
-    ImGui::Text("Queue size: %d", DataChannelManager::getChannelSize(channelName));
-    ImGui::Text("Sent count: %d", sendCounter);
 
-    // lista dostępnych kanałów
-    ImGui::Text("Available channels:");
-    auto channels = DataChannelManager::getAvailableChannels();
-    for (const auto& ch : channels) {
-        ImGui::Text("  - %s (%d)", ch.c_str(), DataChannelManager::getChannelSize(ch));
+    if (isInitialized && dataManager->isConnected())
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Connected");
+    else
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Disconnected");
+}
+
+void DataSenderBlock::drawMenu() {
+    if (ImGui::BeginPopup(("BlockMenu" + std::to_string(id)).c_str())) {
+        ImGui::Text("Data Sender Settings");
+        ImGui::Separator();
+
+        // ustawienia pipe'a
+        char pipeNameBuf[256];
+        strcpy(pipeNameBuf, pipeName.c_str());
+        if (ImGui::InputText("Pipe Name", pipeNameBuf, sizeof(pipeNameBuf))) {
+            pipeName = pipeNameBuf;
+            // jeśli zmieniono nazwę, rozłącz i pozwól na ponowne połączenie
+            if (isInitialized) {
+                dataManager->close();
+                isInitialized = false;
+            }
+        }
+        ImGui::EndPopup();
+    }
+}
+
+void DataSenderBlock::resetBefore() {
+    data.clear();
+}
+
+void DataSenderBlock::resetAfter() {
+    // wyślij dane do Pythona
+    if (dataManager && dataManager->isConnected()) {
+        if (!dataManager->sendData(data, dt, simTime)) {
+            std::cerr << "[DataSender " << id << "] Failed to send data" << std::endl;
+            // spróbuj ponownie połączyć przy następnym wywołaniu
+            isInitialized = false;
+        }
     }
 
-    // przycisk czyszczenia
-    if (ImGui::Button("Clear Channel")) {
-        DataChannelManager::clearChannel(channelName);
-    }
-
-    Block::drawContent();
+    // // nie wiem czy będzie potrzebne, ale - wysyłanie pustego pakietu jako reset
+    // if (isInitialized && dataManager->isConnected()) {
+    //     std::vector<float> emptyData;
+    //     // -1 jako sygnał resetu
+    //     dataManager->sendData(emptyData, dt, -1.0f);
+    // }
 }
 
-// getters/setters
-void DataSenderBlock::setChannelName(const std::string& name) {
-    channelName = name;
-}
-
-std::string DataSenderBlock::getChannelName() const {
-    return channelName;
-}
-
-void DataSenderBlock::setDataType(const std::string& type) {
-    dataTypeName = type;
-}
-
-std::string DataSenderBlock::getDataType() const {
-    return dataTypeName;
-}
-
-bool DataSenderBlock::isSendEnabled() const {
-    return sendEnabled;
-}
-
-void DataSenderBlock::setSendEnabled(bool enabled) {
-    sendEnabled = enabled;
-}
-
-int DataSenderBlock::getSendCounter() const {
-    return sendCounter;
-}
