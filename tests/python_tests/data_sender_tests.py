@@ -1,139 +1,139 @@
 #!/usr/bin/env python3
-"""
-Prosty test odbiornika danych z symulacji C++
-Wypisuje wszystkie otrzymane wartości
-"""
 
 import json
-import os
 import sys
-import signal
+import time
 
-def signal_handler(sig, frame):
-    print('\n\nZatrzymano odbieranie (Ctrl+C)')
-    sys.exit(0)
 
+
+#po prosty test odbiornika - odczytuje jedną wiadomość i kończy
 def main():
-    # # Nazwa pipe'a - musi być taka sama jak w C++
-    # pipe_name = "/tmp/simulink_data"
-
-    # Dla Windows użyj:
     pipe_name = r"\\.\pipe\simulink_data"
 
-    print(f"=== Prosty odbiornik danych z C++ ===")
-    print(f"Pipe: {pipe_name}")
-    print(f"Czekam na połączenie...\n")
+    print("=== ONE MESSAGE RECEIVER ===")
+    print(f"PIPE: {pipe_name}")
+    print("Waiting for connection...")
 
-    # Obsługa Ctrl+C
-    signal.signal(signal.SIGINT, signal_handler)
-
-    # Utwórz pipe jeśli nie istnieje (tylko Linux/Mac)
-    if not sys.platform.startswith('win'):
-        if not os.path.exists(pipe_name):
-            try:
-                os.mkfifo(pipe_name)
-                print(f"Utworzono pipe: {pipe_name}")
-            except Exception as e:
-                print(f"Błąd tworzenia pipe: {e}")
-                return
-
-    message_count = 0
-    total_samples = 0
-
+    # na Windows używamy win32file jeśli dostępne, inaczej próbujemy standardową metodę
     try:
-        # Otwórz pipe do odczytu
-        with open(pipe_name, 'r') as pipe:
-            print("✓ Połączono z nadajnikiem C++!")
-            print("Odbieranie danych...\n")
-            print("-" * 60)
+        import win32file
+        import win32pipe
+        use_win32 = True
+        print("USING: win32 API")
+    except ImportError:
+        use_win32 = False
+        print("USING: standard API")
 
-            buffer = ""
+    max_retries = 10
 
-            while True:
-                # Czytaj dane
-                chunk = pipe.read(1024)
-                if not chunk:
-                    print("\n⚠ Pipe zamknięty przez nadajnik")
-                    break
+    for attempt in range(max_retries):
+        try:
+            print(f"ATTEMPT: {attempt + 1}/{max_retries}...")
 
-                buffer += chunk
+            if use_win32:
+                # używaj Windows API
+                try:
+                    handle = win32file.CreateFile(pipe_name, win32file.GENERIC_READ, 0, None, win32file.OPEN_EXISTING, 0, None)
+                    print("CONNECTED! Waiting for data...")
 
-                # Przetwarzaj kompletne wiadomości JSON (zakończone \n)
-                while '\n' in buffer:
-                    line, buffer = buffer.split('\n', 1)
+                    buffer = ""
 
-                    if line:
+                    while True:
                         try:
-                            # Parsuj JSON
-                            data = json.loads(line)
-                            message_count += 1
+                            result, data = win32file.ReadFile(handle, 1024)
+                            if not data:
+                                print("Pipe CLOSED without receiving data")
+                                break
 
-                            # Sprawdź czy to reset
-                            if data['simTime'] == -1:
-                                print("\n🔄 RESET SYMULACJI")
-                                print("-" * 60)
-                                continue
+                            chunk_str = data.decode('utf-8')
+                            buffer += chunk_str
 
-                            # Wypisz informacje o wiadomości
-                            print(f"📨 Wiadomość #{message_count}")
-                            print(f"   Czas symulacji: {data['simTime']:.3f} s")
-                            print(f"   dt: {data['dt']:.4f} s")
-                            print(f"   Liczba próbek: {len(data['data'])}")
+                            # szukaj pierwszej kompletnej wiadomości
+                            if '\n' in buffer:
+                                line = buffer.split('\n', 1)[0]
 
-                            # Wypisz wartości
-                            if data['data']:
-                                print(f"   Wartości:")
+                                if line.strip():
+                                    data = json.loads(line)
 
-                                # Jeśli mało danych, wypisz wszystkie
-                                if len(data['data']) <= 10:
-                                    for i, val in enumerate(data['data']):
-                                        print(f"      [{i}]: {val:.6f}")
-                                else:
-                                    # Jeśli dużo danych, wypisz pierwsze 5 i ostatnie 5
-                                    print(f"      Pierwsze 5:")
-                                    for i in range(5):
-                                        print(f"        [{i}]: {data['data'][i]:.6f}")
+                                    print("\n" + "="*50)
+                                    print("RECEIVED MESSAGE:")
+                                    print("="*50)
+                                    print(f"Simulation Time: {data['simTime']:.3f} s")
+                                    print(f"Time Step: {data['dt']:.4f} s")
+                                    print(f"Amount of data: {len(data['data'])}")
 
-                                    print(f"      ...")
-                                    print(f"      Ostatnie 5:")
-                                    for i in range(-5, 0):
-                                        idx = len(data['data']) + i
-                                        print(f"        [{idx}]: {data['data'][i]:.6f}")
+                                    if data['data']:
+                                        print(f"Data: {data['data']}")
+                                        print(f"Min: {min(data['data']):.6f}")
+                                        print(f"Max: {max(data['data']):.6f}")
+                                        print(f"Average value: {sum(data['data'])/len(data['data']):.6f}")
 
-                                # Statystyki
-                                values = data['data']
-                                print(f"   📊 Statystyki:")
-                                print(f"      Min: {min(values):.6f}")
-                                print(f"      Max: {max(values):.6f}")
-                                print(f"      Średnia: {sum(values)/len(values):.6f}")
+                                    print("="*50)
+                                    print("DONE!")
+                                    win32file.CloseHandle(handle)
+                                    return
 
-                                total_samples += len(data['data'])
-
-                            print("-" * 60)
-
-                        except json.JSONDecodeError as e:
-                            print(f"❌ Błąd parsowania JSON: {e}")
-                            print(f"   Nieprawidłowe dane: {line[:100]}...")
-                        except KeyError as e:
-                            print(f"❌ Brak klucza w JSON: {e}")
-                            print(f"   Otrzymane klucze: {data.keys() if 'data' in locals() else 'N/A'}")
                         except Exception as e:
-                            print(f"❌ Nieoczekiwany błąd: {e}")
+                            print(f"ERROR: while reading - {e}")
+                            break
 
-    except FileNotFoundError:
-        print(f"❌ Nie znaleziono pipe: {pipe_name}")
-        print("Upewnij się, że symulacja C++ jest uruchomiona")
-    except KeyboardInterrupt:
-        pass  # Obsłużone przez signal_handler
-    except Exception as e:
-        print(f"❌ Błąd: {e}")
+                    win32file.CloseHandle(handle)
 
-    # Podsumowanie
-    print("\n" + "=" * 60)
-    print("📊 PODSUMOWANIE:")
-    print(f"   Otrzymanych wiadomości: {message_count}")
-    print(f"   Łączna liczba próbek: {total_samples}")
-    print("=" * 60)
+                except Exception as e:
+                    print(f"ERROR: win32 - {e}")
+                    if attempt >= max_retries - 1:
+                        return
+            else:
+                # fallback - próbuj otworzyć jako tekst
+                try:
+                    with open(pipe_name, 'r', encoding='utf-8') as pipe:
+                        print("CONNECTED! waiting for data...")
+
+                        # czytaj linię po linii
+                        line = pipe.readline()
+                        if line.strip():
+                            data = json.loads(line)
+
+                            print("\n" + "="*50)
+                            print("RECEIVED MESSAGE:")
+                            print("="*50)
+                            print(f"Simulation Time: {data['simTime']:.3f} s")
+                            print(f"Time Step: {data['dt']:.4f} s")
+                            print(f"Amount of data: {len(data['data'])}")
+
+                            if data['data']:
+                                print(f"Data: {data['data']}")
+                                print(f"Min: {min(data['data']):.6f}")
+                                print(f"Max: {max(data['data']):.6f}")
+                                print(f"Average value: {sum(data['data'])/len(data['data']):.6f}")
+
+                            print("="*50)
+                            print("DONE!")
+                            return
+                        else:
+                            print("Received empty line, pipe closed?")
+
+                except OSError as e:
+                    if "Invalid argument" in str(e):
+                        print("ERROR: OSError - probably issue with Named Pipe on Windows")
+                        print("INSTALL pywin32: pip install pywin32")
+                        return
+                    raise e
+
+        except FileNotFoundError:
+            if attempt < max_retries - 1:
+                print("Pipe doesn't exist, waiting...")
+                time.sleep(1)
+            else:
+                print("UNABLE to find pipe. Make sure C++ simulation is running.")
+                return
+        except json.JSONDecodeError as e:
+            print(f"ERROR: JSON - {e}")
+            return
+        except Exception as e:
+            print(f"ERROR: {e}")
+            if attempt >= max_retries - 1:
+                return
 
 if __name__ == "__main__":
     main()
