@@ -669,6 +669,8 @@ void guiClass::drawMenu() {
         if (ImGui::CollapsingHeader("Control Continous")) {
             if (ImGui::Button("Add Tf box"))
                 model.getBlocks().push_back(std::make_unique<TransferFuncionContinous>(next_id++));
+            if (ImGui::Button("Add PID box"))
+                model.getBlocks().push_back(std::make_unique<PID_regulator>(next_id++));
             if (ImGui::Button("Add Gain Box"))
                 model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
             if (ImGui::Button("Add Saturation Box"))

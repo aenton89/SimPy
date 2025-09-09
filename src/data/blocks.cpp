@@ -111,48 +111,6 @@ void MultiplyBlock::resetBefore() {
 
 
 
-// ----------------------------------------------------------------------------------------------------------------------------------------------
-// całkowania
-IntegratorBlock::IntegratorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {
-    size = ImVec2(200, 120);
-    state = initial_state;
-}
-
-void IntegratorBlock::process() {
-    state += inputValues[0] * timeStep;
-    outputValues[0] = state;
-    std::cout<<"integrator: "<<inputValues[0]<<" * "<<timeStep<<" = "<<outputValues[0]<<std::endl;
-}
-
-// TODO: GUI
-void IntegratorBlock::drawContent() {
-    ImGui::Text("Time step: ");
-    ImGui::InputDouble("", &timeStep);
-    ImGui::Text("Integrator: %f", outputValues[0]);
-
-    Block::drawContent();
-}
-
-void IntegratorBlock::resetAfter() {
-    state = initial_state;
-}
-
-void IntegratorBlock::resetBefore() {
-    state = initial_state;
-    outputValues[0] = initial_state;
-}
-
-void IntegratorBlock::setState(double _initial_state) {
-    initial_state = _initial_state;
-    outputValues[0] = _initial_state;
-}
-
-void IntegratorBlock::drawMenu() {
-    ImGui::InputDouble("Initial state: ", &initial_state);
-}
-
-
-
 // ------------------------------------------------------------------------------------------------------------------------------------
 // blok pierwsikaonia
 sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, true)
@@ -553,26 +511,82 @@ void PLotXYBlock::drawMenu() {
     }
 }
 
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// całkowania
+IntegratorBlock::IntegratorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {
+    size = ImVec2(200, 120);
+
+    ss.A = {{0.0}};
+    ss.B = {{1.0}};
+    ss.C = {{1.0}};
+    ss.D = {{0.0}};
+    ss.x = {initial_state};
+}
+
+void IntegratorBlock::process() {
+    // state += inputValues[0] * timeStep;
+    // outputValues[0] = state;
+    auto solver = SolverManager::solver();
+    if (!solver) return;
+
+    std::vector<double> uvec = { inputValues[0] };
+    solver->step(ss, uvec);
+    outputValues[0] = ss.x[0];
+
+    std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
+    double y = yvec[0] + ss.D[0][0] * inputValues[0];
+    outputValues[0] = y;
+
+    //std::cout<<"integrator: "<<inputValues[0]<<" * "<<timeStep<<" = "<<outputValues[0]<<std::endl;
+}
+
+// TODO: GUI
+void IntegratorBlock::drawContent() {
+    ImGui::Text("IntegratorBlock");
+    Block::drawContent();
+}
+
+void IntegratorBlock::resetAfter() {
+
+}
+
+void IntegratorBlock::resetBefore() {
+    ss.x = {initial_state};
+    outputValues[0] = initial_state;
+}
+
+void IntegratorBlock::setState(double _initial_state) {
+    initial_state = _initial_state;
+    outputValues[0] = _initial_state;
+}
+
+void IntegratorBlock::drawMenu() {
+    ImGui::InputDouble("Initial state: ", &initial_state);
+    ImGui::InputDouble("Time step: ", &timeStep);
+}
+
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // roznczkowanie
-DifferentiatorBlock::DifferentiatorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {}
+DifferentiatorBlock::DifferentiatorBlock(int _id)
+    : Block(_id, 1, 1, true), initial_state(0.0) {}
 
 void DifferentiatorBlock::process() {
-    double derivative = (inputValues[0] - initial_state) / timeStep;
-    initial_state = inputValues[0];
+    double derivative = (inputValues[0] - state) / timeStep;
+    state = inputValues[0];
     outputValues[0] = derivative;
 
-    std::cout << "differentiator: (" << inputValues[0] << " - " << initial_state << ") / " << timeStep << " = " << outputValues[0] << std::endl;
+    // std::cout << "differentiator: (" << inputValues[0]
+    //           << " - " << initial_state
+    //           << ") / " << timeStep
+    //           << " = " << outputValues[0]
+    //           << std::endl;
 }
 
 // TODO: GUI
 void DifferentiatorBlock::drawContent() {
-    ImGui::Text("Time step: ");
-    ImGui::InputDouble("", &timeStep);
-    ImGui::Text("Different: %f", outputValues[0]);
-
+    ImGui::Text("Differentiator Block");
     Block::drawContent();
 }
 
@@ -592,8 +606,8 @@ void DifferentiatorBlock::setState(double _initial_state) {
 
 void DifferentiatorBlock::drawMenu() {
     ImGui::InputDouble("Initial state: ", &initial_state);
+    ImGui::InputDouble("Time step: ", &timeStep);
 }
-
 
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
@@ -616,6 +630,113 @@ void SaturationBlock::drawMenu() {
     ImGui::InputDouble("Lower limit", &lowerLimit);
 }
 
+
+// -----------------------------------------------------------------------------------------------------------------------------------------
+// regulator PID
+PID_regulator::PID_regulator(int id_) : Block(id_, 1, 1, true) {
+    size = ImVec2(200, 150);
+    ss.A = {{0}};
+    ss.B = {{1}};
+    ss.C = {{Ki}};
+    ss.D = {{Kp}};
+}
+
+void PID_regulator::process() {
+    auto solver = SolverManager::solver();
+
+    if (!solver) return;
+    std::vector<double> uvec = { inputValues[0] };
+    solver->step(ss, uvec);
+
+    std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
+
+    double y = 0.0;
+
+    if (current_mode == 0) {
+        y = yvec[0] + ss.D[0][0] * inputValues[0]
+            + Kd * (inputValues[0] - state) / timeStep;
+        state = inputValues[0];
+    }
+    else {
+        y = yvec[0] + ss.D[0][0] * inputValues[0];
+    }
+
+    outputValues[0] = y;
+}
+
+
+void PID_regulator::drawContent() {
+    ImGui::Text("PID");
+    Block::drawContent();
+};
+
+void PID_regulator::drawMenu() {
+    const static char* PID_type[] = {"Without filter", "With filter"};
+    if (ImGui::BeginCombo("PID type", PID_type[current_mode], false)) {
+        for (int i=0; i < IM_ARRAYSIZE(PID_type); i++) {
+            bool is_selected = (current_mode == i);
+            if (ImGui::Selectable(PID_type[i], is_selected)) {
+                current_mode = i;
+            }
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::InputDouble("Kp", &Kp);
+    ImGui::InputDouble("Kd", &Kd);
+    ImGui::InputDouble("Ki", &Ki);
+
+
+    // TODO trzeba to poprawic
+
+    if (current_mode == 0) {
+        ss.A = {{0}};
+        ss.B = {{1}};
+        ss.C = {{Ki}};
+        ss.D = {{Kp}};
+
+        ImGui::Text("Kd*s^2 + Kp*s + Ki");
+        ImGui::Text("-------------------");
+        ImGui::Text("        s");
+
+    }
+    else {
+        // Tu cos nie dziala idk dlaczego
+        ss.A = {{0, 0}, {0, -1/tau}};
+        ss.B = {{1}, {Kd/tau}};
+        ss.C = {{Ki, 1}};
+        ss.D = {{Kp}};
+        ImGui::InputDouble("tau", &tau);
+
+        ImGui::Text("   Kp   ");         // człon proporcjonalny
+        ImGui::Text("-------");
+        ImGui::Text("        ");         // pusta linia lub spacja
+
+        ImGui::Text("   Ki   ");         // człon całkujący
+        ImGui::Text("-------");
+        ImGui::Text("    s   ");
+
+        ImGui::Text("   Kd   ");         // człon różniczkujący z filtrem
+        ImGui::Text("-------");
+        ImGui::Text(" 1 + tau*s ");
+
+
+    }
+};
+
+void PID_regulator::resetBefore() {
+    if (current_mode == 0) {
+        ss.x = {0};
+    }
+    else {
+        ss.x = {0, 0};
+    }
+
+
+    state = 0;
+};
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -684,10 +805,14 @@ void printStateSpace(const MatOp::StateSpace& ss) {
 
 MatOp::StateSpace TransferFuncionContinous::tf2ss(std::vector<float> numerator, std::vector<float> denominator) {
 
-    if (denominator.empty()) {
-        throw std::invalid_argument("Mianownik nie może być pusty.");
-    }
+    // if (denominator.empty()) {
+    //     throw std::invalid_argument("Mianownik nie może być pusty.");
+    // }
 
+    if (numerator.size() > denominator.size()) {
+        numerator = {1, 0};
+        denominator = {1, 1};
+    }
     // konwersja float -> double
     std::vector<double> num(numerator.begin(), numerator.end());
     std::vector<double> den(denominator.begin(), denominator.end());
@@ -696,9 +821,7 @@ MatOp::StateSpace TransferFuncionContinous::tf2ss(std::vector<float> numerator, 
     while (!num.empty() && std::fabs(num.front()) < 1e-12) num.erase(num.begin());
     while (!den.empty() && std::fabs(den.front()) < 1e-12) den.erase(den.begin());
 
-    if (den.empty()) {
-        throw std::invalid_argument("Mianownik po redukcji nie może być pusty.");
-    }
+
 
     int deg_num = (int)num.size() - 1;
     int deg_den = (int)den.size() - 1;
@@ -756,13 +879,19 @@ MatOp::StateSpace TransferFuncionContinous::tf2ss(std::vector<float> numerator, 
 }
 
 
-// zapsianie wetora do postaci wielomainu
-std::string polyToString(std::vector<float>& coeffs) {
+std::string floatToStringTrimmed(float value) {
+    // usuwanie zbednych zer w float
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
+
+std::string polyToString(const std::vector<float>& coeffs) {
     std::string result;
     int n = coeffs.size();
 
     for (int i = 0; i < n; ++i) {
-        int coeff = coeffs[i];
+        float coeff = coeffs[i];
         int power = n - i - 1;
 
         if (coeff == 0)
@@ -772,19 +901,19 @@ std::string polyToString(std::vector<float>& coeffs) {
             result += " + ";
 
         if (power == 0) {
-            result += std::to_string(coeff);
+            result += floatToStringTrimmed(coeff);
         }
         else if (power == 1) {
             if (coeff == 1)
                 result += "s";
             else
-                result += std::to_string(coeff) + "s";
+                result += floatToStringTrimmed(coeff) + "s";
         }
         else {
             if (coeff == 1)
                 result += "s^" + std::to_string(power);
             else
-                result += std::to_string(coeff) + "s^" + std::to_string(power);
+                result += floatToStringTrimmed(coeff) + "s^" + std::to_string(power);
         }
     }
 
@@ -794,9 +923,17 @@ std::string polyToString(std::vector<float>& coeffs) {
 void TransferFuncionContinous::drawContent() {
     ImGui::Text("Transfer Funcion Continous");
     ImGui::Separator();
-    ImGui::Text(polyToString(this->numerator).c_str());
+    std::string num_str = polyToString(this->numerator).c_str();
+    std::string denum_str = polyToString(this->denominator).c_str();
+
+    if (num_str.substr(0, 2) > denum_str.substr(0, 2) ) {
+        num_str += " !";
+        denum_str += " !";
+    }
+
+    ImGui::Text(num_str.c_str());
     ImGui::Text("-------------");
-    ImGui::Text(polyToString(this->denominator).c_str());
+    ImGui::Text(denum_str.c_str());
 
     if (this->run_tf2ss) {
         this->numerator = stringToVector(num);

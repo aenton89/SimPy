@@ -20,7 +20,6 @@ namespace MatOp
         std::vector<std::vector<double>> D; // p x m
         std::vector<double> x;              // aktualny stan n x 1
     };
-
 }
 
 #endif //MATRIX_OP_H

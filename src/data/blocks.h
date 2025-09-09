@@ -51,7 +51,9 @@ public:
 class IntegratorBlock : public Block {
 private:
     double initial_state;
-    double state;
+    //double state;
+    MatOp::StateSpace ss;
+
 public:
     // default'owo dt = 0.01
     IntegratorBlock(int _id);
@@ -118,6 +120,30 @@ public:
     squaredBlock(int id_);
     void process() override;
     void drawContent() override;
+};
+
+
+// -----------------------------------------------------------------------------------------------------------------------------------------
+// regulator PID
+class PID_regulator : public Block
+{
+private:
+    MatOp::StateSpace ss;
+    double Kp = 1.0; // wsmocniee dla czesci proporcionalenej
+    double Ki = 1.0; // wzmocneinie dla czesci calkujacej
+    double Kd = 1.0; // wzmocneinei czesci ronziczkujacej
+    double tau = 1.0; // filtr na czesc rozniczujaca
+
+    double state = 0;
+
+    int current_mode = 0;
+
+public:
+    PID_regulator(int _id_);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
 };
 
 
