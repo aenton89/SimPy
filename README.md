@@ -1,4 +1,4 @@
-# ![icon_v3.png](icon_v3.png) SimPy - what is it?
+# ![icon_v3.png](assets/app_icons/icon_v3.png) SimPy - what is it?
 ### patryk wymyśl co tu dać
 - graphical based system??? dunno
 - with data flow
