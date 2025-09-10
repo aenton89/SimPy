@@ -21,7 +21,7 @@ void guiClass::init(GLFWwindow* win, const char* version) {
 
     // jakaś defaultowa ikonka, potem zmienie
     GLFWimage images[1];
-    images[0].pixels = stbi_load("../../assets/app_icon/icon_v3.png", &images[0].width, &images[0].height, 0, 4);
+    images[0].pixels = stbi_load("../../assets/app_icons/icon_v3.png", &images[0].width, &images[0].height, 0, 4);
     glfwSetWindowIcon(window, 1, images);
     stbi_image_free(images[0].pixels);
     if (!images[0].pixels) {
