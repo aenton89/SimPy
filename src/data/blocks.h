@@ -129,8 +129,7 @@ public:
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // FFT
 
-class STFT_block : public Block  // Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
-{
+class STFT_block : public Block {  // Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
 private:
     long windowSize = 128;
     int current_window_mode = 0;
@@ -159,6 +158,14 @@ public:
 // Projektowanie filtrow
 class filterInplementationBlock : public Block {
 private:
+    int current_signal_type = 0;
+
+    int current_pass_type = 0;
+
+    int analog_filter_type = 0;
+
+    int digital_filter_type = 0;
+
 
 public:
     filterInplementationBlock(int id_);

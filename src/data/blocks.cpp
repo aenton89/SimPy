@@ -1172,6 +1172,86 @@ void STFT_block::resetBefore() {
     batch_vector.clear();
 }
 
+// --------------------------------------------------------------------------------------------------------------------------------------
+// Projektowanie filtrow
+
+filterInplementationBlock::filterInplementationBlock(int id_) : Block(id_, 1, 1, true){
+    size = ImVec2(200, 120);
+}
+
+void filterInplementationBlock::drawContent() {
+    ImGui::Text("Filter");
+    Block::drawContent();
+}
+
+void filterInplementationBlock::process() {
+
+}
+
+void filterInplementationBlock::resetBefore() {
+
+}
+
+void filterInplementationBlock::drawMenu() {
+    // Typ filtra ze wzgledu na rodzaj przetwarzanego syganlu
+    const static char* signal_type[] = {"Analog", "Digital"};
+
+    if (ImGui::BeginCombo("Signal Type", signal_type[current_signal_type], false)) {
+        for (int i=0; i < IM_ARRAYSIZE(signal_type); i++) {
+            bool is_selected = (current_signal_type == i);
+            if (ImGui::Selectable(signal_type[i], is_selected)) {
+                current_signal_type = i;
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    // Typ filtra ze wzgledu na rodzaj pasma przenoszenia
+    const static char* pass_type[] = {"Low-Pass, LPF", "High-Pass, HPF", "Band-Pass, BPF", "Band-Stop, BSF"}; // mozna tu dodac jescze nie liniowe plus te co przepsuzaja srodk lub go blokuja
+
+    if (ImGui::BeginCombo("Pass Type", pass_type[current_pass_type], false)) {
+        for (int i=0; i < IM_ARRAYSIZE(pass_type); i++) {
+            bool is_selected = (current_pass_type == i);
+            if (ImGui::Selectable(pass_type[i], is_selected)) {
+                current_pass_type = i;
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    // Podtypy filtrow analogowych
+    const static char* analog_type[] = {"Butterworth", "Chebyshev I", "Chebyshev II", "Bessel", "elliptical"};
+
+    if (current_signal_type == 0){
+        if (ImGui::BeginCombo("Analog filter type", analog_type[analog_filter_type], false)){
+            for (int i=0; i < IM_ARRAYSIZE(analog_type); i++) {
+                bool is_selected = (analog_filter_type == i);
+                if (ImGui::Selectable(analog_type[i], is_selected)){
+                    analog_filter_type = i;
+                }
+            }
+            ImGui::EndCombo();
+        }
+    }
+
+    // Podtypy filtrow cyfrowych
+    const static char* digital_type[] = {"IR", "IIR", "FIR", "FIIR"};
+
+    if (current_signal_type == 1) {
+        if (ImGui::BeginCombo("Analog filter type", digital_type[digital_filter_type], false)){
+            for (int i=0; i < IM_ARRAYSIZE(digital_type); i++) {
+                bool is_selected = (digital_filter_type == i);
+                if (ImGui::Selectable(digital_type[i], is_selected)){
+                    digital_filter_type = i;
+                }
+            }
+            ImGui::EndCombo();
+        }
+    }
+
+}
+
+
 
 // -------------------------------------------------------------------------------------------------------------------------------------------
 // kwadrat liczby

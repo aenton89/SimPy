@@ -699,6 +699,9 @@ void guiClass::drawMenu() {
         if (ImGui::CollapsingHeader("DSP")) {
             if (ImGui::Button("Add STFT Box (work in progres)"))
                 model.getBlocks().push_back(std::make_unique<STFT_block>(next_id++));
+            if (ImGui::Button("Add filter Box")) {
+                model.getBlocks().push_back(std::make_unique<filterInplementationBlock>(next_id++));
+            }
         }
 
         // modul print/ploty
