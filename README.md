@@ -1,13 +1,30 @@
-# ![icon_v3.png](assets/app_icons/icon_v3.png) SimPy - what is it?
-### patryk wymyśl co tu dać
-- graphical based system??? dunno
-- with data flow
-- integrates with python code???
+# ![icon_v3.png](assets/app_icons/icon_v3.png) # SimPy – What is it?
+
+SimPy is an **application with its own Python IDE** and a tool for **block-based modeling of dynamic systems and time-dependent processes**.  
+It allows creating simulations of controllers, regulation systems, and measurement setups without the need for specialized graphical software.
+
+---
+
+# Main Project Goals
+
+1. **Designing measurement paths and control systems for ESP32**  
+   - Creating schematics and generating code ready to upload to ESP32.  
+
+2. **Real-time data analysis**  
+   - Collecting and analyzing data from ESP32 in Python for testing and system optimization.  
+
+3. **Using RL models in dynamic systems**  
+   - Training reinforcement learning models considering the system's characteristics to perform better in simulations and on the actual hardware.  
+
+---
+
+# Actual Work
+
+- Integration of the Python IDE with the simulation application to streamline development and testing.
+
 ### technicals:
-- C++
-- based mostly on ImGui
-- uses Conan for dependencies
-- uses CMake for building
+- C++/Python
+- based mostly on ImGui for UI
 
 # References
 - [conan tutorial](https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile_py.html)
