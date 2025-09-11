@@ -1,35 +1,26 @@
-# ![icon_v3.png](assets/app_icons/icon_v3.png) # SimPy – What is it?
-
-SimPy is an **application with its own Python IDE** and a tool for **block-based modeling of dynamic systems and time-dependent processes**.  
-It allows creating simulations of controllers, regulation systems, and measurement setups without the need for specialized graphical software.
+# ![icon_v3.png](assets/app_icons/icon_v3.png) SimPy
 
 ---
+## Overview
+### What is it?
+- **application with its own Python IDE** and a tool for **block-based modeling of dynamic systems and time-dependent processes**
+- allows creating simulations of controllers, regulation systems, and measurement setups without the need for specialized graphical software
+- integration of the Python IDE with the simulation application to streamline development and testing
+### **Designing measurement paths and control systems for ESP32**  
+- creating schematics and generating code ready to upload to ESP32
+### **Real-time data analysis**  
+- collecting and analyzing data from ESP32 in Python for testing and system optimization
+### **Using RL models in dynamic systems**  
+- training reinforcement learning models considering the system's characteristics to perform better in simulations and on the actual hardware
 
-# Main Project Goals
-
-1. **Designing measurement paths and control systems for ESP32**  
-   - Creating schematics and generating code ready to upload to ESP32.  
-
-2. **Real-time data analysis**  
-   - Collecting and analyzing data from ESP32 in Python for testing and system optimization.  
-
-3. **Using RL models in dynamic systems**  
-   - Training reinforcement learning models considering the system's characteristics to perform better in simulations and on the actual hardware.  
+![github_photo.jpg](assets/github_photo.jpg)
 
 ---
-
-# Actual Work
-
-- Integration of the Python IDE with the simulation application to streamline development and testing.
-
-### technicals:
-- C++/Python
-- based mostly on ImGui for UI
-
 # References
 - [conan tutorial](https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile_py.html)
 - [imgui tutorial](https://thescienceofcode.com/imgui-quickstart/)
 
+---
 # Getting started and so on
 ## 1. install cmake and conan
 ### 1.1. install cmake

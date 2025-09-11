@@ -9,6 +9,7 @@
 #include <cmath>
 #include <numbers>
 #include <complex>
+#include <algorithm>
 
 // w tym pliku są implementacje specyficznych bloków
 
@@ -578,11 +579,9 @@ PlotHeatmapBlock::PlotHeatmapBlock(int _id) : Block(_id, 65, 0, false){
 }
 
 void PlotHeatmapBlock::process() {
-    if (!std::isnan(inputValues[0]))
-    {
+    if (!std::isnan(inputValues[0])) {
         std::cout << "------------------HeatMap---------------: " << inputValues[0] << " " << inputValues.size() << std::endl;
-        for (auto val: inputValues)
-        {
+        for (auto val: inputValues) {
             std::cout << val << " ";
         }
         num_row = std::max(num_row, inputValues.size());
@@ -594,16 +593,17 @@ void PlotHeatmapBlock::drawContent() {
     if (ImPlot::BeginPlot("##PlotHeatmap", size)) {
 
         int rows = num_row;
-        int cols = data.size() / rows; // zakładamy, że data.size() jest wielokrotnością rows
+        // zakładamy, że data.size() jest wielokrotnością rows
+        int cols = data.size() / rows;
 
         if (cols > 0 && rows > 0) {
             ImPlot::PlotHeatmap(
                 "Spectrogram",
                 data.data(),
                 rows, cols,
-                0, 0,                // skala min/max (kolory)
-                "%.1f",              // format etykiet
-                ImPlotPoint(0, 0),   // minimalny punkt (x_min, y_min)
+                0, 0,                   // skala min/max (kolory)
+                "%.1f",                         // format etykiet
+                ImPlotPoint(0, 0),          // minimalny punkt (x_min, y_min)
                 ImPlotPoint(cols-1, rows-1) // maksymalny punkt (x_max, y_max)
             );
         }
@@ -615,20 +615,13 @@ void PlotHeatmapBlock::drawContent() {
 
 
     // int i = 0;
-    // for (auto &arr : data)
-    // {
+    // for (auto &arr : data) {
     //     std::cout << arr << " ";;
     //     i ++ ;
     //     if (i % num_row == 0)
     //         std::cout << std::endl;
     // }
 }
-
-void PlotHeatmapBlock::drawMenu() {
-
-}
-
-
 
 void PlotHeatmapBlock::resetBefore() {
     data.clear();
@@ -637,8 +630,7 @@ void PlotHeatmapBlock::resetBefore() {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // roznczkowanie
-DifferentiatorBlock::DifferentiatorBlock(int _id)
-    : Block(_id, 1, 1, true), initial_state(0.0) {}
+DifferentiatorBlock::DifferentiatorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {}
 
 void DifferentiatorBlock::process() {
     double derivative = (inputValues[0] - state) / Model::timeStep;

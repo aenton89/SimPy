@@ -23,7 +23,6 @@ add_executable(patrykcpp
         src/data/data_sender/data_channel_manager.cpp
         src/data/math/matrix_operation/matrix_op.cpp
         src/data/math/solvers/solverMethod.cpp
-        src/data/math/digital_signal_processing/DSP.h
         src/data/math/digital_signal_processing/DSP.cpp
 )
 

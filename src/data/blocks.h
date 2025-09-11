@@ -319,7 +319,6 @@ public:
     void process() override;
     void drawContent() override;
     void resetBefore() override;
-    void drawMenu() override;
 };
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
