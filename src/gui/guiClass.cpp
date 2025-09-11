@@ -695,6 +695,12 @@ void guiClass::drawMenu() {
                 model.getBlocks().push_back(std::make_unique<WhiteNoiseInputBlock>(next_id++));
         }
 
+        // modul spketum czestoliwosciowego
+        if (ImGui::CollapsingHeader("DSP")) {
+            if (ImGui::Button("Add STFT Box (work in progres)"))
+                model.getBlocks().push_back(std::make_unique<STFT_block>(next_id++));
+        }
+
         // modul print/ploty
         if (ImGui::CollapsingHeader("Print")) {
             if (ImGui::Button("Add Print Box"))
@@ -703,6 +709,8 @@ void guiClass::drawMenu() {
                 model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
             if (ImGui::Button("Add Plot XY Box"))
                 model.getBlocks().push_back(std::make_unique<PLotXYBlock>(next_id++));
+            if (ImGui::Button("Add Spectogram Box (work in progres)"))
+                model.getBlocks().push_back(std::make_unique<PlotHeatmapBlock>(next_id++));
         }
 
         // moduł code

@@ -11,6 +11,7 @@
 #include <random>
 #include "data_sender/data_channel_manager.h"
 #include "math/matrix_operation/matrix_op.h"
+#include <complex>
 
 
 
@@ -124,6 +125,49 @@ public:
     void drawMenu() override;
     void resetBefore() override;
 };
+
+// ----------------------------------------------------------------------------------------------------------------------------------------
+// FFT
+
+class STFT_block : public Block  // Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
+{
+private:
+    long windowSize = 128;
+    int current_window_mode = 0;
+    long overlap = 64;
+    double fs = 1/Model::timeStep;
+
+    long nextPow2 = 128;
+
+    int current_return_type = 0;
+
+    std::vector<double> window_vector; // vector do przechowywania okna
+    std::vector<std::complex<double>> batch_vector; // vector do przechowyania batcha
+
+
+public:
+    STFT_block(int _id_);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+
+    std::vector<double> generateWindowVector(int N, int idx);
+};
+
+// --------------------------------------------------------------------------------------------------------------------------------------
+// Projektowanie filtrow
+class filterInplementationBlock : public Block {
+private:
+
+public:
+    filterInplementationBlock(int id_);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+};
+
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // blok kwadratu sygnalu wejsciwoego
@@ -240,7 +284,7 @@ public:
     void drawMenu() override;
 };
 
-//bloczek wykresy
+//bloczek wykresu XY
 class PLotXYBlock : public Block {
 private:
     float x_limMax = 0;
@@ -258,6 +302,18 @@ public:
     void drawMenu() override;
 };
 
+// bloczke wykresu typu heatmap
+class PlotHeatmapBlock : public Block {
+private:
+    std::vector<float> data;
+    size_t num_row = 1; // liczba wierszy w kolumnie fft
+public:
+    PlotHeatmapBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void resetBefore() override;
+    void drawMenu() override;
+};
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 // blok saturacji

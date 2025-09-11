@@ -155,8 +155,8 @@ void Model::makeConnections() {
                 Block* connectedBlock = it->get();
                 connect(connectedBlock, 0, boxPtr.get(), boxPtr->numConnected);
                 boxPtr->numConnected++;
-                std::cout << "Connected block " << boxPtr->id
-                          << " to block " << connectedBlock->id << std::endl;
+                // std::cout << "Connected block " << boxPtr->id
+                //           << " to block " << connectedBlock->id << std::endl;
             } else {
                 std::cerr << "Warning: Block with ID " << connId << " not found.\n";
             }
@@ -185,9 +185,9 @@ bool Model::hasCycles() {
 }
 
 void Model::simulate() {
-    std::cout<<"simulate() called"<<std::endl;
+   // std::cout<<"simulate() called"<<std::endl;
     if (connections.size() > 0) {
-        std::cout<<"connections.size() > 0"<<std::endl;
+        //std::cout<<"connections.size() > 0"<<std::endl;
         // jeśli mamy cykle, W TEORII potrzebna jest specjalna obsługa (np. iteracyjne rozwiązanie) -> ALE narazie ignorujemy problem
         // bo i tak w naszym przypadku cykle są na sprzężeniach zwrotnych, a w nich ustaliliśmy, że wstawiamy 0.0
         //bool hasCyclesInModel = hasCycles();
@@ -200,7 +200,7 @@ void Model::simulate() {
 
         // przetwarzanie bloków
         for (auto& block : blocks) {
-            std::cout<<"Processing block ID: " << block->getId() << std::endl;
+            //std::cout<<"Processing block ID: " << block->getId() << std::endl;
             block->process();
         }
 
