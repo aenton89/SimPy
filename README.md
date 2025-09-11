@@ -1,6 +1,5 @@
 # ![icon_v3.png](assets/app_icons/icon_v3.png) SimPy
 
----
 ## Overview
 ### What is it?
 - **application with its own Python IDE** and a tool for **block-based modeling of dynamic systems and time-dependent processes**
@@ -15,12 +14,10 @@
 
 ![github_photo.jpg](assets/github_photo.jpg)
 
----
 # References
 - [conan tutorial](https://docs.conan.io/2/tutorial/consuming_packages/the_flexibility_of_conanfile_py.html)
 - [imgui tutorial](https://thescienceofcode.com/imgui-quickstart/)
 
----
 # Getting started and so on
 ## 1. install cmake and conan
 ### 1.1. install cmake
