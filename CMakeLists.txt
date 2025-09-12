@@ -24,6 +24,8 @@ add_executable(patrykcpp
         src/data/math/matrix_operation/matrix_op.cpp
         src/data/math/solvers/solverMethod.cpp
         src/data/math/digital_signal_processing/DSP.cpp
+        src/data/math/math_help_fun/math_help_fun.h
+        src/data/math/math_help_fun/math_help_fun.cpp
 )
 
 target_compile_definitions(patrykcpp PRIVATE

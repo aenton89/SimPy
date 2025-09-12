@@ -5,6 +5,7 @@
 #include "blocks.h"
 #include "data_sender/data_channel_manager.h"
 #include "math/digital_signal_processing/DSP.h"
+#include "math/math_help_fun/math_help_fun.h"
 #include <sstream>
 #include <cmath>
 #include <numbers>
@@ -726,112 +727,6 @@ std::vector<float> TransferFuncionContinous::stringToVector(const std::string& s
 }
 
 
-void printStateSpace(const MatOp::StateSpace& ss) {
-    std::cout << "A:\n";
-    for (const auto& row : ss.A) {
-        for (double v : row) std::cout << v << " ";
-        std::cout << "\n";
-    }
-
-    std::cout << "B:\n";
-    for (const auto& row : ss.B) {
-        for (double v : row) std::cout << v << " ";
-        std::cout << "\n";
-    }
-
-    std::cout << "C:\n";
-    for (const auto& row : ss.C) {
-        for (double v : row) std::cout << v << " ";
-        std::cout << "\n";
-    }
-
-    std::cout << "D:\n";
-    for (const auto& row : ss.D) {
-        for (double v : row) std::cout << v << " ";
-        std::cout << "\n";
-    }
-
-    std::cout << "x (stan początkowy): ";
-    for (double v : ss.x) std::cout << v << " ";
-    std::cout << "\n";
-}
-
-MatOp::StateSpace TransferFuncionContinous::tf2ss(std::vector<float> numerator, std::vector<float> denominator) {
-
-    // if (denominator.empty()) {
-    //     throw std::invalid_argument("Mianownik nie może być pusty.");
-    // }
-
-    if (numerator.size() > denominator.size()) {
-        numerator = {1, 0};
-        denominator = {1, 1};
-    }
-    // konwersja float -> double
-    std::vector<double> num(numerator.begin(), numerator.end());
-    std::vector<double> den(denominator.begin(), denominator.end());
-
-    // usunięcie zer wiodących
-    while (!num.empty() && std::fabs(num.front()) < 1e-12) num.erase(num.begin());
-    while (!den.empty() && std::fabs(den.front()) < 1e-12) den.erase(den.begin());
-
-
-
-    int deg_num = (int)num.size() - 1;
-    int deg_den = (int)den.size() - 1;
-    int n = deg_den;
-
-    // normalizacja do wiodącego 1 w mianowniku
-    double lead = den[0];
-    for (auto &v : den) v /= lead;
-    for (auto &v : num) v /= lead;
-
-    // wyzerowanie wektora num do długości n+1
-    std::vector<double> num_padded(n+1, 0.0);
-    for (int i = 0; i < (int)num.size(); i++) {
-        num_padded[n+1 - num.size() + i] = num[i];
-    }
-
-    std::vector<double> a(den.begin() + 1, den.end());
-
-    double Dval = num_padded[0];
-
-    std::vector<double> cvec(n, 0.0);
-    for (int i = 0; i < n; i++) {
-        cvec[i] = num_padded[i+1] - a[i] * Dval;
-    }
-
-    // macierz A (n x n)
-    std::vector<std::vector<double>> A(n, std::vector<double>(n, 0.0));
-    for (int i = 0; i < n-1; i++) {
-        A[i][i+1] = 1.0;
-    }
-    for (int j = 0; j < n; j++) {
-        A[n-1][j] = -a[n-1-j];
-    }
-
-    // macierz B (n x 1)
-    std::vector<std::vector<double>> B(n, std::vector<double>(1, 0.0));
-    B[n-1][0] = 1.0;
-
-    // macierz C (1 x n)
-    std::vector<std::vector<double>> C(1, std::vector<double>(n, 0.0));
-    for (int i = 0; i < n; i++) {
-        C[0][i] = cvec[n-1-i];
-    }
-
-    // macierz D (1 x 1)
-    std::vector<std::vector<double>> D(1, std::vector<double>(1, Dval));
-
-    // wektor stanu x (n x 1), inicjalizacja zerami
-    std::vector<double> x(n, 0.0);
-
-    MatOp::StateSpace ss{A, B, C, D, x};
-
-    printStateSpace(ss);
-    return ss;
-}
-
-
 std::string floatToStringTrimmed(float value) {
     // usuwanie zbednych zer w float
     std::ostringstream oss;
@@ -893,7 +788,7 @@ void TransferFuncionContinous::drawContent() {
         this->denominator = stringToVector(denum);
 
         // if (this->numerator.size() < this->denominator.size())
-        ss = TransferFuncionContinous::tf2ss(this->numerator, this->denominator);
+        ss = dsp::tf2ss(this->numerator, this->denominator);
         this->run_tf2ss = false;
 
     }
@@ -917,7 +812,6 @@ void TransferFuncionContinous::drawMenu() {
 }
 
 void TransferFuncionContinous::process() {
-    // 1. pobierz globalny solver
     auto solver = SolverManager::solver();
     if (!solver) return;
 
@@ -1169,6 +1063,19 @@ void STFT_block::resetBefore() {
 
 filterInplementationBlock::filterInplementationBlock(int id_) : Block(id_, 1, 1, true){
     size = ImVec2(200, 120);
+    Tf = dsp::butterworth(filter_order, current_pass_type, range);
+
+    std::vector<float> num;
+    std::vector<float> den;
+
+    // przesztalcenie tf w postaci kanonicznej na postac wieloamianowa
+    for (auto val: math::expandPolynomial(Tf.zeros))
+        num.push_back(val.real());
+
+    for (auto val: math::expandPolynomial(Tf.poles))
+        den.push_back(val.real());
+
+    ss = dsp::tf2ss(num, den);
 }
 
 void filterInplementationBlock::drawContent() {
@@ -1176,13 +1083,45 @@ void filterInplementationBlock::drawContent() {
     Block::drawContent();
 }
 
-void filterInplementationBlock::process() {
-
+void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
+    // // --- Wyznacz min/max dla osi Y ---
+    // auto minMaxMagnitude = std::minmax_element(bode.magnitude.begin(), bode.magnitude.end());
+    // auto minMaxPhase = std::minmax_element(bode.phase.begin(), bode.phase.end());
+    //
+    // double mag_min = *minMaxMagnitude.first;
+    // double mag_max = *minMaxMagnitude.second;
+    // double phase_min = *minMaxPhase.first;
+    // double phase_max = *minMaxPhase.second;
+    //
+    // double omega_min = *std::min_element(bode.omega.begin(), bode.omega.end());
+    // double omega_max = *std::max_element(bode.omega.begin(), bode.omega.end());
+    //
+    // // --- Wykres modułu ---
+    // if (ImPlot::BeginPlot("Bode Diagram")) {
+    //     ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10); // logarytmiczna oś X
+    //     ImPlot::SetupAxisLimits(ImAxis_X1, omega_min, omega_max, ImGuiCond_Always);
+    //     ImPlot::SetupAxisLimits(ImAxis_Y1, mag_min, mag_max, ImGuiCond_Always);
+    //     ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
+    //     ImPlot::SetupAxis(ImAxis_Y1, "Magnitude [dB]");
+    //
+    //     ImPlot::PlotLine("Magnitude", bode.omega.data(), bode.magnitude.data(), (int)bode.omega.size());
+    //     ImPlot::EndPlot();
+    // }
+    //
+    // // --- Wykres fazy ---
+    // if (ImPlot::BeginPlot("Bode Phase")) {
+    //     ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+    //     ImPlot::SetupAxisLimits(ImAxis_X1, omega_min, omega_max, ImGuiCond_Always);
+    //     ImPlot::SetupAxisLimits(ImAxis_Y1, phase_min, phase_max, ImGuiCond_Always);
+    //     ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
+    //     ImPlot::SetupAxis(ImAxis_Y1, "Phase [deg]");
+    //
+    //     ImPlot::PlotLine("Phase", bode.omega.data(), bode.phase.data(), (int)bode.omega.size());
+    //     ImPlot::EndPlot();
+    // }
 }
 
-void filterInplementationBlock::resetBefore() {
 
-}
 
 void filterInplementationBlock::drawMenu() {
     // Typ filtra ze wzgledu na rodzaj przetwarzanego syganlu
@@ -1241,6 +1180,61 @@ void filterInplementationBlock::drawMenu() {
         }
     }
 
+    ImGui::InputInt("Order ", &filter_order);
+    filter_order = (filter_order < 1) ? 1 : filter_order;
+    ImGui::InputFloat("Ripple ", &ripple);
+
+    if (current_pass_type == BPF || current_pass_type == BSF) {
+        ImGui::InputDouble("Lower Limit", &lower_limit);
+        ImGui::SameLine();
+        ImGui::InputDouble("Upper Limit", &higher_limit);
+    }
+    else {
+        ImGui::InputDouble("Lower Limit", &lower_limit);
+    }
+    lower_limit = (lower_limit > higher_limit) ? 0 : lower_limit;
+
+    range = {lower_limit * 2 * std::numbers::pi, higher_limit * 2 * std::numbers::pi};
+
+    Tf = dsp::butterworth(filter_order, current_pass_type, range);
+
+    std::vector<float> num;
+    std::vector<float> den;
+
+    // przesztalcenie tf w postaci kanonicznej na postac wieloamianowa
+    for (const auto& val: math::expandPolynomial(Tf.zeros))
+        num.push_back(val.real()*Tf.gain);
+
+    for (const auto& val: math::expandPolynomial(Tf.poles))
+        den.push_back(val.real());
+
+    ss = dsp::tf2ss(num, den);
+
+    dsp::Bode bode = dsp::bode_characteristic(Tf);
+
+    filterInplementationBlock::drawBodePlot(bode);
+
+    //dsp::printStateSpace(ss);
+}
+
+void filterInplementationBlock::process() {
+    auto solver = SolverManager::solver();
+    if (!solver) return;
+
+    std::vector<double> uvec = { inputValues[0] };
+    solver->step(ss, uvec);
+
+    std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
+    double y = yvec[0] + ss.D[0][0] * inputValues[0];
+    outputValues[0] = y;
+}
+
+void filterInplementationBlock::resetBefore() {
+    for (int i = 0; i < outputValues.size(); i++) {
+        outputValues[i] = 0.0;
+        inputValues[i] = 0.0;
+    }
+    std::fill(ss.x.begin(), ss.x.end(), 0.0);
 }
 
 

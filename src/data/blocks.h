@@ -13,6 +13,7 @@
 #include "math/matrix_operation/matrix_op.h"
 #include <complex>
 
+#include "math/digital_signal_processing/DSP.h"
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,7 +98,6 @@ public:
     void drawContent() override;
     void resetBefore() override;
     std::vector<float> stringToVector(const std::string& s);
-    MatOp::StateSpace tf2ss(std::vector<float> numerator, std::vector<float> denominator);
 private:
     bool run_tf2ss;
     MatOp::StateSpace ss;
@@ -159,13 +159,21 @@ public:
 class filterInplementationBlock : public Block {
 private:
     int current_signal_type = 0;
-
     int current_pass_type = 0;
-
     int analog_filter_type = 0;
-
     int digital_filter_type = 0;
 
+    MatOp::StateSpace ss;
+    dsp::tf Tf;
+
+    // typowe parametry filtra
+    int filter_order = 1;
+    float ripple = 1;
+    double lower_limit = 5;
+    double higher_limit = 10;
+    std::vector<double> range = {lower_limit * 2 * std::numbers::pi, higher_limit * 2 * std::numbers::pi};
+
+    void drawBodePlot(const dsp::Bode& bode);
 
 public:
     filterInplementationBlock(int id_);
