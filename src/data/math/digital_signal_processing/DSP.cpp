@@ -229,20 +229,18 @@ dsp::Bode dsp::bode_characteristic(const dsp::tf Tf) {
 
 // filtry
 
-// oblicznaie pol i zer na filtra butterwortha ze wzgledu na rzad, podtyp i pasma odceicia
 dsp::tf dsp::butterworth(int order, int filter_type, const std::vector<double>& cutoff) {
-
     std::vector<std::complex<double>> zeros;
     std::vector<std::complex<double>> poles;
     cd gain = cd(1.0, 0);
 
     tf Tf;
 
-    // 1️Bieguny prototypowego LPF (ωc = 1)
+    // 1️⃣ Bieguny prototypowego LPF (ωc = 1)
     std::vector<std::complex<double>> poles_proto;
     for (int i = 0; i < order; i++) {
         double theta = M_PI * (2.0*i + 1.0 + order) / (2.0*order);
-        std::complex<double> pole = std::exp(std::complex<double>(0.0, theta)); // e^(jθ)
+        std::complex<double> pole = std::exp(std::complex<double>(0.0, theta));
         if (pole.real() < 0)
             poles_proto.push_back(pole);
     }
@@ -250,43 +248,25 @@ dsp::tf dsp::butterworth(int order, int filter_type, const std::vector<double>& 
     if (filter_type == LPF) {
         double wc = cutoff[0];
         for (auto& p : poles_proto) {
-            gain *= wc;
             poles.push_back(p * wc);
+            gain *= wc;
         }
 
-    }
-    else if (filter_type == HPF)
-    {
+    } else if (filter_type == HPF) {
         double wc = cutoff[0];
         for (auto& p : poles_proto) {
             poles.push_back(wc / p);
-            gain /= wc;
+            gain /= -p;
         }
         for (int i = 0; i < order; i++)
             zeros.push_back(std::complex<double>(0, 0));
-    }
-    else if (filter_type == BPF) {
+
+    } else if (filter_type == BPF) {
         double w1 = cutoff[0], w2 = cutoff[1];
         double B = w2 - w1;
         double w0 = std::sqrt(w1 * w2);
 
         for (auto& p : poles_proto) {
-            std::complex<double> A = p * B / 2.0;
-            std::complex<double> delta = std::sqrt(A*A - w0*w0);
-            poles.push_back(A + delta);
-            poles.push_back(A - delta);
-        }
-
-        for (int i = 0; i < order; i++)
-            zeros.push_back(std::complex<double>(0, 0));
-    }
-    else if (filter_type == BSF) {
-        double w1 = cutoff[0], w2 = cutoff[1];
-        double B = w2 - w1;
-        double w0 = std::sqrt(w1 * w2);
-
-        for (auto& p : poles_proto) {
-            gain *= p;
             std::complex<double> A = p * B / 2.0;
             std::complex<double> delta = std::sqrt(A*A - w0*w0);
             poles.push_back(A + delta);
@@ -294,29 +274,36 @@ dsp::tf dsp::butterworth(int order, int filter_type, const std::vector<double>& 
         }
 
         for (int i = 0; i < order; i++) {
-            zeros.push_back(std::complex<double>(0,  w0));
+            zeros.push_back(std::complex<double>(0, 0));
+            zeros.push_back(std::complex<double>(0, 0));
+            gain = cd(1.0, 0.0);
+        }
+
+    } else if (filter_type == BSF) {
+        double w1 = cutoff[0], w2 = cutoff[1];
+        double B = w2 - w1;
+        double w0 = std::sqrt(w1 * w2);
+
+        for (auto& p : poles_proto) {
+            std::complex<double> A = p * B / 2.0;
+            std::complex<double> delta = std::sqrt(A*A - w0*w0);
+            poles.push_back(A + delta);
+            poles.push_back(A - delta);
+            gain *= p;  // Transformacja LP->BSF
+        }
+
+        for (int i = 0; i < order; i++) {
+            zeros.push_back(std::complex<double>(0, w0));
             zeros.push_back(std::complex<double>(0, -w0));
         }
     }
 
-    // std::vector<std::complex<double>> num_cmplx = expandPolynomial(zeros);
-    // std::vector<std::complex<double>> den_cmplx = expandPolynomial(poles);
-
-    // std::vector<float> num(num_cmplx.size());
-    // std::vector<float> den(den_cmplx.size());
-    //
-    // for (size_t i = 0; i < num_cmplx.size(); i++)
-    //     num[i] = static_cast<double>(num_cmplx[i].real() * gain.real());
-    //
-    // for (size_t i = 0; i < den_cmplx.size(); i++)
-    //     den[i] = static_cast<double>(den_cmplx[i].real());
-
-    //printStateSpace(dsp::tf2ss(num, den));
     Tf.zeros = zeros;
     Tf.poles = poles;
     Tf.gain = gain.real();
 
     return Tf;
 }
+
 
 

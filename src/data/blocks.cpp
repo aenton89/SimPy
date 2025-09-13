@@ -1084,43 +1084,24 @@ void filterInplementationBlock::drawContent() {
 }
 
 void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
-    // // --- Wyznacz min/max dla osi Y ---
-    // auto minMaxMagnitude = std::minmax_element(bode.magnitude.begin(), bode.magnitude.end());
-    // auto minMaxPhase = std::minmax_element(bode.phase.begin(), bode.phase.end());
-    //
-    // double mag_min = *minMaxMagnitude.first;
-    // double mag_max = *minMaxMagnitude.second;
-    // double phase_min = *minMaxPhase.first;
-    // double phase_max = *minMaxPhase.second;
-    //
-    // double omega_min = *std::min_element(bode.omega.begin(), bode.omega.end());
-    // double omega_max = *std::max_element(bode.omega.begin(), bode.omega.end());
-    //
-    // // --- Wykres modułu ---
-    // if (ImPlot::BeginPlot("Bode Diagram")) {
-    //     ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10); // logarytmiczna oś X
-    //     ImPlot::SetupAxisLimits(ImAxis_X1, omega_min, omega_max, ImGuiCond_Always);
-    //     ImPlot::SetupAxisLimits(ImAxis_Y1, mag_min, mag_max, ImGuiCond_Always);
-    //     ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
-    //     ImPlot::SetupAxis(ImAxis_Y1, "Magnitude [dB]");
-    //
-    //     ImPlot::PlotLine("Magnitude", bode.omega.data(), bode.magnitude.data(), (int)bode.omega.size());
-    //     ImPlot::EndPlot();
-    // }
-    //
-    // // --- Wykres fazy ---
-    // if (ImPlot::BeginPlot("Bode Phase")) {
-    //     ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
-    //     ImPlot::SetupAxisLimits(ImAxis_X1, omega_min, omega_max, ImGuiCond_Always);
-    //     ImPlot::SetupAxisLimits(ImAxis_Y1, phase_min, phase_max, ImGuiCond_Always);
-    //     ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
-    //     ImPlot::SetupAxis(ImAxis_Y1, "Phase [deg]");
-    //
-    //     ImPlot::PlotLine("Phase", bode.omega.data(), bode.phase.data(), (int)bode.omega.size());
-    //     ImPlot::EndPlot();
-    // }
-}
+    // Wykres modułu
+    if (ImPlot::BeginPlot("Bode Diagram")) {
+        ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10); // logarytmiczna oś X
+        ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
+        ImPlot::SetupAxis(ImAxis_Y1, "Magnitude [dB]");
+        ImPlot::PlotLine("Magnitude", bode.omega.data(), bode.magnitude.data(), (int)bode.omega.size());
+        ImPlot::EndPlot();
+    }
 
+    // Wykres fazy
+    if (ImPlot::BeginPlot("Bode Phase")) {
+        ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+        ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
+        ImPlot::SetupAxis(ImAxis_Y1, "Phase [deg]");
+        ImPlot::PlotLine("Phase", bode.omega.data(), bode.phase.data(), (int)bode.omega.size());
+        ImPlot::EndPlot();
+    }
+}
 
 
 void filterInplementationBlock::drawMenu() {
@@ -1214,7 +1195,7 @@ void filterInplementationBlock::drawMenu() {
 
     filterInplementationBlock::drawBodePlot(bode);
 
-    //dsp::printStateSpace(ss);
+    dsp::printStateSpace(ss);
 }
 
 void filterInplementationBlock::process() {
