@@ -166,6 +166,8 @@ private:
     MatOp::StateSpace ss;
     dsp::tf Tf;
 
+    dsp::FilterDesigner filter_designer;
+
     // typowe parametry filtra
     int filter_order = 1;
     float ripple = 1;
@@ -334,7 +336,7 @@ public:
 class SaturationBlock : public Block {
 private:
     double upperLimit = 1.0f;
-    double lowerLimit = 1.0f;
+    double lowerLimit = -1.0f;
 public:
     SaturationBlock(int _id);
     void process() override;
@@ -347,7 +349,7 @@ public:
 class DeadZoneBlock : public Block {
 private:
     double startDeadZone = -1.f;
-    double endDeadZone = -1.f;
+    double endDeadZone = 1.f;
 public:
     DeadZoneBlock(int _id);
     void process() override;

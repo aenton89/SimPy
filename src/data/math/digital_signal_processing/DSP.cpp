@@ -179,131 +179,480 @@ MatOp::StateSpace dsp::tf2ss(std::vector<float> numerator, std::vector<float> de
 }
 
 // charakterystyka Bodego (trzeba podac zera i bieguny)
-dsp::Bode dsp::bode_characteristic(const dsp::tf Tf) {
+dsp::Bode dsp::bode_characteristic(const tf& Tf) {
 
-    float wmin = std::numeric_limits<float>::max();
-    float wmax = 0.0;
-    dsp::Bode bode;
+    double wmin = std::numeric_limits<double>::max();
+    double wmax = 0.0;
 
+    // Szukamy minimalnej i maksymalnej wartości modułu biegunów i zer
     for (const auto& p: Tf.poles) {
-        float mag = abs(p);
+        double mag = std::abs(p);
         if (mag < wmin) wmin = mag;
         if (mag > wmax) wmax = mag;
     }
 
     for (const auto& z: Tf.zeros) {
-        float mag = abs(z);
+        double mag = std::abs(z);
         if (mag < wmin) wmin = mag;
         if (mag > wmax) wmax = mag;
     }
 
-    // margines dla dekady
+    // zabezpieczenie w przypadku wmin = 0
+    if (wmin == 0.0) wmin = 1e-3;
+
     wmin *= 0.1;
     wmax *= 10.0;
 
-    int N = (std::log10(wmax/wmin) * 20) + 1;
+    int N = static_cast<int>(std::log10(wmax/wmin) * 100) + 1;
 
-    for (int i=0; i<N; i++) {
-        double w = std::pow(wmin*(wmax/wmin), i/(N-1)); // pkt na charaterystuce
+    dsp::Bode bode;
+
+
+    for (int i = 0; i < N; i++) {
+        // logarytmicznie rozłożone częstotliwości
+        double w = wmin * std::pow(wmax/wmin, static_cast<double>(i)/(N-1));
         cd s(0, w);
 
-        cd num = cd(1.0, 0);
+        cd num(1.0, 0);
         for (auto z: Tf.zeros) num *= (s - z);
 
-        cd den = cd(1.0, 0);
+        cd den(1.0, 0);
         for (auto p: Tf.poles) den *= (s - p);
 
-        cd H = Tf.gain*num/den;
+        cd H = Tf.gain * num / den;
 
-        double magnitude_dB = 20*std::log10(abs(H));
-        double phase_deg = std::arg(H)*180.0/M_PI;
+        double magnitude_dB = 20.0 * std::log10(std::abs(H));
+        double phase_deg = std::arg(H) * 180.0 / M_PI;
+
+        //std::cout << magnitude_dB << " " << phase_deg << " " << w << std::endl;
 
         bode.magnitude.push_back(magnitude_dB);
         bode.phase.push_back(phase_deg);
         bode.omega.push_back(w);
     }
 
+
     return bode;
 }
 
 
+
 // filtry
 
-dsp::tf dsp::butterworth(int order, int filter_type, const std::vector<double>& cutoff) {
-    std::vector<std::complex<double>> zeros;
-    std::vector<std::complex<double>> poles;
-    cd gain = cd(1.0, 0);
+// Zamysl jest taki. Na poaczku projektujemy prototyp filtra (LPF dla cutof = 1) Nastepnie modyfikujemy go jedna funkja na juz ionne typu o konretnych cutoff
 
+
+dsp::FilterDesigner::FilterDesigner() {
+    Tf = dsp::FilterDesigner::butterworth_proto();
+    dsp::FilterDesigner::apply_filter_subtype();
+}
+
+dsp::tf dsp::FilterDesigner::butterworth_proto() {
     tf Tf;
+    std::vector<cd> poles;
 
-    // 1️⃣ Bieguny prototypowego LPF (ωc = 1)
-    std::vector<std::complex<double>> poles_proto;
     for (int i = 0; i < order; i++) {
-        double theta = M_PI * (2.0*i + 1.0 + order) / (2.0*order);
-        std::complex<double> pole = std::exp(std::complex<double>(0.0, theta));
-        if (pole.real() < 0)
-            poles_proto.push_back(pole);
+        double theta = M_PI * (2.0 * i + 1.0 + order) / (2.0 * order);
+        cd pole = std::exp(cd(0.0, theta));
+        if (pole.real() < 0.0) {
+            poles.push_back(pole);
+        }
     }
 
-    if (filter_type == LPF) {
-        double wc = cutoff[0];
-        for (auto& p : poles_proto) {
-            poles.push_back(p * wc);
-            gain *= wc;
-        }
+    Tf.zeros = {};      // brak zer w prototypie
+    Tf.poles = poles;   // bieguny na lewej półpłaszczyźnie
+    Tf.gain = 1.0;      // normalizacja
 
-    } else if (filter_type == HPF) {
-        double wc = cutoff[0];
-        for (auto& p : poles_proto) {
-            poles.push_back(wc / p);
-            gain /= -p;
-        }
-        for (int i = 0; i < order; i++)
-            zeros.push_back(std::complex<double>(0, 0));
+    return Tf;
+}
 
-    } else if (filter_type == BPF) {
-        double w1 = cutoff[0], w2 = cutoff[1];
-        double B = w2 - w1;
-        double w0 = std::sqrt(w1 * w2);
+dsp::tf dsp::FilterDesigner::chebyshev_i_proto() {
+    tf Tf;
+    std::vector<cd> poles;
 
-        for (auto& p : poles_proto) {
-            std::complex<double> A = p * B / 2.0;
-            std::complex<double> delta = std::sqrt(A*A - w0*w0);
-            poles.push_back(A + delta);
-            poles.push_back(A - delta);
-        }
+    double epsilon = std::sqrt(std::pow(10, ripple/10.0) - 1.0);
+    double beta = std::asinh(1.0 / epsilon);
+    int N = order;
 
-        for (int i = 0; i < order; i++) {
-            zeros.push_back(std::complex<double>(0, 0));
-            zeros.push_back(std::complex<double>(0, 0));
-            gain = cd(1.0, 0.0);
-        }
+    for (int k = 1; k <= N; k++) {
+        double theta = M_PI * (2.0 * k - 1.0) / (2.0 * N);
+        cd pole(
+            -std::sinh(beta / N) * std::sin(theta),
+             std::cosh(beta / N) * std::cos(theta)
+        );
+        //if (pole.real() < 0.0)  // tylko lewa półpłaszczyzna
+            poles.push_back(pole);
+    }
 
-    } else if (filter_type == BSF) {
-        double w1 = cutoff[0], w2 = cutoff[1];
-        double B = w2 - w1;
-        double w0 = std::sqrt(w1 * w2);
+    Tf.zeros = {};
+    Tf.poles = poles;
+    Tf.gain = 1.0 ;
 
-        for (auto& p : poles_proto) {
-            std::complex<double> A = p * B / 2.0;
-            std::complex<double> delta = std::sqrt(A*A - w0*w0);
-            poles.push_back(A + delta);
-            poles.push_back(A - delta);
-            gain *= p;  // Transformacja LP->BSF
-        }
+    return Tf;
+}
 
-        for (int i = 0; i < order; i++) {
-            zeros.push_back(std::complex<double>(0, w0));
-            zeros.push_back(std::complex<double>(0, -w0));
-        }
+dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() {
+    tf Tf;
+    std::vector<cd> poles;
+    std::vector<cd> zeros;
+
+    int N = order;
+    double epsilon = std::sqrt(std::pow(10, ripple/10.0) - 1.0);
+    double beta = std::asinh(1.0 / epsilon)/N;   // tylko raz dzielimy przez N
+
+    for (int k = 1; k <= N; k++) {
+        double theta = M_PI * (2.0 * k - 1.0) / (2.0 * N);
+        cd pole(
+            -std::sinh(beta) * std::sin(theta),
+             std::cosh(beta) * std::cos(theta)
+        );
+        cd zero(0.0, 1.0 / std::cos(theta));
+
+        poles.push_back(pole);
+        zeros.push_back(zero);
     }
 
     Tf.zeros = zeros;
     Tf.poles = poles;
-    Tf.gain = gain.real();
+    Tf.gain = 1.0;
 
     return Tf;
 }
+
+// idk czy ja mam w cutoff robic normalziacje czy w pkt odniesienia
+double eval_H(const dsp::tf& Tf, double omega) {
+    cd s(0, omega);
+
+    cd num(1.0, 0);
+    for (auto z: Tf.zeros) num *= (s - z);
+
+    cd den(1.0, 0);
+    for (auto p: Tf.poles) den *= (s - p);
+
+    cd H = Tf.gain * num / den;
+
+    return std::abs(H);
+}
+
+
+void dsp::FilterDesigner::apply_filter_subtype() {
+    std::vector<cd> new_poles;
+    std::vector<cd> new_zeros;
+    double gain = 1.0;
+
+    if (filter_subtype == LPF) {
+        double wc = cutoff[0];
+        for (auto& p : Tf.poles)
+            new_poles.push_back(p * wc);
+
+        // Jeśli prototyp ma zera, skalujemy je tak samo
+        for (auto& z : Tf.zeros)
+            new_zeros.push_back(z * wc);
+
+        Tf.poles = new_poles;
+        Tf.zeros = new_zeros;
+
+        // Normalizacja w ω = 0
+        double H0 = eval_H(Tf, 0.0);
+        Tf.gain /= H0;
+
+    } else if (filter_subtype == HPF) {
+        double wc = cutoff[0];
+        for (auto& p : Tf.poles)
+            new_poles.push_back(wc / p);
+
+        // Transformacja zer: zera z prototypu + domyślne w 0 dla LPF bez zer
+        if (Tf.zeros.empty()) {
+            for (size_t i = 0; i < Tf.poles.size(); i++)
+                new_zeros.push_back(cd(0, 0));
+        } else {
+            for (auto& z : Tf.zeros)
+                new_zeros.push_back(wc / z);
+        }
+
+        Tf.poles = new_poles;
+        Tf.zeros = new_zeros;
+
+        // Normalizacja w ω → ∞
+        double Hinf = eval_H(Tf, 1e6);
+        Tf.gain /= Hinf;
+
+    } else if (filter_subtype == BPF) {
+        double w1 = cutoff[0], w2 = cutoff[1];
+        double B = w2 - w1;
+        double w0 = std::sqrt(w1 * w2);
+
+        // Transformacja biegunów LPF → BPF
+        for (auto& p : Tf.poles) {
+            cd A = p * B / 2.0;
+            cd delta = std::sqrt(A*A - w0*w0);
+            new_poles.push_back(A + delta);
+            new_poles.push_back(A - delta);
+        }
+
+        // Transformacja zer
+        if (Tf.zeros.empty()) {
+            for (size_t i = 0; i < Tf.poles.size() / 2; i++) {
+                new_zeros.push_back(cd(0, 0));
+                new_zeros.push_back(cd(0, 0));
+            }
+        } else {
+            for (auto& z : Tf.zeros) {
+                cd A = z * B / 2.0;
+                cd delta = std::sqrt(A*A - w0*w0);
+                new_zeros.push_back(A + delta);
+                new_zeros.push_back(A - delta);
+            }
+        }
+
+        Tf.poles = new_poles;
+        Tf.zeros = new_zeros;
+
+        // Normalizacja w ω = w0 (środek pasma)
+        double Hmid = eval_H(Tf, w0);
+        Tf.gain /= Hmid;
+
+    } else if (filter_subtype == BSF) {
+        double w1 = cutoff[0], w2 = cutoff[1];
+        double B = w2 - w1;
+        double w0 = std::sqrt(w1 * w2);
+
+        for (auto& p : Tf.poles) {
+            cd A = p * B / 2.0;
+            cd delta = std::sqrt(A*A - w0*w0);
+            new_poles.push_back(A + delta);
+            new_poles.push_back(A - delta);
+        }
+
+        if (Tf.zeros.empty()) {
+            for (size_t i = 0; i < Tf.poles.size() / 2; i++) {
+                new_zeros.push_back(cd(0, w0));
+                new_zeros.push_back(cd(0, -w0));
+            }
+        } else {
+            for (auto& z : Tf.zeros) {
+                cd A = z * B / 2.0;
+                cd delta = std::sqrt(A*A - w0*w0);
+                new_zeros.push_back(A + delta);
+                new_zeros.push_back(A - delta);
+            }
+        }
+
+        Tf.poles = new_poles;
+        Tf.zeros = new_zeros;
+
+        // Normalizacja w ω = 0
+        double H0 = eval_H(Tf, 0.0);
+        Tf.gain /= H0;
+    }
+}
+
+
+
+void dsp::FilterDesigner::apply_setting(int order, int filter_type, int filter_subtype, float ripple, std::vector<double> cutoff) {
+    this->order = order;
+    this->filter_type = filter_type;
+    this->filter_subtype = filter_subtype;
+    this->ripple = ripple;
+    this->cutoff = cutoff;
+
+    if (filter_subtype == LPF || filter_subtype == HPF)
+        this->cutoff[1] = this->cutoff[0];
+
+    std::cout << this->filter_type << std::endl;
+
+    if (this->filter_type == BUTTERWORTH)
+        Tf = FilterDesigner::butterworth_proto();
+    else if (this->filter_type == CHEBYSHEV_I)
+        Tf = FilterDesigner::chebyshev_i_proto();
+    else if (this->filter_type == CHEBYSHEV_II)
+        Tf = FilterDesigner::chebyshev_ii_proto();
+
+    dsp::FilterDesigner::apply_filter_subtype();
+}
+
+dsp::tf dsp::FilterDesigner::get_tf() {
+    return Tf;
+}
+
+
+
+
+
+
+
+
+
+// // filtr butherwortha
+// dsp::tf dsp::butterworth_proto(const int& order) {
+//     dsp::tf Tf;
+//     std::vector<cd> poles;
+//
+//     for (int i=0; i<order; i++) {
+//         double theta = M_PI * (2.0*i + 1.0 + order) / (2.0*order);
+//         cd pole = std::exp(cd(0.0, theta));
+//         if (pole.real() < 0.0) {
+//             poles.push_back(pole);
+//         }
+//     }
+//     Tf.zeros = {};         // brak zer w prototypie
+//     Tf.poles = poles;      // bieguny na półpłaszczyźnie lewej
+//     Tf.gain = 1.0;         // normalizacja
+//
+//     return Tf;
+// }
+//
+// // filtr czebyszewicza
+// dsp::tf dsp::chebyshev_1_proto(const int& order) {
+//     dsp::tf Tf;
+//     std::vector<cd> poles;
+//
+//     for (int i = 0; i < order; i++) {
+//
+//     }
+// }
+//
+//
+//
+// dsp::tf dsp::apply_filter_subtype(const int& filter_type, dsp::tf tf_zp, const std::vector<double>& cutoff) {
+//     cd gain = cd(1.0, 0);
+//     std::vector<cd> new_poles;
+//     std::vector<cd> new_zeros;
+//
+//     if (filter_type == LPF) {
+//         double wc = cutoff[0];
+//         for (auto& p : tf_zp.poles) {
+//             new_poles.push_back(p * wc);
+//             gain *= wc;
+//         }
+//         // brak zer
+//
+//     } else if (filter_type == HPF) {
+//         double wc = cutoff[0];
+//         for (auto& p : tf_zp.poles) {
+//             new_poles.push_back(wc / p);
+//             gain *= -1.0 / p;
+//         }
+//         for (int i=0; i<tf_zp.poles.size(); i++)
+//             new_zeros.push_back(cd(0,0));
+//
+//     } else if (filter_type == BPF) {
+//         double w1 = cutoff[0], w2 = cutoff[1];
+//         double B = w2 - w1;
+//         double w0 = std::sqrt(w1 * w2);
+//
+//         for (auto& p : tf_zp.poles) {
+//             cd A = p * B / 2.0;
+//             cd delta = std::sqrt(A*A - w0*w0);
+//             new_poles.push_back(A + delta);
+//             new_poles.push_back(A - delta);
+//         }
+//         for (int i=0; i<tf_zp.poles.size(); i++) {
+//             new_zeros.push_back(cd(0,0));
+//             new_zeros.push_back(cd(0,0));
+//         }
+//         gain = 1;
+//
+//     } else if (filter_type == BSF) {
+//         double w1 = cutoff[0], w2 = cutoff[1];
+//         double B = w2 - w1;
+//         double w0 = std::sqrt(w1 * w2);
+//
+//         for (auto& p : tf_zp.poles) {
+//             cd A = p * B / 2.0;
+//             cd delta = std::sqrt(A*A - w0*w0);
+//             new_poles.push_back(A + delta);
+//             new_poles.push_back(A - delta);
+//             gain *= p;
+//         }
+//         for (int i=0; i<tf_zp.poles.size(); i++) {
+//             new_zeros.push_back(cd(0, w0));
+//             new_zeros.push_back(cd(0,-w0));
+//         }
+//     }
+//
+//     tf_zp.poles = new_poles;
+//     tf_zp.zeros = new_zeros;
+//     tf_zp.gain = gain.real();
+//     return tf_zp;
+// }
+
+
+
+// dsp::tf dsp::butterworth(int order, int filter_type, const std::vector<double>& cutoff) {
+//     std::vector<std::complex<double>> zeros;
+//     std::vector<std::complex<double>> poles;
+//     cd gain = cd(1.0, 0);
+//
+//     tf Tf;
+//
+//     std::vector<std::complex<double>> poles_proto;
+//     for (int i = 0; i < order; i++) {
+//         double theta = M_PI * (2.0*i + 1.0 + order) / (2.0*order);
+//         std::complex<double> pole = std::exp(std::complex<double>(0.0, theta));
+//         if (pole.real() < 0)
+//             poles_proto.push_back(pole);
+//     }
+//
+//     if (filter_type == LPF) {
+//         double wc = cutoff[0];
+//         for (auto& p : poles_proto) {
+//             poles.push_back(p * wc);
+//             gain *= wc;
+//         }
+//
+//     } else if (filter_type == HPF) {
+//         double wc = cutoff[0];
+//         for (auto& p : poles_proto) {
+//             poles.push_back(wc / p);
+//             gain /= -p;
+//         }
+//         for (int i = 0; i < order; i++)
+//             zeros.push_back(std::complex<double>(0, 0));
+//
+//     } else if (filter_type == BPF) {
+//         double w1 = cutoff[0], w2 = cutoff[1];
+//         double B = w2 - w1;
+//         double w0 = std::sqrt(w1 * w2);
+//
+//         for (auto& p : poles_proto) {
+//             std::complex<double> A = p * B / 2.0;
+//             std::complex<double> delta = std::sqrt(A*A - w0*w0);
+//             poles.push_back(A + delta);
+//             poles.push_back(A - delta);
+//         }
+//
+//         for (int i = 0; i < order; i++) {
+//             zeros.push_back(std::complex<double>(0, 0));
+//             zeros.push_back(std::complex<double>(0, 0));
+//             gain = cd(1.0, 0.0);
+//         }
+//
+//     } else if (filter_type == BSF) {
+//         double w1 = cutoff[0], w2 = cutoff[1];
+//         double B = w2 - w1;
+//         double w0 = std::sqrt(w1 * w2);
+//
+//         for (auto& p : poles_proto) {
+//             std::complex<double> A = p * B / 2.0;
+//             std::complex<double> delta = std::sqrt(A*A - w0*w0);
+//             poles.push_back(A + delta);
+//             poles.push_back(A - delta);
+//             gain *= p;  // Transformacja LP->BSF
+//         }
+//
+//         for (int i = 0; i < order; i++) {
+//             zeros.push_back(std::complex<double>(0, w0));
+//             zeros.push_back(std::complex<double>(0, -w0));
+//         }
+//     }
+//
+//     Tf.zeros = zeros;
+//     Tf.poles = poles;
+//     Tf.gain = gain.real();
+//
+//     return Tf;
+// }
 
 
 

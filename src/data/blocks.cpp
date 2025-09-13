@@ -1063,7 +1063,12 @@ void STFT_block::resetBefore() {
 
 filterInplementationBlock::filterInplementationBlock(int id_) : Block(id_, 1, 1, true){
     size = ImVec2(200, 120);
-    Tf = dsp::butterworth(filter_order, current_pass_type, range);
+
+    // Tf = dsp::butterworth_proto(filter_order);
+    // Tf = dsp::apply_filter_subtype(current_pass_type, Tf, range);
+    //Tf = dsp::butterworth(filter_order, current_pass_type, range);
+    filter_designer.apply_setting(filter_order, current_signal_type, current_pass_type, ripple, range);
+    Tf = filter_designer.get_tf();
 
     std::vector<float> num;
     std::vector<float> den;
@@ -1085,10 +1090,23 @@ void filterInplementationBlock::drawContent() {
 
 void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
     // Wykres modułu
+    double min_omega = *std::min_element(bode.omega.begin(), bode.omega.end());
+    double max_omega = *std::max_element(bode.omega.begin(), bode.omega.end());
+
+    double min_mag = *std::min_element(bode.magnitude.begin(), bode.magnitude.end());
+    double max_mag = *std::max_element(bode.magnitude.begin(), bode.magnitude.end());
+
+    double min_phase = *std::min_element(bode.phase.begin(), bode.phase.end());
+    double max_phase = *std::max_element(bode.phase.begin(), bode.phase.end());
+
     if (ImPlot::BeginPlot("Bode Diagram")) {
-        ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10); // logarytmiczna oś X
+        ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
         ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
         ImPlot::SetupAxis(ImAxis_Y1, "Magnitude [dB]");
+
+        ImPlot::SetupAxisLimits(ImAxis_X1, min_omega - 0.1*min_omega, max_omega + 0.1*max_omega, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, min_mag - 0.1*min_mag, max_mag + 0.1*max_mag, ImGuiCond_Always);
+
         ImPlot::PlotLine("Magnitude", bode.omega.data(), bode.magnitude.data(), (int)bode.omega.size());
         ImPlot::EndPlot();
     }
@@ -1098,10 +1116,15 @@ void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
         ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
         ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
         ImPlot::SetupAxis(ImAxis_Y1, "Phase [deg]");
+
+        ImPlot::SetupAxisLimits(ImAxis_X1, min_omega - 0.1*min_omega, max_omega + 0.1*max_omega, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, min_phase - 0.1*min_phase, max_phase + 0.1*max_phase, ImGuiCond_Always);
+
         ImPlot::PlotLine("Phase", bode.omega.data(), bode.phase.data(), (int)bode.omega.size());
         ImPlot::EndPlot();
     }
 }
+
 
 
 void filterInplementationBlock::drawMenu() {
@@ -1164,6 +1187,7 @@ void filterInplementationBlock::drawMenu() {
     ImGui::InputInt("Order ", &filter_order);
     filter_order = (filter_order < 1) ? 1 : filter_order;
     ImGui::InputFloat("Ripple ", &ripple);
+    ripple = (ripple == 0) ? 1 : ripple;
 
     if (current_pass_type == BPF || current_pass_type == BSF) {
         ImGui::InputDouble("Lower Limit", &lower_limit);
@@ -1177,7 +1201,10 @@ void filterInplementationBlock::drawMenu() {
 
     range = {lower_limit * 2 * std::numbers::pi, higher_limit * 2 * std::numbers::pi};
 
-    Tf = dsp::butterworth(filter_order, current_pass_type, range);
+    // Tf = dsp::butterworth_proto(filter_order);
+    // Tf = dsp::apply_filter_subtype(current_pass_type, Tf, range);
+    filter_designer.apply_setting(filter_order, analog_filter_type, current_pass_type, ripple, range);
+    Tf = filter_designer.get_tf();
 
     std::vector<float> num;
     std::vector<float> den;
@@ -1195,7 +1222,7 @@ void filterInplementationBlock::drawMenu() {
 
     filterInplementationBlock::drawBodePlot(bode);
 
-    dsp::printStateSpace(ss);
+    //dsp::printStateSpace(ss);
 }
 
 void filterInplementationBlock::process() {

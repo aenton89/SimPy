@@ -7,6 +7,13 @@
 #define BPF 2
 #define BSF 3
 
+#define BUTTERWORTH 0
+#define CHEBYSHEV_I 1
+#define CHEBYSHEV_II 2
+#define BESSEL 3
+#define ELLIPTICAL 4
+
+
 #ifndef DSP_H
 #define DSP_H
 
@@ -40,13 +47,47 @@ namespace dsp{
         std::vector<double> omega;
     };
 
-    Bode bode_characteristic(const tf Tf);
+    Bode bode_characteristic(const tf& Tf);
+
 
     // filtry
+    class FilterDesigner {
+    private:
+        int order = 1;
+        int filter_type = BUTTERWORTH;
+        int filter_subtype = LPF;
+        float ripple = 1.0;
+
+        tf Tf;
+        std::vector<double> cutoff = {5, 10};
+
+    protected:
+        tf butterworth_proto();
+        tf chebyshev_i_proto();
+        tf chebyshev_ii_proto();
+
+        void apply_filter_subtype();
+
+    public:
+        FilterDesigner();
+
+        void apply_setting(int order, int filter_type, int filter_subtype, float ripple, std::vector<double> cutoff);
+        tf get_tf();
+    };
+
+
 
     void printStateSpace(const MatOp::StateSpace& ss);
 
-    tf butterworth(int order, int filter_type, const std::vector<double>& cutoff);
+    // filtr butherwortha
+    // tf butterworth_proto(const int& order);
+    // // filtr chebyszewicza 1 rodzaju
+    // tf chebyshev_1_proto(const int& order);
+    //
+    // // uniwersalna metoda do zamiany LPF na inne
+    // tf apply_filter_subtype(const int& filter_type, dsp::tf tf_zp, const std::vector<double>& cutoff);
+
+    //tf butterworth(int order, int filter_type, const std::vector<double>& cutoff);
 }
 
 #endif //DSP_H
