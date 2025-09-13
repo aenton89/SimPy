@@ -291,21 +291,27 @@ dsp::tf dsp::FilterDesigner::chebyshev_i_proto() {
     return Tf;
 }
 
-dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() {
+dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() { // ni huja on nie dziala
     tf Tf;
     std::vector<cd> poles;
     std::vector<cd> zeros;
 
     int N = order;
-    double epsilon = std::sqrt(std::pow(10, ripple/10.0) - 1.0);
-    double beta = std::asinh(1.0 / epsilon)/N;   // tylko raz dzielimy przez N
+
+    // epsilon dla Chebyshev II (z tłumieniem w paśmie zaporowym)
+    double Rs = ripple; // tłumienie w paśmie zaporowym w dB
+    double epsilon = 1.0 / std::sqrt(std::pow(10.0, Rs / 10.0) - 1.0);
+    double beta = std::asinh(1.0 / epsilon) / N;
 
     for (int k = 1; k <= N; k++) {
         double theta = M_PI * (2.0 * k - 1.0) / (2.0 * N);
-        cd pole(
-            -std::sinh(beta) * std::sin(theta),
-             std::cosh(beta) * std::cos(theta)
-        );
+
+        // poprawne bieguny Chebyshev II
+        double sigma = -std::sinh(beta) * std::sin(theta);
+        double omega = std::cosh(beta) * std::cos(theta);
+        cd pole(sigma, omega);
+
+        // zera leżą na osi urojonej
         cd zero(0.0, 1.0 / std::cos(theta));
 
         poles.push_back(pole);
@@ -314,6 +320,8 @@ dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() {
 
     Tf.zeros = zeros;
     Tf.poles = poles;
+
+    // Wzmocnienie prototypu Chebyshev II
     Tf.gain = 1.0;
 
     return Tf;
@@ -342,10 +350,10 @@ void dsp::FilterDesigner::apply_filter_subtype() {
 
     if (filter_subtype == LPF) {
         double wc = cutoff[0];
+        // Skala biegunów
         for (auto& p : Tf.poles)
             new_poles.push_back(p * wc);
-
-        // Jeśli prototyp ma zera, skalujemy je tak samo
+        // Skala zer jeśli są w prototypie
         for (auto& z : Tf.zeros)
             new_zeros.push_back(z * wc);
 
@@ -358,10 +366,11 @@ void dsp::FilterDesigner::apply_filter_subtype() {
 
     } else if (filter_subtype == HPF) {
         double wc = cutoff[0];
+        // Transformacja biegunów LPF → HPF
         for (auto& p : Tf.poles)
             new_poles.push_back(wc / p);
 
-        // Transformacja zer: zera z prototypu + domyślne w 0 dla LPF bez zer
+        // Transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, dodajemy w 0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size(); i++)
                 new_zeros.push_back(cd(0, 0));
@@ -390,7 +399,7 @@ void dsp::FilterDesigner::apply_filter_subtype() {
             new_poles.push_back(A - delta);
         }
 
-        // Transformacja zer
+        // Transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, tworzymy w 0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size() / 2; i++) {
                 new_zeros.push_back(cd(0, 0));
@@ -417,13 +426,16 @@ void dsp::FilterDesigner::apply_filter_subtype() {
         double B = w2 - w1;
         double w0 = std::sqrt(w1 * w2);
 
+        // Transformacja biegunów LPF → BSF
         for (auto& p : Tf.poles) {
             cd A = p * B / 2.0;
             cd delta = std::sqrt(A*A - w0*w0);
-            new_poles.push_back(A + delta);
-            new_poles.push_back(A - delta);
+            // Odwrócenie transformacji dla BSF
+            new_poles.push_back(w0*w0 / (A + delta));
+            new_poles.push_back(w0*w0 / (A - delta));
         }
 
+        // Transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, dodajemy ±j*w0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size() / 2; i++) {
                 new_zeros.push_back(cd(0, w0));
@@ -433,8 +445,8 @@ void dsp::FilterDesigner::apply_filter_subtype() {
             for (auto& z : Tf.zeros) {
                 cd A = z * B / 2.0;
                 cd delta = std::sqrt(A*A - w0*w0);
-                new_zeros.push_back(A + delta);
-                new_zeros.push_back(A - delta);
+                new_zeros.push_back(w0*w0 / (A + delta));
+                new_zeros.push_back(w0*w0 / (A - delta));
             }
         }
 
@@ -446,8 +458,6 @@ void dsp::FilterDesigner::apply_filter_subtype() {
         Tf.gain /= H0;
     }
 }
-
-
 
 void dsp::FilterDesigner::apply_setting(int order, int filter_type, int filter_subtype, float ripple, std::vector<double> cutoff) {
     this->order = order;

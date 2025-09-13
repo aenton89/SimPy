@@ -185,6 +185,34 @@ public:
     void resetBefore() override;
 };
 
+// --------------------------------------------------------------------------------------------------------------------------------------
+// filtr medianowy 1D
+class medianFilter1DBlock : public Block {
+private:
+    std::vector<double> window_vector;
+    long window_size = 5;
+public:
+    medianFilter1DBlock(int id_);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+};
+
+// --------------------------------------------------------------------------------------------------------------------------------------
+// filtr sredni (dziwna nazwa) poprostu movavg
+class meanFilter1DBlock : public Block {
+private:
+    std::vector<double> window_vector;
+    long window_size = 5;
+public:
+    meanFilter1DBlock(int id_);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+};
+
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // blok kwadratu sygnalu wejsciwoego

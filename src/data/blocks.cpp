@@ -1245,6 +1245,77 @@ void filterInplementationBlock::resetBefore() {
     std::fill(ss.x.begin(), ss.x.end(), 0.0);
 }
 
+// --------------------------------------------------------------------------------------------------------------------------------------
+// filtr medianowy 1D
+meanFilter1DBlock::meanFilter1DBlock(int id_) : Block(id_, 1, 1, true) {
+    size = ImVec2(200, 120);
+}
+
+void meanFilter1DBlock::drawContent() {
+    ImGui::Text("MovAvg");
+    Block::drawContent();
+}
+
+void meanFilter1DBlock::drawMenu() {
+    ImGui::InputScalar("Window size", ImGuiDataType_S64, &window_size);
+}
+
+void meanFilter1DBlock::process() {
+    if (window_vector.size() < window_size) {
+        window_vector.push_back(inputValues[0]);
+    } else {
+        window_vector.erase(window_vector.begin()); // usuniecie pierszege elemetu
+        window_vector.push_back(inputValues[0]); // dodanie elementu na koncu listu
+    }
+
+    outputValues[0] = std::accumulate(window_vector.begin(), window_vector.end(), 0.0) / window_vector.size();
+}
+
+void meanFilter1DBlock::resetBefore() {
+    window_vector.clear();
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------------
+// filtr medianowy 1D
+medianFilter1DBlock::medianFilter1DBlock(int id_) : Block(id_, 1, 1, true) {
+    size = ImVec2(200, 120);
+}
+
+void medianFilter1DBlock::drawContent() {
+    ImGui::Text("Median Filter");
+    Block::drawContent();
+}
+
+void medianFilter1DBlock::drawMenu() {
+    ImGui::InputScalar("Window size", ImGuiDataType_S64, &window_size);
+}
+
+double Median(std::vector<double>& vec) {
+    std::sort(vec.begin(), vec.end());
+
+    size_t size = vec.size();
+
+    if (size % 2 == 0) {
+        return (vec[size/2-1] + vec[size/2]) / 2.0;
+    } else
+        return vec[size/2];
+}
+
+void medianFilter1DBlock::process() {
+    if (window_vector.size() < window_size)
+        window_vector.push_back(inputValues[0]);
+    else {
+        window_vector.erase(window_vector.begin());
+        window_vector.push_back(inputValues[0]);
+    }
+
+    outputValues[0] = Median(window_vector);
+}
+
+void medianFilter1DBlock::resetBefore() {
+    window_vector.clear();
+}
+
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------
