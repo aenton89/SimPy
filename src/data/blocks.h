@@ -12,8 +12,8 @@
 #include "data_sender/data_channel_manager.h"
 #include "math/matrix_operation/matrix_op.h"
 #include <complex>
-
 #include "math/digital_signal_processing/DSP.h"
+
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -56,7 +56,6 @@ public:
     void process() override;
     // TODO: GUI
     void drawContent() override;
-    void resetAfter() override;
     void resetBefore() override;
     void setState(double initialState);
     void drawMenu() override;
@@ -84,8 +83,10 @@ public:
 // transmitacja operatorowa
 class TransferFuncionContinous : public Block{
 public:
-    std::string num;   // licznik
-    std::string denum; // mianownik
+    // licznik
+    std::string num;
+    // mianownik
+    std::string denum;
     std::vector<double> state;
 
     std::vector<float> numerator;
@@ -105,17 +106,19 @@ private:
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
 // regulator PID
-class PID_regulator : public Block
-{
+class PID_regulator : public Block {
 private:
     MatOp::StateSpace ss;
-    double Kp = 1.0; // wsmocniee dla czesci proporcionalenej
-    double Ki = 1.0; // wzmocneinie dla czesci calkujacej
-    double Kd = 1.0; // wzmocneinei czesci ronziczkujacej
-    double tau = 1.0; // filtr na czesc rozniczujaca
+    // wzmocnienie dla czesci proporcionalenej
+    double Kp = 1.0;
+    // wzmocnienie dla czesci calkujacej
+    double Ki = 1.0;
+    // wzmocnienie czesci ronziczkujacej
+    double Kd = 1.0;
+    // filtr na czesc rozniczujaca
+    double tau = 1.0;
 
     double state = 0;
-
     int current_mode = 0;
 
 public:
@@ -128,8 +131,8 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // FFT
-
-class STFT_block : public Block {  // Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
+// Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
+class STFT_block : public Block {
 private:
     long windowSize = 128;
     int current_window_mode = 0;
@@ -140,8 +143,10 @@ private:
 
     int current_return_type = 0;
 
-    std::vector<double> window_vector; // vector do przechowywania okna
-    std::vector<std::complex<double>> batch_vector; // vector do przechowyania batcha
+    // vector do przechowywania okna
+    std::vector<double> window_vector;
+    // vector do przechowyania batcha
+    std::vector<std::complex<double>> batch_vector;
 
 
 public:
@@ -329,6 +334,7 @@ public:
     void drawMenu() override;
 };
 
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 //bloczek wykresu XY
 class PLotXYBlock : public Block {
 private:
@@ -347,11 +353,13 @@ public:
     void drawMenu() override;
 };
 
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 // bloczke wykresu typu heatmap
 class PlotHeatmapBlock : public Block {
 private:
     std::vector<float> data;
-    size_t num_row = 1; // liczba wierszy w kolumnie fft
+    // liczba wierszy w kolumnie fft
+    size_t num_row = 1;
 public:
     PlotHeatmapBlock(int _id);
     void process() override;
@@ -468,6 +476,8 @@ public:
     void drawMenu() override;
 };
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// AND block
 class logicANDBlock : public Block {
 public:
     logicANDBlock(int _id);

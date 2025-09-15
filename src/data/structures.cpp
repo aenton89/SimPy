@@ -175,9 +175,8 @@ bool Model::hasCycles() {
 
     for (size_t i = 0; i < blocks.size(); i++) {
         if (!visited[i]) {
-            if (hasCycleDFS(i)) {
+            if (hasCycleDFS(i))
                 return true;
-            }
         }
     }
 
@@ -249,17 +248,19 @@ void Model::removeBlock(int removeId) {
 
 void Model::cleanupAfter() {
     for (auto& block : blocks) {
-        block->resetAfter();  // resetujemy stan każdego bloku
+        // resetujemy stan każdego bloku
+        block->resetAfter();
     }
 }
 
 void Model::cleanupBefore() {
     for (auto& block : blocks) {
-        block->resetBefore();  // resetujemy stan każdego bloku
+        // resetujemy stan każdego bloku
+        block->resetBefore();
     }
 }
 
-// Metody dla solvera
+// metody dla solvera
 void Model::setSolver(std::shared_ptr<Solver> s) {
     solver = std::move(s);
 }

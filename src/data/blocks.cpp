@@ -11,6 +11,7 @@
 #include <numbers>
 #include <complex>
 #include <algorithm>
+#include <numeric>
 
 // w tym pliku są implementacje specyficznych bloków
 
@@ -20,17 +21,15 @@
 // sumowania
 SumBlock::SumBlock(int _id) : Block(_id, 2, 1, true) {
     size = ImVec2(150, 80);
-    if (numInputs != 2) {
+    if (numInputs != 2)
         negate_inputs.resize(numInputs, 0);
-    }
 }
 
 void SumBlock::process() {
     outputValues[0] = 0.0;
     for (int i = 0; i < numInputs; i++) {
-        if (negate_inputs[i]) {
+        if (negate_inputs[i])
             inputValues[i] = -inputValues[i];
-        }
 
         outputValues[0] += inputValues[i];
     }
@@ -40,7 +39,6 @@ void SumBlock::process() {
 // TODO: GUI
 void SumBlock::drawContent() {
     ImGui::Text("Sum: %f", outputValues[0]);
-
     Block::drawContent();
 }
 
@@ -55,9 +53,8 @@ void SumBlock::drawMenu() {
         }
     }
 
-    if (ImGui::Button("Negate Inputs >")) {
+    if (ImGui::Button("Negate Inputs >"))
         ImGui::OpenPopup("MoreOptionsPopup");
-    }
 
     // samo menu
     if (ImGui::BeginPopup("MoreOptionsPopup")) {
@@ -66,9 +63,9 @@ void SumBlock::drawMenu() {
             ImGui::Checkbox(("Negate Input " + std::to_string(i + 1)).c_str(), reinterpret_cast<bool*>(&negate_inputs[i]));
         }
 
-        if (ImGui::Button("Close")) {
+        if (ImGui::Button("Close"))
             ImGui::CloseCurrentPopup();
-        }
+
         ImGui::EndPopup();
     }
 }
@@ -94,7 +91,6 @@ void MultiplyBlock::process() {
 // TODO: GUI
 void MultiplyBlock::drawContent() {
     ImGui::Text("Mult: %f", outputValues[0]);
-
     Block::drawContent();
 }
 
@@ -132,7 +128,8 @@ void IntegratorBlock::process() {
     // state += inputValues[0] * timeStep;
     // outputValues[0] = state;
     auto solver = SolverManager::solver();
-    if (!solver) return;
+    if (!solver)
+        return;
 
     std::vector<double> uvec = { inputValues[0] };
     solver->step(ss, uvec);
@@ -149,10 +146,6 @@ void IntegratorBlock::process() {
 void IntegratorBlock::drawContent() {
     ImGui::Text("IntegratorBlock");
     Block::drawContent();
-}
-
-void IntegratorBlock::resetAfter() {
-
 }
 
 void IntegratorBlock::resetBefore() {
@@ -173,37 +166,31 @@ void IntegratorBlock::drawMenu() {
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------
-// blok pierwsikaonia
-sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, true)
-{
+// blok pierwiastkowania
+sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, true) {
     size = ImVec2(150, 80);
 }
 
-void sqrtBlock::process()
-{
+void sqrtBlock::process() {
     if (mode == "absolut value")
         outputValues[0] = std::sqrt(std::abs(inputValues[0]));
-    else if (mode == "equal 0")
-    {
+    else if (mode == "equal 0") {
         if (inputValues[0] < 0.0)
             inputValues[0] = 0.0;
         outputValues[0] = std::sqrt(inputValues[0]);
     }
     // TODO Trzeba dorobic takz zeby prznosl sie wartosc rzeczywista i zeoslona i zeby te wartsoci byly np ploktowane na wykresie jako dwie ine wykresy
-    else if (mode == "complex value")
-    {
+    else if (mode == "complex value") {
 
     }
 }
 
-void sqrtBlock::drawContent()
-{
+void sqrtBlock::drawContent() {
     ImGui::Text("Sqrt");
     Block::drawContent();
 }
 
-void sqrtBlock::drawMenu()
-{
+void sqrtBlock::drawMenu() {
     const static char* sqrt_mode[] = {"absolut value", "equal 0", "complex value"};
     static int current_selected = 0;
 
@@ -212,19 +199,18 @@ void sqrtBlock::drawMenu()
         for (int i = 0; i < IM_ARRAYSIZE(sqrt_mode); i++)
         {
             bool is_selected = (current_selected == i);
-            if (ImGui::Selectable(sqrt_mode[i], is_selected))
-            {
+            if (ImGui::Selectable(sqrt_mode[i], is_selected)) {
                 current_selected = i;
                 this->mode = sqrt_mode[i];
             }
-            if (is_selected)
-            {
+            if (is_selected) {
                 ImGui::SetItemDefaultFocus();
             }
         }
         ImGui::EndCombo();
     }
 }
+
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -240,7 +226,6 @@ void StepBlock::process() {
     else
         outputValues[0] = inputValue;
     currentTime += Model::timeStep;
-    //std::cout<<"input: "<<outputValues[0]<<std::endl;
 }
 
 // TODO: GUI
@@ -475,8 +460,8 @@ void PlotBlock::drawMenu() {
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------
-//  plotowanie grafu XY
-// trzeba to pobrac. Array trzeba zamienic na dynamiczny wketyor, 2 wejścia: X i Y
+// plotowanie grafu XY
+// trzeba to pobrac, array trzeba zamienic na dynamiczny wektor, 2 wejścia: X i Y
 PLotXYBlock::PLotXYBlock(int _id) : Block(_id, 2, 0, true) {
     size = ImVec2(350, 200);
     data.resize(2); // X i Y
@@ -486,14 +471,14 @@ PLotXYBlock::PLotXYBlock(int _id) : Block(_id, 2, 0, true) {
 }
 
 void PLotXYBlock::process() {
-    // Musimy mieć oba wejścia (X i Y)
+    // musimy mieć oba wejścia (X i Y)
     if (inputValues.size() < 2)
         return;
 
     float x = inputValues[0];
     float y = inputValues[1];
 
-    // Aktualizacja limitów osi X i Y
+    // aktualizacja limitów osi X i Y
     if (sampleIndex == 0) {
         x_limMin = x_limMax = x;
         y_limMin = y_limMax = y;
@@ -505,7 +490,7 @@ void PLotXYBlock::process() {
         if (y > y_limMax) y_limMax = y;
     }
 
-    // Zapisz nową próbkę
+    // zapisz nową próbkę
     if (sampleIndex < (int)data[0].size()) {
         data[0][sampleIndex] = x;
         data[1][sampleIndex] = y;
@@ -513,8 +498,7 @@ void PLotXYBlock::process() {
     }
 }
 
-void PLotXYBlock::drawContent()
-{
+void PLotXYBlock::drawContent() {
     Block::drawContent();
     ImVec2 size = ImGui::GetContentRegionAvail();
 
@@ -555,12 +539,12 @@ void PLotXYBlock::drawMenu() {
         }
     }
 
-    // Limity osi X
+    // limity osi X
     ImGui::InputFloat("X min", &x_limMin);
     ImGui::SameLine();
     ImGui::InputFloat("X max", &x_limMax);
 
-    // Limity osi Y
+    // limity osi Y
     ImGui::InputFloat("Y min", &y_limMin);
     ImGui::SameLine();
     ImGui::InputFloat("Y max", &y_limMax);
@@ -571,6 +555,7 @@ void PLotXYBlock::drawMenu() {
         y_limMin = y_limMax = 0;
     }
 }
+
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------
@@ -629,6 +614,7 @@ void PlotHeatmapBlock::resetBefore() {
 }
 
 
+
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // roznczkowanie
 DifferentiatorBlock::DifferentiatorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {}
@@ -669,6 +655,7 @@ void DifferentiatorBlock::drawMenu() {
     ImGui::InputDouble("Initial state: ", &initial_state);
     ImGui::InputDouble("Time step: ", &Model::timeStep);
 }
+
 
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
@@ -748,9 +735,8 @@ std::string polyToString(const std::vector<float>& coeffs) {
         if (!result.empty())
             result += " + ";
 
-        if (power == 0) {
+        if (power == 0)
             result += floatToStringTrimmed(coeff);
-        }
         else if (power == 1) {
             if (coeff == 1)
                 result += "s";
@@ -813,7 +799,8 @@ void TransferFuncionContinous::drawMenu() {
 
 void TransferFuncionContinous::process() {
     auto solver = SolverManager::solver();
-    if (!solver) return;
+    if (!solver)
+        return;
 
     std::vector<double> uvec = { inputValues[0] };
     solver->step(ss, uvec);
@@ -832,6 +819,8 @@ void TransferFuncionContinous::resetBefore() {
     std::fill(ss.x.begin(), ss.x.end(), 0.0);
 }
 
+
+
 // -----------------------------------------------------------------------------------------------------------------------------------------
 // regulator PID
 PID_regulator::PID_regulator(int id_) : Block(id_, 1, 1, true) {
@@ -845,7 +834,8 @@ PID_regulator::PID_regulator(int id_) : Block(id_, 1, 1, true) {
 void PID_regulator::process() {
     auto solver = SolverManager::solver();
 
-    if (!solver) return;
+    if (!solver)
+        return;
     std::vector<double> uvec = { inputValues[0] };
     solver->step(ss, uvec);
 
@@ -858,9 +848,8 @@ void PID_regulator::process() {
             + Kd * (inputValues[0] - state) / Model::timeStep;
         state = inputValues[0];
     }
-    else {
+    else
         y = yvec[0] + ss.D[0][0] * inputValues[0];
-    }
 
     outputValues[0] = y;
 }
@@ -876,9 +865,8 @@ void PID_regulator::drawMenu() {
     if (ImGui::BeginCombo("PID type", PID_type[current_mode], false)) {
         for (int i=0; i < IM_ARRAYSIZE(PID_type); i++) {
             bool is_selected = (current_mode == i);
-            if (ImGui::Selectable(PID_type[i], is_selected)) {
+            if (ImGui::Selectable(PID_type[i], is_selected))
                 current_mode = i;
-            }
             if (is_selected)
                 ImGui::SetItemDefaultFocus();
         }
@@ -890,8 +878,7 @@ void PID_regulator::drawMenu() {
     ImGui::InputDouble("Ki", &Ki);
 
 
-    // TODO trzeba to poprawic
-
+    // TODO: trzeba to poprawic
     if (current_mode == 0) {
         ss.A = {{0}};
         ss.B = {{1}};
@@ -904,7 +891,7 @@ void PID_regulator::drawMenu() {
 
     }
     else {
-        // Tu cos nie dziala idk dlaczego
+        // tu cos nie dziala idk dlaczego
         ss.A = {{0, 0}, {0, -tau}};
         ss.B = {{1}, {tau}};
         ss.C = {{Kp*Ki, Kp*Kd}};
@@ -936,6 +923,7 @@ void PID_regulator::resetBefore() {
 
     state = 0;
 }
+
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
@@ -986,14 +974,14 @@ void STFT_block::drawMenu() {
         }
         ImGui::EndCombo();
     }
+
     // wybor tego co ma blok zwracac
     const static char* return_type[] = {"Real", "Complex", "Magnitude"};
     if (ImGui::BeginCombo("Return type", return_type[current_return_type], false)) {
         for (int i=0; i < IM_ARRAYSIZE(return_type); i++) {
             bool is_selected = (current_return_type == i);
-            if (ImGui::Selectable(return_type[i], is_selected)){
+            if (ImGui::Selectable(return_type[i], is_selected))
                 current_return_type = i;
-            }
             if (is_selected)
                 ImGui::SetItemDefaultFocus();
         }
@@ -1004,14 +992,10 @@ void STFT_block::drawMenu() {
     ImGui::InputScalar("Overlap: ", ImGuiDataType_S64, &overlap);
     ImGui::InputDouble("fs: ", &fs);
 
-    if (windowSize <= 0) {
+    if (windowSize <= 0)
         windowSize = 128;
-    }
-
     if (windowSize < overlap)
-    {
         overlap = windowSize / 2;
-    }
 
     window_vector = STFT_block::generateWindowVector(windowSize, current_window_mode);
     // nextPow2 = std::pow(2, std::ceil(std::log2(windowSize))); // Do Cooley-Tukey
@@ -1035,21 +1019,26 @@ void STFT_block::process() {
             for (size_t i = 0; i < X.size(); i++) {
                 output[i] = X[i].real();
             }
-        } else if (current_return_type == 1) {
+        }
+        else if (current_return_type == 1) {
             for (size_t i = 0; i < X.size(); i++) {
                 output[i] = X[i].imag();
             }
-        } else if (current_return_type == 2){
+        }
+        else if (current_return_type == 2){
             for (size_t i = 0; i < X.size(); i++)
                 output[i] = std::abs(X[i]);
         }
 
-        outputValues = output; // ja bym tutaj dodal jakis triger ktory mowi ze nastepny blok ma przyjac pkt. Np true albo false
-       // std::cout << "------------------STFT---------------: " << outputValues[0] << " " << outputValues.size() << std::endl;
+        // ja bym tutaj dodal jakis triger ktory mowi ze nastepny blok ma przyjac pkt. Np true albo false
+        outputValues = output;
+        // std::cout << "------------------STFT---------------: " << outputValues[0] << " " << outputValues.size() << std::endl;
         batch_vector.erase(batch_vector.begin(), batch_vector.begin() + windowSize - overlap);
-    } else {
+    }
+    else {
         //std::cout << "------------------STFT_Nan---------------" << batch_vector.size() << std::endl;
-        outputValues = {NAN};// uspoeledzone podejscie do zmiaaony gdy sie zrobi triger i temaplate ze mozna zmianac typ wysyalnych danych
+        // usposledzone podejscie do zmiany, gdy sie zrobi triger i temaplate ze mozna zmianac typ wysylanych danych
+        outputValues = {NAN};
     }
 }
 
@@ -1058,15 +1047,16 @@ void STFT_block::resetBefore() {
     batch_vector.clear();
 }
 
+
+
 // --------------------------------------------------------------------------------------------------------------------------------------
 // Projektowanie filtrow
-
 filterInplementationBlock::filterInplementationBlock(int id_) : Block(id_, 1, 1, true){
     size = ImVec2(200, 120);
 
     // Tf = dsp::butterworth_proto(filter_order);
     // Tf = dsp::apply_filter_subtype(current_pass_type, Tf, range);
-    //Tf = dsp::butterworth(filter_order, current_pass_type, range);
+    // Tf = dsp::butterworth(filter_order, current_pass_type, range);
     filter_designer.apply_setting(filter_order, current_signal_type, current_pass_type, ripple, range);
     Tf = filter_designer.get_tf();
 
@@ -1089,7 +1079,7 @@ void filterInplementationBlock::drawContent() {
 }
 
 void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
-    // Wykres modułu
+    // wykres modułu
     double min_omega = *std::min_element(bode.omega.begin(), bode.omega.end());
     double max_omega = *std::max_element(bode.omega.begin(), bode.omega.end());
 
@@ -1111,7 +1101,7 @@ void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
         ImPlot::EndPlot();
     }
 
-    // Wykres fazy
+    // wykres fazy
     if (ImPlot::BeginPlot("Bode Phase")) {
         ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
         ImPlot::SetupAxis(ImAxis_X1, "Frequency [rad/s]");
@@ -1128,57 +1118,51 @@ void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
 
 
 void filterInplementationBlock::drawMenu() {
-    // Typ filtra ze wzgledu na rodzaj przetwarzanego syganlu
+    // typ filtra ze wzgledu na rodzaj przetwarzanego syganlu
     const static char* signal_type[] = {"Analog", "Digital"};
-
     if (ImGui::BeginCombo("Signal Type", signal_type[current_signal_type], false)) {
         for (int i=0; i < IM_ARRAYSIZE(signal_type); i++) {
             bool is_selected = (current_signal_type == i);
-            if (ImGui::Selectable(signal_type[i], is_selected)) {
+            if (ImGui::Selectable(signal_type[i], is_selected))
                 current_signal_type = i;
-            }
         }
         ImGui::EndCombo();
     }
 
-    // Typ filtra ze wzgledu na rodzaj pasma przenoszenia
-    const static char* pass_type[] = {"Low-Pass, LPF", "High-Pass, HPF", "Band-Pass, BPF", "Band-Stop, BSF"}; // mozna tu dodac jescze nie liniowe plus te co przepsuzaja srodk lub go blokuja
-
+    // typ filtra ze wzgledu na rodzaj pasma przenoszenia
+    // mozna tu dodac jescze nie liniowe plus te co przepsuzaja srodk lub go blokuja
+    const static char* pass_type[] = {"Low-Pass, LPF", "High-Pass, HPF", "Band-Pass, BPF", "Band-Stop, BSF"};
     if (ImGui::BeginCombo("Pass Type", pass_type[current_pass_type], false)) {
         for (int i=0; i < IM_ARRAYSIZE(pass_type); i++) {
             bool is_selected = (current_pass_type == i);
-            if (ImGui::Selectable(pass_type[i], is_selected)) {
+            if (ImGui::Selectable(pass_type[i], is_selected))
                 current_pass_type = i;
-            }
         }
         ImGui::EndCombo();
     }
 
-    // Podtypy filtrow analogowych
+    // podtypy filtrow analogowych
     const static char* analog_type[] = {"Butterworth", "Chebyshev I", "Chebyshev II", "Bessel", "elliptical"};
-
     if (current_signal_type == 0){
         if (ImGui::BeginCombo("Analog filter type", analog_type[analog_filter_type], false)){
             for (int i=0; i < IM_ARRAYSIZE(analog_type); i++) {
                 bool is_selected = (analog_filter_type == i);
-                if (ImGui::Selectable(analog_type[i], is_selected)){
+                if (ImGui::Selectable(analog_type[i], is_selected))
                     analog_filter_type = i;
-                }
             }
             ImGui::EndCombo();
         }
     }
 
-    // Podtypy filtrow cyfrowych
+    // podtypy filtrow cyfrowych
     const static char* digital_type[] = {"IR", "IIR", "FIR", "FIIR"};
 
     if (current_signal_type == 1) {
         if (ImGui::BeginCombo("Analog filter type", digital_type[digital_filter_type], false)){
             for (int i=0; i < IM_ARRAYSIZE(digital_type); i++) {
                 bool is_selected = (digital_filter_type == i);
-                if (ImGui::Selectable(digital_type[i], is_selected)){
+                if (ImGui::Selectable(digital_type[i], is_selected))
                     digital_filter_type = i;
-                }
             }
             ImGui::EndCombo();
         }
@@ -1229,7 +1213,8 @@ void filterInplementationBlock::drawMenu() {
 
 void filterInplementationBlock::process() {
     auto solver = SolverManager::solver();
-    if (!solver) return;
+    if (!solver)
+        return;
 
     std::vector<double> uvec = { inputValues[0] };
     solver->step(ss, uvec);
@@ -1247,6 +1232,8 @@ void filterInplementationBlock::resetBefore() {
     std::fill(ss.x.begin(), ss.x.end(), 0.0);
 }
 
+
+
 // --------------------------------------------------------------------------------------------------------------------------------------
 // filtr medianowy 1D
 meanFilter1DBlock::meanFilter1DBlock(int id_) : Block(id_, 1, 1, true) {
@@ -1263,9 +1250,9 @@ void meanFilter1DBlock::drawMenu() {
 }
 
 void meanFilter1DBlock::process() {
-    if (window_vector.size() < window_size) {
+    if (window_vector.size() < window_size)
         window_vector.push_back(inputValues[0]);
-    } else {
+    else {
         window_vector.erase(window_vector.begin()); // usuniecie pierszege elemetu
         window_vector.push_back(inputValues[0]); // dodanie elementu na koncu listu
     }
@@ -1276,6 +1263,8 @@ void meanFilter1DBlock::process() {
 void meanFilter1DBlock::resetBefore() {
     window_vector.clear();
 }
+
+
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // filtr medianowy 1D
@@ -1297,10 +1286,9 @@ double Median(std::vector<double>& vec) {
 
     size_t size = vec.size();
 
-    if (size % 2 == 0) {
+    if (size % 2 == 0)
         return (vec[size/2-1] + vec[size/2]) / 2.0;
-    } else
-        return vec[size/2];
+    return vec[size/2];
 }
 
 void medianFilter1DBlock::process() {
@@ -1322,20 +1310,19 @@ void medianFilter1DBlock::resetBefore() {
 
 // -------------------------------------------------------------------------------------------------------------------------------------------
 // kwadrat liczby
-squaredBlock::squaredBlock(int id_) : Block(id_, 1, 1, false)
-{
+squaredBlock::squaredBlock(int id_) : Block(id_, 1, 1, false) {
     size = ImVec2(200, 120);
 }
 
-void squaredBlock::process()
-{
+void squaredBlock::process() {
     outputValues[0] = std::pow(inputValues[0], 2);
 }
 
-void squaredBlock::drawContent()
-{
+void squaredBlock::drawContent() {
     ImGui::Text("Squared");
 }
+
+
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // tranformacja pkt na jego wartosc funkji trygonometrycznej
@@ -1433,7 +1420,6 @@ GainBlock::GainBlock(int _id) : Block(_id, 1, 1, true) {
 
 void GainBlock::process() {
     outputValues[0] = inputValues[0] * multiplier;
-    //std::cout<<"gain: "<<inputValues[0]<<" * "<<multiplier<<" = "<<outputValues[0]<<std::endl;
 }
 
 void GainBlock::drawContent() {
@@ -1477,7 +1463,6 @@ void logicORBlock::process() {
     }
 }
 
-
 void logicORBlock::drawContent() {
     ImGui::Text("Logick OR");
     Block::drawContent();
@@ -1488,7 +1473,6 @@ void logicORBlock::drawMenu() {
         if (numInputs < 2)
             numInputs = 2;
         else {
-           // std::cout<<"changed number of inputs: "<<numInputs<<std::endl;
             inputValues.resize(numInputs);
         }
     }

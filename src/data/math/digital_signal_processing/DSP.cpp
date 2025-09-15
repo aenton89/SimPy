@@ -3,11 +3,12 @@
 //
 
 #include "math/digital_signal_processing/DSP.h"
+#include <numbers>
 
 using cd = std::complex<double>;
 
 
-/////////////////////////////////////////////////////////////////// Ten fragment trzebna przekminic czy wywalic do math czy dac jako metody kalsy ///////////
+/////////////////////////////////////////////////////////////////// ten fragment trzeba przekminic czy wywalic do math czy dac jako metody klasy ///////////
 // FFT dla długości potęgi 2
 void dsp::fft(std::vector<cd> &a, bool invert) {
     int n = a.size();
@@ -222,7 +223,7 @@ dsp::Bode dsp::bode_characteristic(const tf& Tf) {
         cd H = Tf.gain * num / den;
 
         double magnitude_dB = 20.0 * std::log10(std::abs(H));
-        double phase_deg = std::arg(H) * 180.0 / M_PI;
+        double phase_deg = std::arg(H) * 180.0 / std::numbers::pi;
 
         //std::cout << magnitude_dB << " " << phase_deg << " " << w << std::endl;
 
@@ -252,7 +253,7 @@ dsp::tf dsp::FilterDesigner::butterworth_proto() {
     std::vector<cd> poles;
 
     for (int i = 0; i < order; i++) {
-        double theta = M_PI * (2.0 * i + 1.0 + order) / (2.0 * order);
+        double theta = std::numbers::pi * (2.0 * i + 1.0 + order) / (2.0 * order);
         cd pole = std::exp(cd(0.0, theta));
         if (pole.real() < 0.0) {
             poles.push_back(pole);
@@ -275,7 +276,7 @@ dsp::tf dsp::FilterDesigner::chebyshev_i_proto() {
     int N = order;
 
     for (int k = 1; k <= N; k++) {
-        double theta = M_PI * (2.0 * k - 1.0) / (2.0 * N);
+        double theta = std::numbers::pi * (2.0 * k - 1.0) / (2.0 * N);
         cd pole(
             -std::sinh(beta / N) * std::sin(theta),
              std::cosh(beta / N) * std::cos(theta)
@@ -304,7 +305,7 @@ dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() { // ni huja on nie dziala
     double beta = std::asinh(1.0 / epsilon) / N;
 
     for (int k = 1; k <= N; k++) {
-        double theta = M_PI * (2.0 * k - 1.0) / (2.0 * N);
+        double theta = std::numbers::pi * (2.0 * k - 1.0) / (2.0 * N);
 
         // poprawne bieguny Chebyshev II
         double sigma = -std::sinh(beta) * std::sin(theta);
@@ -523,7 +524,7 @@ dsp::tf dsp::FilterDesigner::get_tf() {
 //     std::vector<cd> poles;
 //
 //     for (int i=0; i<order; i++) {
-//         double theta = M_PI * (2.0*i + 1.0 + order) / (2.0*order);
+//         double theta = std::numbers::pi * (2.0*i + 1.0 + order) / (2.0*order);
 //         cd pole = std::exp(cd(0.0, theta));
 //         if (pole.real() < 0.0) {
 //             poles.push_back(pole);
@@ -622,7 +623,7 @@ dsp::tf dsp::FilterDesigner::get_tf() {
 //
 //     std::vector<std::complex<double>> poles_proto;
 //     for (int i = 0; i < order; i++) {
-//         double theta = M_PI * (2.0*i + 1.0 + order) / (2.0*order);
+//         double theta = std::numbers::pi * (2.0*i + 1.0 + order) / (2.0*order);
 //         std::complex<double> pole = std::exp(std::complex<double>(0.0, theta));
 //         if (pole.real() < 0)
 //             poles_proto.push_back(pole);

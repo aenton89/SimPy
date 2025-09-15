@@ -16,7 +16,9 @@
 #include <implot.h>
 #include <thread>
 #include <algorithm>
-
+#include <map>
+#include <set>
+#include <unordered_map>
 
 
 const ImVec2 DEFAULT_DOCKED_START_SIZE = ImVec2(195, 180);
@@ -97,6 +99,7 @@ private:
     DockPosition checkDockPosition(ImVec2 windowPos, ImVec2 windowSize);
 
 
+
     int next_id = 0;
     std::optional<int> dragging_from;
     GLFWwindow* window = nullptr;
@@ -127,9 +130,6 @@ private:
     float dockSnapDistance = 50.0f;
 
     // zminne odpwoedzialne za symualcje (czas symulacji, sampling time, rodzaj solvera itd.)
-    float samplingTime = 0.01f;
-    float simTime = 10.f;
-
     std::string solverName = "RK4";
     std::string solverPrecison;
 
@@ -140,6 +140,14 @@ private:
     float gridSpacing = 50.0f;
     float gridThickness = 1.0f;
     ImU32 gridColor = IM_COL32(0, 0, 0, 100);
+
+    // dla zaznaczania wielu box'ów
+    std::set<int> selectedBlocks;
+    bool isMultiSelectMode = false;
+    // grupowe przeciąganie zaznaczonych boxów
+    bool isGroupDragging = false;
+    ImVec2 groupDragStartMousePos;
+    std::unordered_map<int, ImVec2> groupInitialPositions;
 
 
     Model model;
