@@ -398,123 +398,11 @@ void guiClass::applyCanvasTransform() {
     draw_list->_VtxCurrentIdx = 0;
 }
 
-// void guiClass::drawBox(Block& box) {
-//     std::string title = "Box #" + std::to_string(box.id);
-//
-//     // oblicz transformowaną pozycję
-//     ImVec2 world_pos = box.position;
-//     ImVec2 screen_pos = ImVec2(
-//         world_pos.x * zoomAmount + viewOffset.x,
-//         world_pos.y * zoomAmount + viewOffset.y
-//     );
-//     ImVec2 screen_size = ImVec2(
-//         box.size.x * zoomAmount,
-//         box.size.y * zoomAmount
-//     );
-//
-//     // MOLTO IMPORTANTE: NIE ustawiaj pozycji jeśli okno jest przeciągane przez użytkownika
-//     if (!ImGui::IsWindowAppearing() && !isDraggingWindow)
-//         ImGui::SetNextWindowPos(screen_pos);
-//     // inne okna nadal powinny być pozycjonowane
-//     else if (isDraggingWindow && draggedWindowId != box.id)
-//         ImGui::SetNextWindowPos(screen_pos);
-//
-//     ImGui::SetNextWindowSize(screen_size);
-//
-//     // skaluj font
-//     ImGui::GetIO().FontGlobalScale = zoomAmount;
-//
-//     // flagi okna - pozwól na normalne przeciąganie
-//     ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar;
-//
-//     if (!ImGui::Begin(title.c_str(), &box.open, flags)) {
-//         ImGui::GetIO().FontGlobalScale = 1.0f;
-//         ImGui::End();
-//         return;
-//     }
-//
-//     box.drawContent();
-//
-//     // rzeczywista pozycję okna
-//     ImVec2 current_screen_pos = ImGui::GetWindowPos();
-//     ImVec2 current_screen_size = ImGui::GetWindowSize();
-//
-//     // czy to okno jest przeciągane?
-//     bool this_window_dragged = false;
-//
-//     // czy okno jest aktywne i mysz jest w title bar
-//     if (ImGui::IsWindowFocused() && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-//         ImVec2 mouse_pos = ImGui::GetMousePos();
-//         ImVec2 title_bar_min = current_screen_pos;
-//         ImVec2 title_bar_max = ImVec2(current_screen_pos.x + current_screen_size.x, current_screen_pos.y + ImGui::GetFrameHeight());
-//
-//         if (mouse_pos.x >= title_bar_min.x && mouse_pos.x <= title_bar_max.x &&
-//             mouse_pos.y >= title_bar_min.y && mouse_pos.y <= title_bar_max.y) {
-//             this_window_dragged = true;
-//         }
-//     }
-//
-//     // aktualizuj stan przeciągania
-//     if (this_window_dragged && !isDraggingWindow) {
-//         isDraggingWindow = true;
-//         draggedWindowId = box.id;
-//     } else if (isDraggingWindow && draggedWindowId == box.id && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-//         isDraggingWindow = false;
-//         draggedWindowId = -1;
-//     }
-//
-//     // punkt połączenia (output) - znaczek "+"
-//     // TODO: wziąć w pętle w zależności od ilości outputów
-//     ImVec2 center = ImVec2(current_screen_pos.x + current_screen_size.x - 15, current_screen_pos.y + current_screen_size.y * 0.5f);
-//
-//     // kursor do InvisibleButton tak, żeby kółko dało się kliknąć
-//     ImGui::SetCursorScreenPos(ImVec2(center.x - 10, center.y - 10));
-//     ImGui::InvisibleButton(("##link" + std::to_string(box.id)).c_str(), ImVec2(20, 20));
-//
-//     bool isHovered = ImGui::IsItemHovered();
-//     bool isClicked = ImGui::IsItemClicked();
-//
-//     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-//
-//     // kolor przycisku w zależności od stanu
-//     if (box.getNumOutputs() > 0) {
-//         ImU32 buttonColor = isClicked ? IM_COL32(255, 0, 0, 255) : (isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(200, 200, 0, 255));
-//         draw_list->AddCircleFilled(center, 8.0f, buttonColor);
-//         draw_list->AddText(ImVec2(center.x - 4, center.y - 7), IM_COL32(0, 0, 0, 255), "+");
-//     }
-//     // TODO: aż do tąd pętle
-//
-//     // obsługa przeciągania połączeń - tylko gdy nie przeciągamy okna
-//     if (!isDraggingWindow || draggedWindowId != box.id) {
-//         if (isClicked && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-//             if (box.getNumOutputs() > 0)
-//                 dragging_from = box.id;
-//         }
-//
-//         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-//             if (box.getNumOutputs() > 0)
-//                 dragging_from = box.id;
-//         }
-//     }
-//
-//     // aktualizuj pozycję w przestrzeni świata
-//     box.position = ImVec2(
-//         (current_screen_pos.x - viewOffset.x) / zoomAmount,
-//         (current_screen_pos.y - viewOffset.y) / zoomAmount
-//     );
-//
-//     box.size = ImVec2(
-//         current_screen_size.x / zoomAmount,
-//         current_screen_size.y / zoomAmount
-//     );
-//
-//     ImGui::GetIO().FontGlobalScale = 1.0f;
-//     ImGui::End();
-// }
+
 void guiClass::drawBox(Block& box) {
     std::string title = "Box #" + std::to_string(box.id);
 
-    // transformowaną pozycja
+    // oblicz transformowaną pozycję
     ImVec2 world_pos = box.position;
     ImVec2 screen_pos = ImVec2(
         world_pos.x * zoomAmount + viewOffset.x,
@@ -525,9 +413,10 @@ void guiClass::drawBox(Block& box) {
         box.size.y * zoomAmount
     );
 
-    // ustaw pozycję okna
+    // MOLTO IMPORTANTE: NIE ustawiaj pozycji jeśli okno jest przeciągane przez użytkownika
     if (!ImGui::IsWindowAppearing() && !isDraggingWindow)
         ImGui::SetNextWindowPos(screen_pos);
+    // inne okna nadal powinny być pozycjonowane
     else if (isDraggingWindow && draggedWindowId != box.id)
         ImGui::SetNextWindowPos(screen_pos);
 
@@ -546,10 +435,12 @@ void guiClass::drawBox(Block& box) {
         pushedSelectionStyle = true;
     }
 
+    // flagi okna - pozwól na normalne przeciąganie
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar;
 
     if (!ImGui::Begin(title.c_str(), &box.open, flags)) {
         ImGui::GetIO().FontGlobalScale = 1.0f;
+        // tbh już nawet nie pamiętam skąd to się wzieło
         if (pushedSelectionStyle)
             ImGui::PopStyleColor(2);
         ImGui::End();
@@ -604,8 +495,9 @@ void guiClass::drawBox(Block& box) {
 
     box.drawContent();
 
-    // sprawdź czy mysz jest w titlebarze i trzymamy LPM (potencjalne rozpoczęcie drag)
+    // czy to okno jest przeciągane?
     bool this_window_dragged = false;
+    // sprawdź czy mysz jest w titlebarze i trzymamy LPM (potencjalne rozpoczęcie drag)
     if (ImGui::IsWindowFocused() && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
         ImVec2 mouse_pos = ImGui::GetMousePos();
         ImVec2 tb_min = title_bar_min;
@@ -620,7 +512,7 @@ void guiClass::drawBox(Block& box) {
         isDraggingWindow = true;
         draggedWindowId = box.id;
 
-        // Jeżeli ten box jest częścią zaznaczenia i zaznaczono więcej niż 1 -> rozpocznij grupowe przeciąganie
+        // jeżeli ten box jest częścią zaznaczenia i zaznaczono więcej niż 1 -> rozpocznij grupowe przeciąganie
         if (selectedBlocks.count(box.id) && selectedBlocks.size() > 1) {
             isGroupDragging = true;
             groupDragStartMousePos = ImGui::GetMousePos();
@@ -647,8 +539,10 @@ void guiClass::drawBox(Block& box) {
     }
 
     // punkt połączenia (output) - znaczek "+"
+    // TODO: wziąć w pętle w zależności od ilości outputów
     ImVec2 center = ImVec2(current_screen_pos.x + current_screen_size.x - 15, current_screen_pos.y + current_screen_size.y * 0.5f);
 
+    // kursor do InvisibleButton tak, żeby kółko dało się kliknąć
     ImGui::SetCursorScreenPos(ImVec2(center.x - 10, center.y - 10));
     ImGui::InvisibleButton(("##link" + std::to_string(box.id)).c_str(), ImVec2(20, 20));
 
@@ -657,11 +551,13 @@ void guiClass::drawBox(Block& box) {
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
+    // kolor przycisku w zależności od stanu
     if (box.getNumOutputs() > 0) {
         ImU32 buttonColor = isClicked ? IM_COL32(255, 0, 0, 255) : (isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(200, 200, 0, 255));
         draw_list->AddCircleFilled(center, 8.0f, buttonColor);
         draw_list->AddText(ImVec2(center.x - 4, center.y - 7), IM_COL32(0, 0, 0, 255), "+");
     }
+    // TODO: aż do tąd pętle
 
     // obsługa przeciągania połączeń - tylko gdy nie przeciągamy okna
     if (!isDraggingWindow || draggedWindowId != box.id) {
