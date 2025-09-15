@@ -208,19 +208,16 @@ guiClass::DockPosition guiClass::checkDockPosition(ImVec2 windowPos, ImVec2 wind
         std::cout << "Should dock LEFT" << std::endl;
         return DockPosition::Left;
     }
-
     // prawą krawędź
     if (windowPos.x + windowSize.x > displaySize.x - dockSnapDistance) {
         std::cout << "Should dock RIGHT" << std::endl;
         return DockPosition::Right;
     }
-
     // górna krawędź
     if (windowPos.y < dockSnapDistance) {
         std::cout << "Should dock TOP" << std::endl;
         return DockPosition::Top;
     }
-
     // dolną krawędź
     if (windowPos.y + windowSize.y > displaySize.y - dockSnapDistance) {
         std::cout << "Should dock BOTTOM" << std::endl;
@@ -749,7 +746,7 @@ void guiClass::drawMenuBar() {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open", "Ctrl+O")) { /* akcja */ }
             if (ImGui::MenuItem("Save", "Ctrl+S")) { /* akcja */ }
-            if (ImGui::MenuItem("Exit")) { /* zamknij app */ }
+            if (ImGui::MenuItem("Exit", "Alt+F4")) { /* akcja */ }
             ImGui::EndMenu();
         }
 
@@ -760,8 +757,8 @@ void guiClass::drawMenuBar() {
         }
 
         if (ImGui::BeginMenu("Settings")) {
-            ImGui::MenuItem("Light mode", "", &lightMode);
-            ImGui::MenuItem("Show grid", "", &gridEnabled);
+            ImGui::MenuItem("Light mode", "Ctrl+L", &lightMode);
+            ImGui::MenuItem("Show grid", "Ctrl+G", &gridEnabled);
 
             if (ImGui::BeginMenu("Grid Settings")) {
                 ImGui::SliderFloat("Grid Spacing", &gridSpacing, 10.0f, 200.0f);
