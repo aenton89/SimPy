@@ -9,7 +9,6 @@
 #include "../../src/data/structures.h"
 #include "../../src/data/blocks.h"
 #include "../../src/data/data_sender/data_channel_manager.h"
-#include "test_sender.h"
 
 class StructuresTests {
 public:

@@ -20,7 +20,7 @@
 #include <vector>
 #include <numbers>
 #include <complex>
-#include "math/matrix_operation/matrix_op.h"
+#include "../matrix_operation/matrix_op.h"
 #include <iostream>
 
 using cd = std::complex<double>;

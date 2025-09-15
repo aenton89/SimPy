@@ -71,7 +71,7 @@ cmake --build . --config Release
 ## 4. run
 ### 4.1. run main program
 ```
-.\Release\patrykcpp.exe
+.\Release\SimPy.exe
 ```
 ### 4.2. run tests
 ```

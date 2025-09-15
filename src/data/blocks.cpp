@@ -3,9 +3,6 @@
 //
 
 #include "blocks.h"
-#include "data_sender/data_channel_manager.h"
-#include "math/digital_signal_processing/DSP.h"
-#include "math/math_help_fun/math_help_fun.h"
 #include <sstream>
 #include <cmath>
 #include <numbers>

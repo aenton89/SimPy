@@ -5,7 +5,9 @@
 #ifndef SOLVERMETHOD_H
 #define SOLVERMETHOD_H
 
-#include "math/solvers/ISolverMethod.h"
+#include "ISolverMethod.h"
+
+
 
 // Euler do przodu RK1
 class RK1Method : public ISolverMethod {
