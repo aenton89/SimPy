@@ -46,6 +46,9 @@ public:
     virtual void drawMenu() {};
     void drawIcon();
 
+    // metoda dla kopiowania bloczków przez CTRL+D
+    virtual std::unique_ptr<Block> clone() const = 0;
+
     // metoda do przetwarzania danych wejściowych i generowania danych wyjściowych
     virtual void process() = 0;
 
@@ -74,6 +77,25 @@ public:
 };
 
 
+
+/* klasa pomocnicza do klonowania bloczków
+- używa CRTP czy coś (Curiously Recurring Template Pattern)
+- dziedziczy konstruktor po Block
+- (note to self):
+- szablony muszą być definiowane w pliku .h, bo kompilator musi widzieć ich definicję przy instancjonowaniu
+ */
+template <typename Derived>
+class BlockCloneable : public Block {
+public:
+    // <- dziedziczymy konstruktory z Block
+    using Block::Block;
+
+    std::unique_ptr<Block> clone() const override {
+        return std::make_unique<Derived>(static_cast<const Derived&>(*this));
+    }
+};
+
+
 /* struktura reprezentująca połączenie między blokami
 - pomaga z procesem łączenia bloczków
 - oraz flow danych między nimi
@@ -88,6 +110,7 @@ struct Connection {
     // konstruktor
     Connection(Block* src, int srcPort, Block* tgt, int tgtPort);
 };
+
 
 
 /* główna klasa modelu (grafu)

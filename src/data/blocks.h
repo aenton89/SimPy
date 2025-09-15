@@ -18,7 +18,7 @@
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek sumujący
-class SumBlock : public Block {
+class SumBlock : public BlockCloneable<SumBlock> {
     // bo vector<bool> nie zwraca zwykłego wskaźnika (chyba??)
     std::vector<char> negate_inputs = {0, 0};
 public:
@@ -32,7 +32,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek mnożący
-class MultiplyBlock : public Block {
+class MultiplyBlock : public BlockCloneable<MultiplyBlock> {
 public:
     MultiplyBlock(int _id);
     void process() override;
@@ -44,7 +44,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek całkujący
-class IntegratorBlock : public Block {
+class IntegratorBlock : public BlockCloneable<IntegratorBlock> {
 private:
     double initial_state;
     //double state;
@@ -63,7 +63,7 @@ public:
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek rozniczkujacy
-class DifferentiatorBlock : public Block {
+class DifferentiatorBlock : public BlockCloneable<DifferentiatorBlock> {
 private:
     double initial_state;
     double state;
@@ -81,7 +81,7 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // transmitacja operatorowa
-class TransferFuncionContinous : public Block{
+class TransferFuncionContinous : public BlockCloneable<TransferFuncionContinous> {
 public:
     // licznik
     std::string num;
@@ -106,7 +106,7 @@ private:
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
 // regulator PID
-class PID_regulator : public Block {
+class PID_regulator : public BlockCloneable<PID_regulator> {
 private:
     MatOp::StateSpace ss;
     // wzmocnienie dla czesci proporcionalenej
@@ -132,7 +132,7 @@ public:
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // FFT
 // Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
-class STFT_block : public Block {
+class STFT_block : public BlockCloneable<STFT_block> {
 private:
     long windowSize = 128;
     int current_window_mode = 0;
@@ -161,7 +161,7 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // Projektowanie filtrow
-class filterInplementationBlock : public Block {
+class filterInplementationBlock : public BlockCloneable<filterInplementationBlock> {
 private:
     int current_signal_type = 0;
     int current_pass_type = 0;
@@ -192,7 +192,7 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // filtr medianowy 1D
-class medianFilter1DBlock : public Block {
+class medianFilter1DBlock : public BlockCloneable<medianFilter1DBlock> {
 private:
     std::vector<double> window_vector;
     long window_size = 5;
@@ -206,7 +206,7 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // filtr sredni (dziwna nazwa) poprostu movavg
-class meanFilter1DBlock : public Block {
+class meanFilter1DBlock : public BlockCloneable<meanFilter1DBlock> {
 private:
     std::vector<double> window_vector;
     long window_size = 5;
@@ -221,7 +221,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // blok kwadratu sygnalu wejsciwoego
-class squaredBlock : public Block {
+class squaredBlock : public BlockCloneable<squaredBlock> {
 public:
     squaredBlock(int id_);
     void process() override;
@@ -230,7 +230,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // blok pierwiskownaia
-class sqrtBlock : public Block {
+class sqrtBlock : public BlockCloneable<sqrtBlock> {
 public:
     sqrtBlock(int id_);
     void process() override;
@@ -242,7 +242,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek input'u
-class StepBlock : public Block {
+class StepBlock : public BlockCloneable<StepBlock> {
 private:
     double inputValue;
     double delay = 0;
@@ -257,7 +257,7 @@ public:
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postaci Sinusa
-class SinusInputBlock : public Block {
+class SinusInputBlock : public BlockCloneable<SinusInputBlock> {
 private:
    double inputValue;
    double shiftPhase = 0;
@@ -274,7 +274,7 @@ public:
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postac PWM
-class PWMInputBlock : public Block {
+class PWMInputBlock : public BlockCloneable<PWMInputBlock> {
 private:
     double currentTime;
     double inputValue;
@@ -291,7 +291,7 @@ public:
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postaci bialego szumu
-class WhiteNoiseInputBlock : public Block {
+class WhiteNoiseInputBlock : public BlockCloneable<WhiteNoiseInputBlock> {
 private:
     double mean = 0;
     double std = 1;
@@ -308,7 +308,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek print'a
-class PrintBlock : public Block {
+class PrintBlock : public BlockCloneable<PrintBlock> {
 public:
     PrintBlock(int _id);
     void process() override;
@@ -318,7 +318,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek robiący wykres
-class PlotBlock : public Block {
+class PlotBlock : public BlockCloneable<PlotBlock> {
     // offset do przesunięcia wykresu
     float x_limMax = 0;
     float x_limMin = 0;
@@ -336,7 +336,7 @@ public:
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 //bloczek wykresu XY
-class PLotXYBlock : public Block {
+class PLotXYBlock : public BlockCloneable<PLotXYBlock> {
 private:
     float x_limMax = 0;
     float x_limMin = 0;
@@ -355,7 +355,7 @@ public:
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 // bloczke wykresu typu heatmap
-class PlotHeatmapBlock : public Block {
+class PlotHeatmapBlock : public BlockCloneable<PlotHeatmapBlock> {
 private:
     std::vector<float> data;
     // liczba wierszy w kolumnie fft
@@ -369,7 +369,7 @@ public:
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 // blok saturacji
-class SaturationBlock : public Block {
+class SaturationBlock : public BlockCloneable<SaturationBlock> {
 private:
     double upperLimit = 1.0f;
     double lowerLimit = -1.0f;
@@ -382,7 +382,7 @@ public:
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // blok deadzona
-class DeadZoneBlock : public Block {
+class DeadZoneBlock : public BlockCloneable<DeadZoneBlock> {
 private:
     double startDeadZone = -1.f;
     double endDeadZone = 1.f;
@@ -394,7 +394,7 @@ public:
 };
 
 // zamina pkt na wartosc funkjo trygonometrycznej pkt
-class TrigonometricFunctionBlock : public Block {
+class TrigonometricFunctionBlock : public BlockCloneable<TrigonometricFunctionBlock> {
 private:
     std::string functionName = "sin";
 public:
@@ -406,7 +406,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // jak MultiplyBlock, ale z ustawianym mnożnikiem
-class GainBlock: public Block {
+class GainBlock: public BlockCloneable<GainBlock> {
     float multiplier = 1.0f;
 public:
     GainBlock(int _id);
@@ -419,7 +419,7 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // data sending - POKI CO WYSYLANIE NASTEPUJE W RESETAFTER(), ale to trzeba bedzie przeniesc
-class DataSenderBlock : public Block {
+class DataSenderBlock : public BlockCloneable<DataSenderBlock> {
 private:
     std::vector<float> data;
     double dt;
@@ -440,7 +440,7 @@ public:
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // bloki zwazane z inpelntacja kodu pythona i cpp w symualaci, rozwazam uzycie pybinda
-class pythonBlock : public Block {
+class pythonBlock : public BlockCloneable<pythonBlock> {
 public:
     pythonBlock(int _id);
     void process() override;
@@ -454,7 +454,7 @@ private:
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // cpp tu
-class cppBlock : public Block {
+class cppBlock : public BlockCloneable<cppBlock> {
 public:
     cppBlock(int _id);
     void process() override;
@@ -468,7 +468,7 @@ private:
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // OR block
-class logicORBlock : public Block {
+class logicORBlock : public BlockCloneable<logicORBlock> {
 public:
     logicORBlock(int _id);
     void process() override;
@@ -478,7 +478,7 @@ public:
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // AND block
-class logicANDBlock : public Block {
+class logicANDBlock : public BlockCloneable<logicANDBlock> {
 public:
     logicANDBlock(int _id);
     void process() override;
@@ -488,7 +488,7 @@ public:
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // NOT block
-class logicNOTBlock : public Block {
+class logicNOTBlock : public BlockCloneable<logicNOTBlock> {
 public:
     logicNOTBlock(int _id);
     void process() override;
@@ -497,7 +497,7 @@ public:
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // NOR block
-class logicNORBlock : public Block {
+class logicNORBlock : public BlockCloneable<logicNORBlock> {
 public:
     logicNORBlock(int _id);
     void process() override;

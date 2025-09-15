@@ -60,28 +60,49 @@ void guiClass::newFrame() {
 
 
 void guiClass::update() {
-    // TODO: added
+    // logika czyszczenia zaznaczeń
     ImGuiIO& io = ImGui::GetIO();
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !io.KeyShift) {
         ImVec2 mousePos = io.MousePos;
         bool clickedOnAnyTitle = false;
         for (auto& b : model.getBlocks()) {
-            ImVec2 screen_pos = ImVec2(b->position.x * zoomAmount + viewOffset.x,
-                                       b->position.y * zoomAmount + viewOffset.y);
+            ImVec2 screen_pos = ImVec2(b->position.x * zoomAmount + viewOffset.x, b->position.y * zoomAmount + viewOffset.y);
             ImVec2 screen_size = ImVec2(b->size.x * zoomAmount, b->size.y * zoomAmount);
             ImVec2 title_min = screen_pos;
             ImVec2 title_max = ImVec2(screen_pos.x + screen_size.x, screen_pos.y + ImGui::GetFrameHeight());
-            if (mousePos.x >= title_min.x && mousePos.x <= title_max.x &&
-                mousePos.y >= title_min.y && mousePos.y <= title_max.y) {
+            if (mousePos.x >= title_min.x && mousePos.x <= title_max.x && mousePos.y >= title_min.y && mousePos.y <= title_max.y) {
                 clickedOnAnyTitle = true;
                 break;
-                }
+            }
         }
         if (!clickedOnAnyTitle) {
             // klik poza titlebarami -> odznacz wszystko
             selectedBlocks.clear();
         }
     }
+
+    // logika kopiowania bloczków przez CTRL+D
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D, false)) {
+        if (!selectedBlocks.empty()) {
+            std::set<int> newSelection;
+
+            for (int id : selectedBlocks) {
+                auto it = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b){ return b->id == id; });
+                if (it != model.getBlocks().end()) {
+                    std::unique_ptr<Block> copy = (*it)->clone();
+                    copy->id = next_id++;
+                    copy->position = ImVec2((*it)->position.x + 20, (*it)->position.y + 20);
+
+                    newSelection.insert(copy->id);
+                    model.getBlocks().push_back(std::move(copy));
+                }
+            }
+
+            // przenosimy zaznaczenie na nowo dodane bloczki
+            selectedBlocks = newSelection;
+        }
+    }
+
 
     // Wywołaj nowe funkcje
     drawMenu();

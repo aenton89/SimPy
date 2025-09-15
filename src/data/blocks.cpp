@@ -19,7 +19,7 @@
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // sumowania
-SumBlock::SumBlock(int _id) : Block(_id, 2, 1, true) {
+SumBlock::SumBlock(int _id) : BlockCloneable(_id, 2, 1, true) {
     size = ImVec2(150, 80);
     if (numInputs != 2)
         negate_inputs.resize(numInputs, 0);
@@ -79,7 +79,7 @@ void SumBlock::resetBefore() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // mnożenia
-MultiplyBlock::MultiplyBlock(int _id) : Block(_id, 2, 1, true) {
+MultiplyBlock::MultiplyBlock(int _id) : BlockCloneable(_id, 2, 1, true) {
     size = ImVec2(150, 80);
 }
 
@@ -114,7 +114,7 @@ void MultiplyBlock::resetBefore() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // całkowania
-IntegratorBlock::IntegratorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {
+IntegratorBlock::IntegratorBlock(int _id) : BlockCloneable(_id, 1, 1, true), initial_state(0.0) {
     size = ImVec2(200, 120);
 
     ss.A = {{0.0}};
@@ -167,7 +167,7 @@ void IntegratorBlock::drawMenu() {
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 // blok pierwiastkowania
-sqrtBlock::sqrtBlock(int id_): Block(id_, 1, 1, true) {
+sqrtBlock::sqrtBlock(int id_): BlockCloneable(id_, 1, 1, true) {
     size = ImVec2(150, 80);
 }
 
@@ -215,7 +215,7 @@ void sqrtBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // input'u
-StepBlock::StepBlock(int _id) : Block(_id, 0, 1, true) {
+StepBlock::StepBlock(int _id) : BlockCloneable(_id, 0, 1, true) {
     size = ImVec2(150, 80);
     inputValue = 0.0;
 }
@@ -247,7 +247,7 @@ void StepBlock::resetBefore() {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek inputu w postaci Sinusa
-SinusInputBlock::SinusInputBlock(int id_) : Block(id_, 0, 1, true) {
+SinusInputBlock::SinusInputBlock(int id_) : BlockCloneable(id_, 0, 1, true) {
     size = ImVec2(150, 80);
     inputValue = 0.0;
 }
@@ -278,7 +278,7 @@ void SinusInputBlock::drawMenu() {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // PWM input
-PWMInputBlock::PWMInputBlock(int _id) : Block(_id, 0, 1, true) {
+PWMInputBlock::PWMInputBlock(int _id) : BlockCloneable(_id, 0, 1, true) {
     size = ImVec2(150, 200);
 }
 
@@ -317,7 +317,7 @@ void PWMInputBlock::resetBefore() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // Generator bilalego szumu
-WhiteNoiseInputBlock::WhiteNoiseInputBlock(int id_) : Block(id_, 0, 1, true), distribution(mean, std) {
+WhiteNoiseInputBlock::WhiteNoiseInputBlock(int id_) : BlockCloneable(id_, 0, 1, true), distribution(mean, std) {
     size = ImVec2(150, 80);
     std::random_device rd;
     generator.seed(rd());
@@ -345,7 +345,7 @@ void WhiteNoiseInputBlock::drawContent() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // print'a
-PrintBlock::PrintBlock(int _id) : Block(_id, 1, 0) {
+PrintBlock::PrintBlock(int _id) : BlockCloneable(_id, 1, 0) {
     size = ImVec2(150, 60);
 }
 
@@ -364,7 +364,7 @@ void PrintBlock::drawContent() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // plot'a
-PlotBlock::PlotBlock(int _id) : Block(_id, 1, 0, true) {
+PlotBlock::PlotBlock(int _id) : BlockCloneable(_id, 1, 0, true) {
     size = ImVec2(350, 200);
     data.resize(numInputs);
     for (auto& arr : data) {
@@ -462,7 +462,7 @@ void PlotBlock::drawMenu() {
 // --------------------------------------------------------------------------------------------------------------------------------------
 // plotowanie grafu XY
 // trzeba to pobrac, array trzeba zamienic na dynamiczny wektor, 2 wejścia: X i Y
-PLotXYBlock::PLotXYBlock(int _id) : Block(_id, 2, 0, true) {
+PLotXYBlock::PLotXYBlock(int _id) : BlockCloneable(_id, 2, 0, true) {
     size = ImVec2(350, 200);
     data.resize(2); // X i Y
     for (auto &arr : data) {
@@ -560,7 +560,7 @@ void PLotXYBlock::drawMenu() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // plot heatmap
-PlotHeatmapBlock::PlotHeatmapBlock(int _id) : Block(_id, 65, 0, false){
+PlotHeatmapBlock::PlotHeatmapBlock(int _id) : BlockCloneable(_id, 65, 0, false){
     size = ImVec2(350, 200);
 }
 
@@ -617,7 +617,7 @@ void PlotHeatmapBlock::resetBefore() {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // roznczkowanie
-DifferentiatorBlock::DifferentiatorBlock(int _id) : Block(_id, 1, 1, true), initial_state(0.0) {}
+DifferentiatorBlock::DifferentiatorBlock(int _id) : BlockCloneable(_id, 1, 1, true), initial_state(0.0) {}
 
 void DifferentiatorBlock::process() {
     double derivative = (inputValues[0] - state) / Model::timeStep;
@@ -660,7 +660,7 @@ void DifferentiatorBlock::drawMenu() {
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
 // Blok saturacji
-SaturationBlock::SaturationBlock(int id_): Block(id_, 1, 1, true) {
+SaturationBlock::SaturationBlock(int id_): BlockCloneable(id_, 1, 1, true) {
     this->size = ImVec2(200, 150);
 }
 
@@ -682,7 +682,7 @@ void SaturationBlock::drawMenu() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // transmitacja operatorowa
-TransferFuncionContinous::TransferFuncionContinous(int id_) : Block(id_, 1, 1, true) {
+TransferFuncionContinous::TransferFuncionContinous(int id_) : BlockCloneable(id_, 1, 1, true) {
     this->size = ImVec2(200, 130);
     this->num = "1";
     this->denum = "1, 1";
@@ -823,7 +823,7 @@ void TransferFuncionContinous::resetBefore() {
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
 // regulator PID
-PID_regulator::PID_regulator(int id_) : Block(id_, 1, 1, true) {
+PID_regulator::PID_regulator(int id_) : BlockCloneable(id_, 1, 1, true) {
     size = ImVec2(200, 150);
     ss.A = {{0}};
     ss.B = {{1}};
@@ -928,7 +928,7 @@ void PID_regulator::resetBefore() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // FFT
-STFT_block::STFT_block(int id_) : Block(id_, 1, 65, true) {
+STFT_block::STFT_block(int id_) : BlockCloneable(id_, 1, 65, true) {
     size = ImVec2(200, 120);
     window_vector = STFT_block::generateWindowVector(windowSize, current_window_mode);
 }
@@ -1051,7 +1051,7 @@ void STFT_block::resetBefore() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // Projektowanie filtrow
-filterInplementationBlock::filterInplementationBlock(int id_) : Block(id_, 1, 1, true){
+filterInplementationBlock::filterInplementationBlock(int id_) : BlockCloneable(id_, 1, 1, true){
     size = ImVec2(200, 120);
 
     // Tf = dsp::butterworth_proto(filter_order);
@@ -1236,7 +1236,7 @@ void filterInplementationBlock::resetBefore() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // filtr medianowy 1D
-meanFilter1DBlock::meanFilter1DBlock(int id_) : Block(id_, 1, 1, true) {
+meanFilter1DBlock::meanFilter1DBlock(int id_) : BlockCloneable(id_, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1268,7 +1268,7 @@ void meanFilter1DBlock::resetBefore() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // filtr medianowy 1D
-medianFilter1DBlock::medianFilter1DBlock(int id_) : Block(id_, 1, 1, true) {
+medianFilter1DBlock::medianFilter1DBlock(int id_) : BlockCloneable(id_, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1310,7 +1310,7 @@ void medianFilter1DBlock::resetBefore() {
 
 // -------------------------------------------------------------------------------------------------------------------------------------------
 // kwadrat liczby
-squaredBlock::squaredBlock(int id_) : Block(id_, 1, 1, false) {
+squaredBlock::squaredBlock(int id_) : BlockCloneable(id_, 1, 1, false) {
     size = ImVec2(200, 120);
 }
 
@@ -1326,7 +1326,7 @@ void squaredBlock::drawContent() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // tranformacja pkt na jego wartosc funkji trygonometrycznej
-TrigonometricFunctionBlock::TrigonometricFunctionBlock(int id_) : Block(id_, 1, 1, true) {
+TrigonometricFunctionBlock::TrigonometricFunctionBlock(int id_) : BlockCloneable(id_, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1387,7 +1387,7 @@ void TrigonometricFunctionBlock::process() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // DeadZone blok
-DeadZoneBlock::DeadZoneBlock(int id_) : Block(id_, 1, 1, true) {
+DeadZoneBlock::DeadZoneBlock(int id_) : BlockCloneable(id_, 1, 1, true) {
     this->size = ImVec2(200, 120);
 }
 
@@ -1414,7 +1414,7 @@ void DeadZoneBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // gain'a
-GainBlock::GainBlock(int _id) : Block(_id, 1, 1, true) {
+GainBlock::GainBlock(int _id) : BlockCloneable(_id, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1448,7 +1448,7 @@ void GainBlock::resetBefore() {
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 // OR
-logicORBlock::logicORBlock(int id_): Block(id_, 2, 1, true) {
+logicORBlock::logicORBlock(int id_): BlockCloneable(id_, 2, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1482,7 +1482,7 @@ void logicORBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // AND
-logicANDBlock::logicANDBlock(int id_) : Block(id_, 2, 1, true) {
+logicANDBlock::logicANDBlock(int id_) : BlockCloneable(id_, 2, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1516,7 +1516,7 @@ void logicANDBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // NOT
-logicNOTBlock::logicNOTBlock(int id_) : Block(id_, 1, 1, false) {
+logicNOTBlock::logicNOTBlock(int id_) : BlockCloneable(id_, 1, 1, false) {
     size = ImVec2(200, 120);
 }
 
@@ -1533,7 +1533,7 @@ void logicNOTBlock::drawContent() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // NOR
-logicNORBlock::logicNORBlock(int id_) : Block(id_, 2, 1, true) {
+logicNORBlock::logicNORBlock(int id_) : BlockCloneable(id_, 2, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1566,7 +1566,7 @@ void logicNORBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // python block
-pythonBlock::pythonBlock(int _id) : Block(_id, 1, 1, true) {
+pythonBlock::pythonBlock(int _id) : BlockCloneable(_id, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1597,7 +1597,7 @@ void pythonBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // cpp block
-cppBlock::cppBlock(int _id) : Block(_id, 1, 1, true) {
+cppBlock::cppBlock(int _id) : BlockCloneable(_id, 1, 1, true) {
     size = ImVec2(200, 120);
 }
 
@@ -1628,7 +1628,7 @@ void cppBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // data sending
-DataSenderBlock::DataSenderBlock(int _id) : Block(_id, 1, 0, true), isInitialized(false), pipeName(R"(\\.\pipe\simulink_data)"), bufferSize(1000) {
+DataSenderBlock::DataSenderBlock(int _id) : BlockCloneable(_id, 1, 0, true), isInitialized(false), pipeName(R"(\\.\pipe\simulink_data)"), bufferSize(1000) {
     // rezerwacja miejsca dla bufora danych
     data.reserve(bufferSize);
     // instancja managera
