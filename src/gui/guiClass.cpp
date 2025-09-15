@@ -60,8 +60,9 @@ void guiClass::newFrame() {
 
 
 void guiClass::update() {
-    // logika czyszczenia zaznaczeń
     ImGuiIO& io = ImGui::GetIO();
+
+    // logika czyszczenia zaznaczeń
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !io.KeyShift) {
         ImVec2 mousePos = io.MousePos;
         bool clickedOnAnyTitle = false;
@@ -80,7 +81,6 @@ void guiClass::update() {
             selectedBlocks.clear();
         }
     }
-
     // logika kopiowania bloczków przez CTRL+D
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D, false)) {
         if (!selectedBlocks.empty()) {
@@ -102,7 +102,6 @@ void guiClass::update() {
             selectedBlocks = newSelection;
         }
     }
-
     // usuwanie bloczków przez DEL
     if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
         if (!selectedBlocks.empty()) {
@@ -113,6 +112,11 @@ void guiClass::update() {
             selectedBlocks.clear();
         }
     }
+    // logika settings'ów z menu bar
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_L, false))
+        lightMode = !lightMode;
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G, false))
+        gridEnabled = !gridEnabled;
 
 
     // Wywołaj nowe funkcje
