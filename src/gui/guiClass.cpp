@@ -103,6 +103,17 @@ void guiClass::update() {
         }
     }
 
+    // usuwanie bloczków przez DEL
+    if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
+        if (!selectedBlocks.empty()) {
+            auto& blocks = model.getBlocks();
+            blocks.erase(std::remove_if(blocks.begin(), blocks.end(),[&](auto& b) {return selectedBlocks.count(b->id) > 0;}), blocks.end());
+
+            // wyczyść zaznaczenie
+            selectedBlocks.clear();
+        }
+    }
+
 
     // Wywołaj nowe funkcje
     drawMenu();

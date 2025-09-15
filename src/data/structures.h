@@ -87,7 +87,7 @@ public:
 template <typename Derived>
 class BlockCloneable : public Block {
 public:
-    // <- dziedziczymy konstruktory z Block
+    // dziedziczymy konstruktory z Block
     using Block::Block;
 
     std::unique_ptr<Block> clone() const override {
