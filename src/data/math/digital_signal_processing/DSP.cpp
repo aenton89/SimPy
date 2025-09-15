@@ -327,6 +327,30 @@ dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() { // ni huja on nie dziala
     return Tf;
 }
 
+dsp::tf dsp::FilterDesigner::besel_proto() {
+    tf Tf;
+    std::vector<cd> poles;
+    std::vector<cd> zeros;
+
+    int N = order;
+    if (N == 0) {
+        poles.push_back(cd(0, 0));
+        zeros.push_back(cd(1.0, 0));
+    }
+    if (N == 1)
+    {
+
+    }
+
+    Tf.zeros = zeros;
+    Tf.poles = poles;
+
+    // Wzmocnienie prototypu Chebyshev II
+    Tf.gain = 1.0;
+
+    return Tf;
+}
+
 // idk czy ja mam w cutoff robic normalziacje czy w pkt odniesienia
 double eval_H(const dsp::tf& Tf, double omega) {
     cd s(0, omega);
@@ -469,7 +493,7 @@ void dsp::FilterDesigner::apply_setting(int order, int filter_type, int filter_s
     if (filter_subtype == LPF || filter_subtype == HPF)
         this->cutoff[1] = this->cutoff[0];
 
-    std::cout << this->filter_type << std::endl;
+    //std::cout << this->filter_type << std::endl;
 
     if (this->filter_type == BUTTERWORTH)
         Tf = FilterDesigner::butterworth_proto();

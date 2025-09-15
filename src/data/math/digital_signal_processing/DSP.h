@@ -65,6 +65,7 @@ namespace dsp{
         tf butterworth_proto();
         tf chebyshev_i_proto();
         tf chebyshev_ii_proto();
+        tf besel_proto();
 
         void apply_filter_subtype();
 

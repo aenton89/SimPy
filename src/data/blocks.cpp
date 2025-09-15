@@ -1197,7 +1197,9 @@ void filterInplementationBlock::drawMenu() {
     else {
         ImGui::InputDouble("Lower Limit", &lower_limit);
     }
-    lower_limit = (lower_limit > higher_limit) ? 0 : lower_limit;
+    lower_limit = (lower_limit == 0) ? 0.001 : lower_limit;
+    lower_limit = (lower_limit > higher_limit) ? 0.001 : lower_limit;
+    std::cout << lower_limit << " " << higher_limit << std::endl;
 
     range = {lower_limit * 2 * std::numbers::pi, higher_limit * 2 * std::numbers::pi};
 
