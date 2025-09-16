@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
-project(patrykcpp)
+project(SimPy)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -13,7 +13,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(stb REQUIRED)
 
 # =================== MAIN PROGRAM ===================
-add_executable(patrykcpp
+add_executable(SimPy
         src/main.cpp
         src/imgui_backends/imgui_impl_glfw.cpp
         src/imgui_backends/imgui_impl_opengl3.cpp
@@ -23,15 +23,17 @@ add_executable(patrykcpp
         src/data/data_sender/data_channel_manager.cpp
         src/data/math/matrix_operation/matrix_op.cpp
         src/data/math/solvers/solverMethod.cpp
+        src/data/math/solvers/solver.cpp
+        src/data/math/solvers/solverManager.cpp
         src/data/math/digital_signal_processing/DSP.cpp
         src/data/math/math_help_fun/math_help_fun.cpp
 )
 
-target_compile_definitions(patrykcpp PRIVATE
+target_compile_definitions(SimPy PRIVATE
         IMGUI_IMPL_OPENGL_LOADER_GLAD
 )
 
-target_link_libraries(patrykcpp PRIVATE
+target_link_libraries(SimPy PRIVATE
         imgui::imgui
         glfw
         OpenGL::GL
@@ -41,12 +43,14 @@ target_link_libraries(patrykcpp PRIVATE
         stb::stb
 )
 
-target_include_directories(patrykcpp PRIVATE
+target_include_directories(SimPy PRIVATE
         ${imgui_INCLUDE_DIRS}
         src/imgui_backends
         src/gui
         src/data
 )
+
+target_compile_definitions(SimPy PRIVATE ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
 
 # =================== TESTS ===================
 enable_testing()
@@ -54,10 +58,17 @@ enable_testing()
 # tworzymy target dla testów
 add_executable(tests
         tests/data_tests/test_structures.cpp
+        tests/test.cpp
+
         src/data/blocks.cpp
         src/data/structures.cpp
         src/data/data_sender/data_channel_manager.cpp
-        tests/test.cpp
+        src/data/math/matrix_operation/matrix_op.cpp
+        src/data/math/solvers/solverMethod.cpp
+        src/data/math/solvers/solver.cpp
+        src/data/math/solvers/solverManager.cpp
+        src/data/math/digital_signal_processing/DSP.cpp
+        src/data/math/math_help_fun/math_help_fun.cpp
 )
 
 target_include_directories(tests PRIVATE src)

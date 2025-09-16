@@ -2,7 +2,7 @@
 // Created by patryk on 12.09.25.
 //
 
-#include "math/math_help_fun/math_help_fun.h"
+#include "math_help_fun.h"
 
 
 // Funkja do mznorzneia wilomainaow

@@ -5,14 +5,16 @@
 #ifndef BLOCKS_H
 #define BLOCKS_H
 
-#include "structures.h"
 #include <implot.h>
 #include <array>
 #include <random>
+#include <complex>
+#include "structures.h"
 #include "data_sender/data_channel_manager.h"
 #include "math/matrix_operation/matrix_op.h"
-#include <complex>
 #include "math/digital_signal_processing/DSP.h"
+#include "math/math_help_fun/math_help_fun.h"
+#include "math/solvers/solverMethod.h"
 
 
 

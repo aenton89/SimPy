@@ -21,7 +21,8 @@ void guiClass::init(GLFWwindow* win, const char* version) {
 
     // jakaś defaultowa ikonka, potem zmienie
     GLFWimage images[1];
-    images[0].pixels = stbi_load("../../assets/app_icons/icon_v3.png", &images[0].width, &images[0].height, 0, 4);
+    std::string iconPath = std::string(ASSETS_DIR) + "/app_icons/icon_v3.png";
+    images[0].pixels = stbi_load(iconPath.c_str(), &images[0].width, &images[0].height, 0, 4);
     glfwSetWindowIcon(window, 1, images);
     stbi_image_free(images[0].pixels);
     if (!images[0].pixels) {
@@ -60,8 +61,9 @@ void guiClass::newFrame() {
 
 
 void guiClass::update() {
-    // logika czyszczenia zaznaczeń
     ImGuiIO& io = ImGui::GetIO();
+
+    // logika czyszczenia zaznaczeń
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !io.KeyShift) {
         ImVec2 mousePos = io.MousePos;
         bool clickedOnAnyTitle = false;
@@ -80,7 +82,6 @@ void guiClass::update() {
             selectedBlocks.clear();
         }
     }
-
     // logika kopiowania bloczków przez CTRL+D
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D, false)) {
         if (!selectedBlocks.empty()) {
@@ -102,7 +103,6 @@ void guiClass::update() {
             selectedBlocks = newSelection;
         }
     }
-
     // usuwanie bloczków przez DEL
     if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
         if (!selectedBlocks.empty()) {
@@ -113,6 +113,11 @@ void guiClass::update() {
             selectedBlocks.clear();
         }
     }
+    // logika settings'ów z menu bar
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_L, false))
+        lightMode = !lightMode;
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G, false))
+        gridEnabled = !gridEnabled;
 
 
     // Wywołaj nowe funkcje
@@ -208,19 +213,16 @@ guiClass::DockPosition guiClass::checkDockPosition(ImVec2 windowPos, ImVec2 wind
         std::cout << "Should dock LEFT" << std::endl;
         return DockPosition::Left;
     }
-
     // prawą krawędź
     if (windowPos.x + windowSize.x > displaySize.x - dockSnapDistance) {
         std::cout << "Should dock RIGHT" << std::endl;
         return DockPosition::Right;
     }
-
     // górna krawędź
     if (windowPos.y < dockSnapDistance) {
         std::cout << "Should dock TOP" << std::endl;
         return DockPosition::Top;
     }
-
     // dolną krawędź
     if (windowPos.y + windowSize.y > displaySize.y - dockSnapDistance) {
         std::cout << "Should dock BOTTOM" << std::endl;
@@ -749,7 +751,7 @@ void guiClass::drawMenuBar() {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open", "Ctrl+O")) { /* akcja */ }
             if (ImGui::MenuItem("Save", "Ctrl+S")) { /* akcja */ }
-            if (ImGui::MenuItem("Exit")) { /* zamknij app */ }
+            if (ImGui::MenuItem("Exit", "Alt+F4")) { /* akcja */ }
             ImGui::EndMenu();
         }
 
@@ -760,8 +762,8 @@ void guiClass::drawMenuBar() {
         }
 
         if (ImGui::BeginMenu("Settings")) {
-            ImGui::MenuItem("Light mode", "", &lightMode);
-            ImGui::MenuItem("Show grid", "", &gridEnabled);
+            ImGui::MenuItem("Light mode", "Ctrl+L", &lightMode);
+            ImGui::MenuItem("Show grid", "Ctrl+G", &gridEnabled);
 
             if (ImGui::BeginMenu("Grid Settings")) {
                 ImGui::SliderFloat("Grid Spacing", &gridSpacing, 10.0f, 200.0f);

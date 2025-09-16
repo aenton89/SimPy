@@ -2,7 +2,7 @@
 // Created by patryk on 11.09.25.
 //
 
-#include "math/digital_signal_processing/DSP.h"
+#include "DSP.h"
 #include <numbers>
 
 using cd = std::complex<double>;
