@@ -22,3 +22,7 @@ std::vector<std::complex<double>> math::expandPolynomial(const std::vector<std::
     }
     return coeffs;
 }
+
+cd math::polyEval(const std::vector<double>& coeff, cd z) {
+
+}
