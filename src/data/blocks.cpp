@@ -8,7 +8,9 @@
 #include <numbers>
 #include <complex>
 #include <algorithm>
+#include <fstream>
 #include <numeric>
+#include <sys/stat.h>
 
 // w tym pliku są implementacje specyficznych bloków
 
@@ -305,9 +307,153 @@ void PWMInputBlock::process() {
     this->currentTime += Model::timeStep;
 }
 
+SignalFromFileBlock::SignalFromFileBlock(int id_) : BlockCloneable(id_, 0, 1, true) {
+    size = ImVec2(150, 80);
+}
+
+void SignalFromFileBlock::drawContent() {
+    ImGui::Text("Signal form file");
+    Block::drawContent();
+}
+
+// Funkcja pomocnicza do wczytywania wartości z pliku
+std::vector<float> readValuesFromFile(const std::string& filePath, bool is_scal = false, float lower_band = 0.0f, float upper_band = 1.0f) {
+    std::vector<float> values;
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        ImGui::Text("File doesn't exist");
+        return values;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string cell;
+
+        while (std::getline(ss, cell, ',')) {
+            if (!cell.empty()) {
+                try {
+                    float val = std::stof(cell);
+                    if (is_scal) {
+                        val = (val - lower_band) / (upper_band - lower_band);
+                        if (val < 0.0f) val = 0.0f;
+                        if (val > 1.0f) val = 1.0f;
+                    }
+                    values.push_back(val);
+                } catch (...) {
+
+                }
+            }
+        }
+    }
+
+    return values;
+}
+
+void SignalFromFileBlock::drawMenu() {
+    char buf[256];
+    strncpy(buf, filePath.c_str(), sizeof(buf));
+    buf[sizeof(buf)-1] = '\0';
+
+    if (ImGui::InputText("Path to .txt/.csv", buf, sizeof(buf)))
+        filePath = std::string(buf);
+
+    const static char* readMode[] = {"Read all", "Read point by point"};
+    if (ImGui::BeginCombo("Read Mode", readMode[current_read_mode], false)) {
+        for (int i = 0; i < IM_ARRAYSIZE(readMode); i++) {
+            bool is_selected = current_read_mode == i;
+            if (ImGui::Selectable(readMode[i], is_selected))
+                current_read_mode = i;
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    if (current_read_mode == 0) {
+        ImGui::Checkbox("Enable Scaler", &is_scal);
+
+        if (is_scal) {
+            ImGui::InputFloat("Lower Band", &lower_band);
+            ImGui::InputFloat("Upper Band", &upper_band);
+        } else {
+            ImGui::BeginDisabled();
+            ImGui::InputFloat("Lower Band", &lower_band);
+            ImGui::InputFloat("Upper Band", &upper_band);
+            ImGui::EndDisabled();
+        }
+
+        values = readValuesFromFile(filePath, is_scal, lower_band, upper_band);
+    }
+}
+
+float SignalFromFileBlock::readNextValue() {
+    std::ifstream file(filePath);
+    if (!file.is_open())
+        return 0.0f; // brak pliku
+
+    std::string line;
+    std::stringstream ss;
+
+    size_t currentLine = 0;
+    while (std::getline(file, line)) {
+        if (currentLine == i) {
+            ss.str(line);
+            ss.clear();
+            break;
+        }
+        currentLine++;
+    }
+
+    i++; // przy następnym wywołaniu weź następny wiersz
+
+    std::string cell;
+    if (std::getline(ss, cell, ',')) {
+        try {
+            float val = std::stof(cell);
+            if (is_scal) {
+                val = (val - lower_band) / (upper_band - lower_band);
+                if (val < 0.0f) val = 0.0f;
+                if (val > 1.0f) val = 1.0f;
+            }
+            return val;
+        } catch (...) {
+            return 0.0f;
+        }
+    }
+
+    return 0.0f;
+}
+
+
+
+void SignalFromFileBlock::process() {
+    if (current_read_mode == 0) { // read all
+        std::cout <<"debug" << i << std::endl;
+        if (i < values.size()) {
+            for (auto val: values)
+            {
+                std::cout <<"debug" << val << std::endl;
+            }
+            outputValues[0] = values[i];
+            i++;
+        } else {
+            outputValues[0] = 0.0f;
+        }
+    } else { // point-by-point
+        outputValues[0] = readNextValue();
+    }
+}
+
+void SignalFromFileBlock::resetAfter() {
+    values.clear();
+    i=0;
+}
+
 
 void PWMInputBlock::resetBefore() {
     currentTime = 0;
+
 }
 
 
@@ -1180,7 +1326,7 @@ void filterInplementationBlock::drawMenu() {
     }
     lower_limit = (lower_limit == 0) ? 0.001 : lower_limit;
     lower_limit = (lower_limit > higher_limit) ? 0.001 : lower_limit;
-    std::cout << lower_limit << " " << higher_limit << std::endl;
+    //std::cout << lower_limit << " " << higher_limit << std::endl;
 
     range = {lower_limit * 2 * std::numbers::pi, higher_limit * 2 * std::numbers::pi};
 

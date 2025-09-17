@@ -5,6 +5,8 @@
 #include "DSP.h"
 #include <numbers>
 
+#include "math/math_help_fun/math_help_fun.h"
+
 using cd = std::complex<double>;
 
 
@@ -22,7 +24,7 @@ void dsp::fft(std::vector<cd> &a, bool invert) {
         double ang = 2 * std::numbers::pi / len * (invert ? -1 : 1);
         cd wlen(std::cos(ang), std::sin(ang));
         for (int i = 0; i < n; i += len) {
-            cd w(1);
+            cd w(1, 0);
             for (int j = 0; j < len / 2; j++) {
                 cd u = a[i+j], v = a[i+j+len/2]*w;
                 a[i+j] = u+v;
@@ -331,26 +333,45 @@ dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() { // ni huja on nie dziala
 dsp::tf dsp::FilterDesigner::besel_proto() {
     tf Tf;
     std::vector<cd> poles;
-    std::vector<cd> zeros;
+    std::vector<cd> zeros; // Bessel LP ma zera w ∞ → pusty wektor
 
     int N = order;
+
     if (N == 0) {
-        poles.push_back(cd(0, 0));
-        zeros.push_back(cd(1.0, 0));
-    }
-    if (N == 1)
-    {
-
+        poles.push_back(cd(0.0, 0.0));
     }
 
-    Tf.zeros = zeros;
-    Tf.poles = poles;
+    if (N == 1) {
+        poles.push_back(cd(-1.0, 0.0));
+    }
 
-    // Wzmocnienie prototypu Chebyshev II
+    if (N > 1) {
+        // Wyliczamy współczynniki wielomianu Bessela rekurencyjnie
+        std::vector<double> an(N+1, 0.0);
+        an[0] = 1.0;
+        for (int k = 1; k <= N; ++k) {
+            an[k] = an[k-1] * 2.0 * (N - k + 1) / (k * (2*N - k + 1));
+        }
+
+        // Odwracamy, bo polyRoots_DK oczekuje współczynników od x^N do x^0
+        // std::reverse(an.begin(), an.end());
+
+        poles = math::polyRoots_DK(an); // obliczamy bieguny
+        for (auto &p : poles) {
+            if (std::isnan(p.real()) || std::isnan(p.imag())) {
+                std::cerr << "Błąd: pierwiastek nie jest liczbą!" << std::endl;
+            }
+        }
+    }
+
     Tf.gain = 1.0;
+    Tf.zeros = {};
+    Tf.poles = poles;
 
     return Tf;
 }
+
+
 
 // idk czy ja mam w cutoff robic normalziacje czy w pkt odniesienia
 double eval_H(const dsp::tf& Tf, double omega) {
@@ -502,6 +523,8 @@ void dsp::FilterDesigner::apply_setting(int order, int filter_type, int filter_s
         Tf = FilterDesigner::chebyshev_i_proto();
     else if (this->filter_type == CHEBYSHEV_II)
         Tf = FilterDesigner::chebyshev_ii_proto();
+    else if (this->filter_type == BESSEL)
+        Tf = FilterDesigner::besel_proto();
 
     dsp::FilterDesigner::apply_filter_subtype();
 }

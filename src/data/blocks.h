@@ -9,12 +9,16 @@
 #include <array>
 #include <random>
 #include <complex>
+#include <filesystem>
+#include <fstream>
+
 #include "structures.h"
 #include "data_sender/data_channel_manager.h"
 #include "math/matrix_operation/matrix_op.h"
 #include "math/digital_signal_processing/DSP.h"
 #include "math/math_help_fun/math_help_fun.h"
 #include "math/solvers/solverMethod.h"
+#include <paths.h>
 
 
 
@@ -289,6 +293,32 @@ public:
     void drawContent() override;
     void drawMenu() override;
     void resetBefore() override;
+};
+
+
+class SignalFromFileBlock : public BlockCloneable<SignalFromFileBlock> {
+private:
+    std::string filePath = "";
+    int current_read_mode = 0; // 1 to odczyt sample po samplu dla duzych plikow a 0 to dla maych zaczytujemy calosc. Szybsze gdy wyslamu do ESP
+    std::vector<double> buffor;
+
+    float upper_band = 1;
+    float lower_band = 0;
+
+    bool is_scal = false;
+
+    size_t i = 0;
+
+    std::vector<float> values;
+
+    float readNextValue();
+
+public:
+    SignalFromFileBlock(int _id_);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetAfter() override;
 };
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------

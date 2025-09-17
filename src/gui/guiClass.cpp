@@ -847,6 +847,8 @@ void guiClass::drawMenu() {
                 model.getBlocks().push_back(std::make_unique<PWMInputBlock>(next_id++));
             if (ImGui::Button("Add WhiteNoise Box"))
                 model.getBlocks().push_back(std::make_unique<WhiteNoiseInputBlock>(next_id++));
+            if (ImGui::Button("Add Input form File"))
+                model.getBlocks().push_back(std::make_unique<SignalFromFileBlock>(next_id++));
         }
 
         // modul spketum czestoliwosciowego
