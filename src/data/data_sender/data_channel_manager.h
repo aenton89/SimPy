@@ -16,7 +16,6 @@
 #endif
 
 
-
 class DataChannelManager {
 private:
     static std::unique_ptr<DataChannelManager> instance;
@@ -53,5 +52,6 @@ public:
     // get last error message
     std::string getLastError() const;
 };
+
 
 #endif // DATA_CHANNEL_MANAGER_H

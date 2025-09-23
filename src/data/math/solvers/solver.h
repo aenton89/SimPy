@@ -17,6 +17,12 @@ public:
     // krok solvera dla danego układu
     std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u);
 
+    template <class Archive>
+    void serialize(Archive& ar) {
+        ar(CEREAL_NVP(dt));
+        ar(CEREAL_NVP(method));
+    }
+
 private:
     double dt;
     std::shared_ptr<ISolverMethod> method;

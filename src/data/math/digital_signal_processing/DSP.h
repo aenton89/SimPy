@@ -52,6 +52,13 @@ namespace dsp{
         std::vector<double> magnitude;
         std::vector<double> phase;
         std::vector<double> omega;
+
+        template <class Archive>
+        void serialize(Archive& ar) {
+            ar(CEREAL_NVP(magnitude),
+               CEREAL_NVP(phase),
+               CEREAL_NVP(omega));
+        }
     };
 
     Bode bode_characteristic(const tf& Tf);
@@ -88,7 +95,7 @@ namespace dsp{
                CEREAL_NVP(filter_type),
                CEREAL_NVP(filter_subtype),
                CEREAL_NVP(ripple),
-               CEREAL_NVP(Tf),           // używa tf::serialize
+               CEREAL_NVP(Tf),
                CEREAL_NVP(cutoff));
         }
     };

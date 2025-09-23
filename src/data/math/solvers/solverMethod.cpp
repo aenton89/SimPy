@@ -51,5 +51,8 @@ std::vector<double> RK2Method::step(MatOp::StateSpace& ss, const std::vector<dou
 
 
 
-
+// dla serializacji
+REGISTER_SOLVER_TYPE(RK1Method);
+REGISTER_SOLVER_TYPE(RK2Method);
+REGISTER_SOLVER_TYPE(RK4Method);
 
