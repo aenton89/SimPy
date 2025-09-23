@@ -106,7 +106,7 @@ void dsp::printStateSpace(const MatOp::StateSpace& ss) {
 
 
 // transmitancja operaotorowa
-MatOp::StateSpace dsp::tf2ss(std::vector<float> numerator, std::vector<float> denominator) {
+MatOp::StateSpace dsp::tf2ss(std::vector<double> numerator, std::vector<double> denominator) {
 
     // if (denominator.empty()) {
     //     throw std::invalid_argument("Mianownik nie może być pusty.");

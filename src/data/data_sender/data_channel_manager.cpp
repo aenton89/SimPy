@@ -111,7 +111,7 @@ bool DataChannelManager::initialize(const std::string& pipeName) {
     return true;
 }
 
-std::string DataChannelManager::createJSON(const std::vector<float>& data, float dt, float simTime) {
+std::string DataChannelManager::createJSON(const std::vector<double>& data, float dt, float simTime) {
     std::stringstream json;
     json << std::fixed << std::setprecision(6);
     json << "{";
@@ -133,7 +133,7 @@ std::string DataChannelManager::createJSON(const std::vector<float>& data, float
     return json.str();
 }
 
-bool DataChannelManager::sendData(const std::vector<float>& data, float dt, float simTime) {
+bool DataChannelManager::sendData(const std::vector<double>& data, float dt, float simTime) {
     if (!is_connected) {
         std::cerr << "Not connected to pipe. Call initialize() first." << std::endl;
         return false;

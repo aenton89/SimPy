@@ -13,7 +13,7 @@ class CompressorRecipe(ConanFile):
         # implot dla wykresów
         self.requires("implot/0.16")
         # dla serializacji
-        self.requires("nlohmann_json/3.12.0")
+        self.requires("cereal/1.3.2")
         # dla obrazka
         self.requires("stb/cci.20240531")
 

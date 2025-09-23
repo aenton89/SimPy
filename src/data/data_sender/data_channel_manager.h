@@ -32,7 +32,7 @@ private:
     // private constructor for singleton
     DataChannelManager();
     // helper function to create JSON string
-    std::string createJSON(const std::vector<float>& data, float dt, float simTime);
+    std::string createJSON(const std::vector<double>& data, float dt, float simTime);
 
 public:
     // singleton pattern
@@ -45,7 +45,7 @@ public:
     // initialize connection to Python
     bool initialize(const std::string& pipeName = "/tmp/simulink_pipe");
     // send data to Python
-    bool sendData(const std::vector<float>& data, float dt, float simTime);
+    bool sendData(const std::vector<double>& data, float dt, float simTime);
     // close connection
     void close();
     // check if connected

@@ -1,8 +1,0 @@
-//
-// Created by tajbe on 29.07.2025.
-//
-
-#ifndef BLOCKSSERIALIZATION_H
-#define BLOCKSSERIALIZATION_H
-
-#endif //BLOCKS_SERIALIZATION_H

@@ -1,8 +1,0 @@
-//
-// Created by tajbe on 29.07.2025.
-//
-
-#ifndef GUICLASSSERIALIZATION_H
-#define GUICLASSSERIALIZATION_H
-
-#endif //GUICLASSSERIALIZATION_H

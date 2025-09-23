@@ -90,7 +90,7 @@ void guiClass::update() {
             for (int id : selectedBlocks) {
                 auto it = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b){ return b->id == id; });
                 if (it != model.getBlocks().end()) {
-                    std::unique_ptr<Block> copy = (*it)->clone();
+                    std::shared_ptr<Block> copy = (*it)->clone();
                     copy->id = next_id++;
                     copy->position = ImVec2((*it)->position.x + 20, (*it)->position.y + 20);
 
@@ -154,7 +154,7 @@ void guiClass::update() {
 
     // usuwamy same boxy
     model.getBlocks().erase(std::remove_if(model.getBlocks().begin(), model.getBlocks().end(),
-        [](const std::unique_ptr<Block>& box) {
+        [](const std::shared_ptr<Block>& box) {
             return !box->open;
         }), model.getBlocks().end());
 
@@ -808,97 +808,97 @@ void guiClass::drawMenu() {
         // modul math
         if (ImGui::CollapsingHeader("Math")) {
             if (ImGui::Button("Add Sum Box"))
-                model.getBlocks().push_back(std::make_unique<SumBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<SumBlock>(next_id++));
             if (ImGui::Button("Add Multiply Box"))
-                model.getBlocks().push_back(std::make_unique<MultiplyBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<MultiplyBlock>(next_id++));
             if (ImGui::Button("Add Integrator Box"))
-                model.getBlocks().push_back(std::make_unique<IntegratorBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<IntegratorBlock>(next_id++));
             if (ImGui::Button("Add Diff Box"))
-                model.getBlocks().push_back(std::make_unique<DifferentiatorBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<DifferentiatorBlock>(next_id++));
             if (ImGui::Button("Add Trigonometric Funcion Box"))
-                model.getBlocks().push_back(std::make_unique<TrigonometricFunctionBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<TrigonometricFunctionBlock>(next_id++));
             if (ImGui::Button("Add Sqrt Box"))
-                model.getBlocks().push_back(std::make_unique<sqrtBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<sqrtBlock>(next_id++));
             if (ImGui::Button("Add Squered Box"))
-                model.getBlocks().push_back(std::make_unique<squaredBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<squaredBlock>(next_id++));
         }
 
         // modul contorl
         if (ImGui::CollapsingHeader("Control Continous")) {
             if (ImGui::Button("Add Tf box"))
-                model.getBlocks().push_back(std::make_unique<TransferFuncionContinous>(next_id++));
+                model.getBlocks().push_back(std::make_shared<TransferFuncionContinous>(next_id++));
             if (ImGui::Button("Add PID box"))
-                model.getBlocks().push_back(std::make_unique<PID_regulator>(next_id++));
+                model.getBlocks().push_back(std::make_shared<PID_regulator>(next_id++));
             if (ImGui::Button("Add Gain Box"))
-                model.getBlocks().push_back(std::make_unique<GainBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<GainBlock>(next_id++));
             if (ImGui::Button("Add Saturation Box"))
-                model.getBlocks().push_back(std::make_unique<SaturationBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<SaturationBlock>(next_id++));
             if (ImGui::Button("Add DeadZone Box"))
-                model.getBlocks().push_back(std::make_unique<DeadZoneBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<DeadZoneBlock>(next_id++));
         }
 
         // modul inputy
         if (ImGui::CollapsingHeader("Input")) {
             if (ImGui::Button("Add Step Box"))
-                model.getBlocks().push_back(std::make_unique<StepBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<StepBlock>(next_id++));
             if (ImGui::Button("Add SinusInput Box"))
-                model.getBlocks().push_back(std::make_unique<SinusInputBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<SinusInputBlock>(next_id++));
             if (ImGui::Button("Add PWM Input"))
-                model.getBlocks().push_back(std::make_unique<PWMInputBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<PWMInputBlock>(next_id++));
             if (ImGui::Button("Add WhiteNoise Box"))
-                model.getBlocks().push_back(std::make_unique<WhiteNoiseInputBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<WhiteNoiseInputBlock>(next_id++));
             if (ImGui::Button("Add Input form File"))
-                model.getBlocks().push_back(std::make_unique<SignalFromFileBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<SignalFromFileBlock>(next_id++));
         }
 
         // modul spketum czestoliwosciowego
         if (ImGui::CollapsingHeader("DSP")) {
             if (ImGui::Button("Add STFT Box (work in progres)"))
-                model.getBlocks().push_back(std::make_unique<STFT_block>(next_id++));
+                model.getBlocks().push_back(std::make_shared<STFT_block>(next_id++));
             if (ImGui::Button("Add filter Box"))
-                model.getBlocks().push_back(std::make_unique<filterInplementationBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<filterImplementationBlock>(next_id++));
             if (ImGui::Button("Add MovAvg Box"))
-                model.getBlocks().push_back(std::make_unique<meanFilter1DBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<meanFilter1DBlock>(next_id++));
             if (ImGui::Button("Add MedianFilter Box"))
-                model.getBlocks().push_back(std::make_unique<medianFilter1DBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<medianFilter1DBlock>(next_id++));
         }
 
         // modul print/ploty
         if (ImGui::CollapsingHeader("Print")) {
             if (ImGui::Button("Add Print Box"))
-                model.getBlocks().push_back(std::make_unique<PrintBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<PrintBlock>(next_id++));
             if (ImGui::Button("Add Plot Box"))
-                model.getBlocks().push_back(std::make_unique<PlotBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<PlotBlock>(next_id++));
             if (ImGui::Button("Add Plot XY Box"))
-                model.getBlocks().push_back(std::make_unique<PLotXYBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<PlotXYBlock>(next_id++));
             if (ImGui::Button("Add Spectogram Box (work in progres)"))
-                model.getBlocks().push_back(std::make_unique<PlotHeatmapBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<PlotHeatmapBlock>(next_id++));
         }
 
         // moduł code
         if (ImGui::CollapsingHeader("Code Box")) {
             if (ImGui::Button("Add Python Box"))
-                model.getBlocks().push_back(std::make_unique<pythonBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<pythonBlock>(next_id++));
             if (ImGui::Button("Add C++ Box"))
-                model.getBlocks().push_back(std::make_unique<cppBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<cppBlock>(next_id++));
         }
 
         // bloki logiczne (sprawdzenie czy aktualna struktra sie do tego nadaje)
         if (ImGui::CollapsingHeader("Logic")) {
             if (ImGui::Button("Add OR Box"))
-                model.getBlocks().push_back(std::make_unique<logicORBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<logicORBlock>(next_id++));
             if (ImGui::Button("Add AND Box"))
-                model.getBlocks().push_back(std::make_unique<logicANDBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<logicANDBlock>(next_id++));
             if (ImGui::Button("Add NOT Box"))
-                model.getBlocks().push_back(std::make_unique<logicNOTBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<logicNOTBlock>(next_id++));
             if (ImGui::Button("Add NOR Box"))
-                model.getBlocks().push_back(std::make_unique<logicNORBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<logicNORBlock>(next_id++));
         }
 
         // wysylanie danych
         if (ImGui::CollapsingHeader("Sender")) {
             if (ImGui::Button("Add Sender Box"))
-                model.getBlocks().push_back(std::make_unique<DataSenderBlock>(next_id++));
+                model.getBlocks().push_back(std::make_shared<DataSenderBlock>(next_id++));
         }
 
         ImGui::Separator();

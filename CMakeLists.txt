@@ -9,7 +9,7 @@ find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glad REQUIRED)
 find_package(implot REQUIRED)
-find_package(nlohmann_json REQUIRED)
+find_package(cereal REQUIRED)
 find_package(stb REQUIRED)
 
 # =================== MAIN PROGRAM ===================
@@ -39,7 +39,7 @@ target_link_libraries(SimPy PRIVATE
         OpenGL::GL
         glad::glad
         implot::implot
-        nlohmann_json::nlohmann_json
+        cereal::cereal
         stb::stb
 )
 

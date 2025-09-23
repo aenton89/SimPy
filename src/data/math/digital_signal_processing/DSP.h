@@ -1,6 +1,8 @@
 //
 // Created by patryk on 11.09.25.
 //
+#ifndef DSP_H
+#define DSP_H
 
 #define LPF 0
 #define HPF 1
@@ -13,10 +15,6 @@
 #define BESSEL 3
 #define ELLIPTICAL 4
 
-
-#ifndef DSP_H
-#define DSP_H
-
 #include <vector>
 #include <numbers>
 #include <complex>
@@ -25,6 +23,8 @@
 
 using cd = std::complex<double>;
 
+
+
 namespace dsp{
     // funkje odpowiedzialne za transfomate fouriera
     void fft(std::vector<cd>& x, bool reverse);
@@ -32,12 +32,19 @@ namespace dsp{
     std::vector<cd> bluestein(std::vector<cd> const& x);
 
     // transmitanja operatorowa
-    MatOp::StateSpace tf2ss(std::vector<float> numerator, std::vector<float> denominator);
+    MatOp::StateSpace tf2ss(std::vector<double> numerator, std::vector<double> denominator);
 
     struct tf {
         std::vector<cd> zeros; // wielomian licznika
         std::vector<cd> poles; // wielomian mianownika
         double gain;
+
+        template<class Archive>
+        void serialize(Archive& ar) {
+            ar(CEREAL_NVP(zeros),
+               CEREAL_NVP(poles),
+               CEREAL_NVP(gain));
+        }
     };
 
     // charaterystyki bodego
@@ -74,6 +81,16 @@ namespace dsp{
 
         void apply_setting(int order, int filter_type, int filter_subtype, float ripple, std::vector<double> cutoff);
         tf get_tf();
+
+        template<class Archive>
+        void serialize(Archive& ar) {
+            ar(CEREAL_NVP(order),
+               CEREAL_NVP(filter_type),
+               CEREAL_NVP(filter_subtype),
+               CEREAL_NVP(ripple),
+               CEREAL_NVP(Tf),           // używa tf::serialize
+               CEREAL_NVP(cutoff));
+        }
     };
 
 

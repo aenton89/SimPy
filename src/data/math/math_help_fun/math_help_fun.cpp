@@ -3,19 +3,24 @@
 //
 
 #include "math_help_fun.h"
+#include <numbers>
 
 
-// Funkja do mznorzneia wilomainaow
-// potem trzba przerobic na tamplate
+
+// funkja do mnozenia wielomianow
+// potem trzba przerobic na template
 std::vector<std::complex<double>> math::expandPolynomial(const std::vector<std::complex<double>>& roots) {
-    std::vector<std::complex<double>> coeffs = {cd(1.0, 0)}; // startujemy od wielomianu 1
+    // startujemy od wielomianu 1
+    std::vector<std::complex<double>> coeffs = {cd(1.0, 0)};
 
     for (const auto& root : roots) {
         std::vector<std::complex<double>> new_coeffs(coeffs.size() + 1, cd(0.0, 0.0));
 
         for (size_t i = 0; i < coeffs.size(); i++) {
-            new_coeffs[i]     += coeffs[i];        // x^i * x
-            new_coeffs[i + 1] += -coeffs[i] * root; // x^i * (-root)
+            // x^i * x
+            new_coeffs[i] += coeffs[i];
+            // x^i * (-root)
+            new_coeffs[i + 1] += -coeffs[i] * root;
         }
 
         coeffs = new_coeffs;
@@ -36,7 +41,7 @@ std::vector<cd> math::polyRoots_DK(const std::vector<double>& coeffs, int maxIte
     std::vector<cd> roots(n);
 
     for (int i = 0; i < n; i++) {
-        double angle = 2.0 * M_PI * i / n;
+        double angle = 2.0 * std::numbers::pi * i / n;
         roots[i] = cd(std::cos(angle), std::sin(angle));
     }
 
@@ -51,12 +56,12 @@ std::vector<cd> math::polyRoots_DK(const std::vector<double>& coeffs, int maxIte
             }
             new_roots[i] = roots[i] - polyEval(coeffs, roots[i]) / denum;
 
-            if (std::abs(new_roots[i] - roots[i]) > tol) {
+            if (std::abs(new_roots[i] - roots[i]) > tol)
                 done = false;
-            }
         }
         roots = new_roots;
-        if (done) break;
+        if (done)
+            break;
     }
 
     return roots;

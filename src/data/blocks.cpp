@@ -316,9 +316,9 @@ void SignalFromFileBlock::drawContent() {
     Block::drawContent();
 }
 
-// Funkcja pomocnicza do wczytywania wartości z pliku
-std::vector<float> readValuesFromFile(const std::string& filePath, bool is_scal = false, float lower_band = 0.0f, float upper_band = 1.0f) {
-    std::vector<float> values;
+// funkcja pomocnicza do wczytywania wartości z pliku
+std::vector<double> readValuesFromFile(const std::string& filePath, bool is_scal = false, float lower_band = 0.0f, float upper_band = 1.0f) {
+    std::vector<double> values;
     std::ifstream file(filePath);
     if (!file.is_open()) {
         ImGui::Text("File doesn't exist");
@@ -605,7 +605,7 @@ void PlotBlock::drawMenu() {
 // --------------------------------------------------------------------------------------------------------------------------------------
 // plotowanie grafu XY
 // trzeba to pobrac, array trzeba zamienic na dynamiczny wektor, 2 wejścia: X i Y
-PLotXYBlock::PLotXYBlock(int _id) : BlockCloneable(_id, 2, 0, true) {
+PlotXYBlock::PlotXYBlock(int _id) : BlockCloneable(_id, 2, 0, true) {
     size = ImVec2(350, 200);
     data.resize(2); // X i Y
     for (auto &arr : data) {
@@ -613,7 +613,7 @@ PLotXYBlock::PLotXYBlock(int _id) : BlockCloneable(_id, 2, 0, true) {
     }
 }
 
-void PLotXYBlock::process() {
+void PlotXYBlock::process() {
     // musimy mieć oba wejścia (X i Y)
     if (inputValues.size() < 2)
         return;
@@ -641,7 +641,7 @@ void PLotXYBlock::process() {
     }
 }
 
-void PLotXYBlock::drawContent() {
+void PlotXYBlock::drawContent() {
     Block::drawContent();
     ImVec2 size = ImGui::GetContentRegionAvail();
 
@@ -659,7 +659,7 @@ void PLotXYBlock::drawContent() {
     }
 }
 
-void PLotXYBlock::resetBefore() {
+void PlotXYBlock::resetBefore() {
     for (auto &arr : data) {
         arr.fill(0.0f);
     }
@@ -668,7 +668,7 @@ void PLotXYBlock::resetBefore() {
     x_limMax = y_limMax = 1.0f;
 }
 
-void PLotXYBlock::drawMenu() {
+void PlotXYBlock::drawMenu() {
     if (ImGui::InputInt("Number of inputs", &numInputs)) {
         if (numInputs < 1)
             numInputs = 1;
@@ -832,8 +832,8 @@ TransferFuncionContinous::TransferFuncionContinous(int id_) : BlockCloneable(id_
     this->run_tf2ss = true;
 }
 
-std::vector<float> TransferFuncionContinous::stringToVector(const std::string& s) {
-    std::vector<float> result;
+std::vector<double> TransferFuncionContinous::stringToVector(const std::string& s) {
+    std::vector<double> result;
     std::stringstream ss(s);
     std::string item;
 
@@ -864,7 +864,7 @@ std::string floatToStringTrimmed(float value) {
     return oss.str();
 }
 
-std::string polyToString(const std::vector<float>& coeffs) {
+std::string polyToString(const std::vector<double>& coeffs) {
     std::string result;
     int n = coeffs.size();
 
@@ -1194,7 +1194,7 @@ void STFT_block::resetBefore() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // Projektowanie filtrow
-filterInplementationBlock::filterInplementationBlock(int id_) : BlockCloneable(id_, 1, 1, true){
+filterImplementationBlock::filterImplementationBlock(int id_) : BlockCloneable(id_, 1, 1, true){
     size = ImVec2(200, 120);
 
     // Tf = dsp::butterworth_proto(filter_order);
@@ -1203,8 +1203,8 @@ filterInplementationBlock::filterInplementationBlock(int id_) : BlockCloneable(i
     filter_designer.apply_setting(filter_order, current_signal_type, current_pass_type, ripple, range);
     Tf = filter_designer.get_tf();
 
-    std::vector<float> num;
-    std::vector<float> den;
+    std::vector<double> num;
+    std::vector<double> den;
 
     // przesztalcenie tf w postaci kanonicznej na postac wieloamianowa
     for (auto val: math::expandPolynomial(Tf.zeros))
@@ -1216,12 +1216,12 @@ filterInplementationBlock::filterInplementationBlock(int id_) : BlockCloneable(i
     ss = dsp::tf2ss(num, den);
 }
 
-void filterInplementationBlock::drawContent() {
+void filterImplementationBlock::drawContent() {
     ImGui::Text("Filter");
     Block::drawContent();
 }
 
-void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
+void filterImplementationBlock::drawBodePlot(const dsp::Bode& bode) {
     // wykres modułu
     double min_omega = *std::min_element(bode.omega.begin(), bode.omega.end());
     double max_omega = *std::max_element(bode.omega.begin(), bode.omega.end());
@@ -1260,7 +1260,7 @@ void filterInplementationBlock::drawBodePlot(const dsp::Bode& bode) {
 
 
 
-void filterInplementationBlock::drawMenu() {
+void filterImplementationBlock::drawMenu() {
     // typ filtra ze wzgledu na rodzaj przetwarzanego syganlu
     const static char* signal_type[] = {"Analog", "Digital"};
     if (ImGui::BeginCombo("Signal Type", signal_type[current_signal_type], false)) {
@@ -1335,8 +1335,8 @@ void filterInplementationBlock::drawMenu() {
     filter_designer.apply_setting(filter_order, analog_filter_type, current_pass_type, ripple, range);
     Tf = filter_designer.get_tf();
 
-    std::vector<float> num;
-    std::vector<float> den;
+    std::vector<double> num;
+    std::vector<double> den;
 
     // przesztalcenie tf w postaci kanonicznej na postac wieloamianowa
     for (const auto& val: math::expandPolynomial(Tf.zeros))
@@ -1349,12 +1349,12 @@ void filterInplementationBlock::drawMenu() {
 
     dsp::Bode bode = dsp::bode_characteristic(Tf);
 
-    filterInplementationBlock::drawBodePlot(bode);
+    filterImplementationBlock::drawBodePlot(bode);
 
     //dsp::printStateSpace(ss);
 }
 
-void filterInplementationBlock::process() {
+void filterImplementationBlock::process() {
     auto solver = SolverManager::solver();
     if (!solver)
         return;
@@ -1367,7 +1367,7 @@ void filterInplementationBlock::process() {
     outputValues[0] = y;
 }
 
-void filterInplementationBlock::resetBefore() {
+void filterImplementationBlock::resetBefore() {
     for (int i = 0; i < outputValues.size(); i++) {
         outputValues[i] = 0.0;
         inputValues[i] = 0.0;
@@ -1855,3 +1855,39 @@ void DataSenderBlock::resetAfter() {
     // }
 }
 
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// DO SERIALIZACJI:
+REGISTER_BLOCK_TYPE(SumBlock);
+REGISTER_BLOCK_TYPE(MultiplyBlock);
+REGISTER_BLOCK_TYPE(IntegratorBlock);
+REGISTER_BLOCK_TYPE(DifferentiatorBlock);
+REGISTER_BLOCK_TYPE(TransferFuncionContinous);
+REGISTER_BLOCK_TYPE(PID_regulator);
+REGISTER_BLOCK_TYPE(STFT_block);
+REGISTER_BLOCK_TYPE(filterImplementationBlock);
+REGISTER_BLOCK_TYPE(medianFilter1DBlock);
+REGISTER_BLOCK_TYPE(meanFilter1DBlock);
+REGISTER_BLOCK_TYPE(squaredBlock);
+REGISTER_BLOCK_TYPE(sqrtBlock);
+REGISTER_BLOCK_TYPE(StepBlock);
+REGISTER_BLOCK_TYPE(SinusInputBlock);
+REGISTER_BLOCK_TYPE(PWMInputBlock);
+REGISTER_BLOCK_TYPE(SignalFromFileBlock);
+REGISTER_BLOCK_TYPE(WhiteNoiseInputBlock);
+REGISTER_BLOCK_TYPE(PrintBlock);
+REGISTER_BLOCK_TYPE(PlotBlock);
+REGISTER_BLOCK_TYPE(PlotXYBlock);
+REGISTER_BLOCK_TYPE(PlotHeatmapBlock);
+REGISTER_BLOCK_TYPE(SaturationBlock);
+REGISTER_BLOCK_TYPE(DeadZoneBlock);
+REGISTER_BLOCK_TYPE(TrigonometricFunctionBlock);
+REGISTER_BLOCK_TYPE(GainBlock);
+REGISTER_BLOCK_TYPE(DataSenderBlock);
+REGISTER_BLOCK_TYPE(pythonBlock);
+REGISTER_BLOCK_TYPE(cppBlock);
+REGISTER_BLOCK_TYPE(logicORBlock);
+REGISTER_BLOCK_TYPE(logicANDBlock);
+REGISTER_BLOCK_TYPE(logicNOTBlock);
+REGISTER_BLOCK_TYPE(logicNORBlock);

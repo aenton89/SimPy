@@ -1,11 +1,16 @@
 //
 // Created by patryk on 07.09.25.
 //
-
-#include <vector>
-
 #ifndef MATRIX_OP_H
 #define MATRIX_OP_H
+
+#include <vector>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/binary.hpp>
+
+
 
 namespace MatOp {
     std::vector<double> matVecMul(const std::vector<std::vector<double>>& M, const std::vector<double>& v);
@@ -23,6 +28,15 @@ namespace MatOp {
         std::vector<std::vector<double>> D;
         // aktualny stan n x 1
         std::vector<double> x;
+
+        template<class Archive>
+        void serialize(Archive& ar) {
+            ar(CEREAL_NVP(A),
+               CEREAL_NVP(B),
+               CEREAL_NVP(C),
+               CEREAL_NVP(D),
+               CEREAL_NVP(x));
+        }
     };
 }
 

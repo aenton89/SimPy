@@ -65,7 +65,7 @@ void Block::drawIcon() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // implementacja struktury Connection
-Connection::Connection(Block* src, int srcPort, Block* tgt, int tgtPort)
+Connection::Connection(std::shared_ptr<Block> src, int srcPort, std::shared_ptr<Block> tgt, int tgtPort)
     : sourceBlock(src), sourcePort(srcPort),
       targetBlock(tgt), targetPort(tgtPort) {}
 
@@ -110,19 +110,22 @@ void Model::updateAdjacencyMatrix() {
     }
 }
 
-int Model::getBlockIndex(Block* block) const {
+int Model::getBlockIndex(std::shared_ptr<Block> block) const {
     for (size_t i = 0; i < blocks.size(); i++) {
-        if (blocks[i].get() == block) {
-            return i;
+        if (blocks[i] == block) {
+            return static_cast<int>(i);
         }
     }
     return -1;
 }
 
-bool Model::connect(Block* source, int sourcePort, Block* target, int targetPort) {
-    if (!source || !target) return false;
-    if (sourcePort < 0 || sourcePort >= source->getNumOutputs()) return false;
-    if (targetPort < 0 || targetPort >= target->getNumInputs()) return false;
+bool Model::connect(std::shared_ptr<Block> source, int sourcePort, std::shared_ptr<Block> target, int targetPort) {
+    if (!source || !target)
+        return false;
+    if (sourcePort < 0 || sourcePort >= source->getNumOutputs())
+        return false;
+    if (targetPort < 0 || targetPort >= target->getNumInputs())
+        return false;
 
     connections.emplace_back(source, sourcePort, target, targetPort);
 
@@ -147,13 +150,13 @@ void Model::makeConnections() {
         boxPtr->numConnected = 0; // reset licznika!
         for (auto connId : boxPtr->connections) {
             auto it = std::find_if(blocks.begin(), blocks.end(),
-                [connId](const std::unique_ptr<Block>& b) {
+                [connId](const std::shared_ptr<Block>& b) {
                     return b->id == connId;
                 });
 
             if (it != blocks.end()) {
-                Block* connectedBlock = it->get();
-                connect(connectedBlock, 0, boxPtr.get(), boxPtr->numConnected);
+                auto connectedBlock = *it;
+                connect(connectedBlock, 0, boxPtr, boxPtr->numConnected);
                 boxPtr->numConnected++;
                 // std::cout << "Connected block " << boxPtr->id
                 //           << " to block " << connectedBlock->id << std::endl;
@@ -218,7 +221,7 @@ void Model::simulateMultipleSteps(int steps) {
     }
 }
 
-std::vector<std::unique_ptr<Block>>& Model::getBlocks() {
+std::vector<std::shared_ptr<Block>>& Model::getBlocks() {
     return blocks;
 }
 
@@ -226,7 +229,7 @@ std::vector<Connection>& Model::getConnections() {
     return connections;
 }
 
-const std::vector<std::unique_ptr<Block>>& Model::getBlocks() const {
+const std::vector<std::shared_ptr<Block>>& Model::getBlocks() const {
     return blocks;
 }
 
@@ -235,13 +238,13 @@ const std::vector<Connection>& Model::getConnections() const {
 }
 
 
-void Model::addBlock(std::unique_ptr<Block> block) {
+void Model::addBlock(std::shared_ptr<Block> block) {
     blocks.push_back(std::move(block));
 }
 
 void Model::removeBlock(int removeId) {
     blocks.erase(std::remove_if(blocks.begin(), blocks.end(),
-        [removeId](const std::unique_ptr<Block>& block) {
+        [removeId](const std::shared_ptr<Block>& block) {
             return block->getId() == removeId;
         }), blocks.end());
 }

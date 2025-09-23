@@ -11,6 +11,18 @@
 #include <iostream>
 #include <cmath>
 #include <imgui.h>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/array.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/complex.hpp>
+// dla serializacji - pod polimorfizm
+#include <cereal/types/polymorphic.hpp>
+// dla serializacji pointer'ów
+#include <cereal/types/memory.hpp>
 #include "math/solvers/solverManager.h"
 
 
@@ -72,8 +84,27 @@ public:
         std::vector<double>& getInputValues() { return inputValues; }
     #endif
 
-    // pod serializacje
-    // virtual std::string getTypeName() const = 0;
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(CEREAL_NVP(id),
+           CEREAL_NVP(numInputs),
+           CEREAL_NVP(numOutputs),
+           CEREAL_NVP(has_menu),
+           CEREAL_NVP(inputValues),
+           CEREAL_NVP(outputValues),
+           CEREAL_NVP(connections),
+           CEREAL_NVP(numConnected),
+           CEREAL_NVP(open));
+
+        std::vector<float> pos = {position.x, position.y};
+        std::vector<float> sz  = {size.x, size.y};
+        ar(cereal::make_nvp("position", pos), cereal::make_nvp("size", sz));
+
+        if constexpr (Archive::is_loading::value) {
+            position = ImVec2(pos[0], pos[1]);
+            size = ImVec2(sz[0], sz[1]);
+        }
+    }
 };
 
 
@@ -90,6 +121,9 @@ public:
     // dziedziczymy konstruktory z Block
     using Block::Block;
 
+    // dla serializacji
+    BlockCloneable() : Block(-1, 0, 0, false) {}
+
     std::unique_ptr<Block> clone() const override {
         return std::make_unique<Derived>(static_cast<const Derived&>(*this));
     }
@@ -102,13 +136,22 @@ public:
 - sprzężenia zwrotne itd. też są tu obsługiwane
  */
 struct Connection {
-    Block* sourceBlock;
+    std::shared_ptr<Block> sourceBlock;
     int sourcePort;
-    Block* targetBlock;
+    std::shared_ptr<Block> targetBlock;
     int targetPort;
 
     // konstruktor
-    Connection(Block* src, int srcPort, Block* tgt, int tgtPort);
+    Connection(std::shared_ptr<Block> src, int srcPort, std::shared_ptr<Block> tgt, int tgtPort);
+
+    // dla serializacji
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(CEREAL_NVP(sourceBlock),
+           CEREAL_NVP(sourcePort),
+           CEREAL_NVP(targetBlock),
+           CEREAL_NVP(targetPort));
+    }
 };
 
 
@@ -120,7 +163,7 @@ struct Connection {
 class Model {
 private:
     // bloki i połączenia jakie mamy w modelu
-    std::vector<std::unique_ptr<Block>> blocks;
+    std::vector<std::shared_ptr<Block>> blocks;
     std::vector<Connection> connections;
 
     // macierz sąsiedztwa do wykrywania cykli (które narazie są nam średnio potrzebne, o ile w ogóle kiedyś będą)
@@ -137,7 +180,7 @@ private:
     void updateAdjacencyMatrix();
 
     // znalezienie indeksu bloku
-    int getBlockIndex(Block* block) const;
+    int getBlockIndex(std::shared_ptr<Block> block) const;
 
     // solver dla modelu
     std::shared_ptr<Solver> solver;
@@ -148,14 +191,13 @@ public:
     static double simTime;
     // dodanie bloku do modelu
     template<typename BlockType, typename... Args>
-    BlockType* addBlock(Args&&... args) {
-        auto block = std::make_unique<BlockType>(std::forward<Args>(args)...);
-        BlockType* ptr = block.get();
-        blocks.push_back(std::move(block));
-        return ptr;
+    std::shared_ptr<Block> addBlock(Args&&... args) {
+        auto block = std::make_shared<BlockType>(std::forward<Args>(args)...);
+        blocks.push_back(block);
+        return block;
     }
     // dodanie połączenia między blokami do modelu
-    bool connect(Block* source, int sourcePort, Block* target, int targetPort);
+    bool connect(std::shared_ptr<Block> source, int sourcePort, std::shared_ptr<Block> target, int targetPort);
     void disconnectAll();
 
     // sprawdzenie czy model zawiera cykle
@@ -171,9 +213,9 @@ public:
     void cleanupAfter();
 
     // gettery listy bloków i połączeń - przeciążone na const i nie-const
-    std::vector<std::unique_ptr<Block>>& getBlocks();
+    std::vector<std::shared_ptr<Block>>& getBlocks();
     std::vector<Connection>& getConnections();
-    const std::vector<std::unique_ptr<Block>>& getBlocks() const;
+    const std::vector<std::shared_ptr<Block>>& getBlocks() const;
     const std::vector<Connection>& getConnections() const;
 
     // TODO: łączenie w całość
@@ -181,13 +223,27 @@ public:
     // metoda pomoicncza do usuwania polaczen. Ma je robic od nowa
     
     // dodawanie i usuwanie bloków
-    void addBlock(std::unique_ptr<Block> block);
+    void addBlock(std::shared_ptr<Block> block);
     void removeBlock(int removeId);
 
     // inplentacja solvera dla symulacji
     void setSolver(std::shared_ptr<Solver> solver);
     void cleanSolver();
 
+    // dla serializacji
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(CEREAL_NVP(blocks),
+           CEREAL_NVP(connections),
+           CEREAL_NVP(timeStep),
+           CEREAL_NVP(simTime));
+
+        // reinitialize solver after loading
+        if constexpr (Archive::is_loading::value) {
+            // reset adjacency matrix and other computed fields
+            updateAdjacencyMatrix();
+        }
+    }
 };
 
 
