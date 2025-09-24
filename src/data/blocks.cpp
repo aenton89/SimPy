@@ -1929,16 +1929,17 @@ void ESPinBlock::process() {
     if (n > 0) {
         buf[n] = 0;
         int sample = atoi(buf);
-        outputValues[0] = (float)sample;
+        inputValues[0] = (float)sample;
     }
 }
 
 void ESPinBlock::drawContent() {
     ImGui::Text("ESP input");
-    if (connected).
+    if (connected)
         ImGui::TextColored(ImVec4(0,1,0,1), "Connected");
     else
         ImGui::TextColored(ImVec4(1,0,0,1), "Disconnected");
+
     Block::drawContent();
 }
 
@@ -2009,3 +2010,4 @@ REGISTER_BLOCK_TYPE(logicANDBlock);
 REGISTER_BLOCK_TYPE(logicNOTBlock);
 REGISTER_BLOCK_TYPE(logicNORBlock);
 REGISTER_BLOCK_TYPE(ESPoutBlock);
+REGISTER_BLOCK_TYPE(ESPinBlock);
