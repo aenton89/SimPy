@@ -26,6 +26,7 @@
 #include "math/solvers/solverManager.h"
 
 
+
 /* klasa z której dziedziczą wszystkie bloki, odpowiada za:
 - procesowanie danych
 - przechowywanie danych wejściowych i wyjściowych

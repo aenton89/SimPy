@@ -9,6 +9,7 @@
 #include <memory>
 
 
+
 int main() {
     // setup glfw + open gl bedzie potrzebny tutaj
     // ---------------------------------------------------------------------------------------

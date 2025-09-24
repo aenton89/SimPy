@@ -2,7 +2,6 @@
 // Created by tajbe on 18.04.2025.
 //
 
-
 #include "guiClass.h"
 #include "structures.h"
 #include <functional>
@@ -12,6 +11,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "math/solvers/solverMethod.h"
+
 
 
 // initialization of evertything regarding ImGui

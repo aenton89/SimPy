@@ -1,6 +1,7 @@
 //
 // Created by tajbe on 18.04.2025.
 //
+
 #ifndef GUICLASS_H
 #define GUICLASS_H
 
@@ -22,6 +23,7 @@
 #include <cereal/types/atomic.hpp>
 #include "../data/structures.h"
 #include "../data/blocks.h"
+
 
 
 const ImVec2 DEFAULT_DOCKED_START_SIZE = ImVec2(195, 180);

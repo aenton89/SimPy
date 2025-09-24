@@ -18,8 +18,12 @@
 #include <vector>
 #include <numbers>
 #include <complex>
-#include "../matrix_operation/matrix_op.h"
 #include <iostream>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/binary.hpp>
+#include "../matrix_operation/matrix_op.h"
 
 using cd = std::complex<double>;
 
@@ -35,8 +39,10 @@ namespace dsp{
     MatOp::StateSpace tf2ss(std::vector<double> numerator, std::vector<double> denominator);
 
     struct tf {
-        std::vector<cd> zeros; // wielomian licznika
-        std::vector<cd> poles; // wielomian mianownika
+        // wielomian licznika
+        std::vector<cd> zeros;
+        // wielomian mianownika
+        std::vector<cd> poles;
         double gain;
 
         template<class Archive>

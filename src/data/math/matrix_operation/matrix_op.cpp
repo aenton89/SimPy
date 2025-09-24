@@ -5,6 +5,8 @@
 #include <vector>
 #include "matrix_op.h"
 
+
+
 // funkcja mnożenia macierzy przez wektor
 std::vector<double> MatOp::matVecMul(const std::vector<std::vector<double>>& M, const std::vector<double>& v) {
     std::vector<double> result(M.size(), 0.0);

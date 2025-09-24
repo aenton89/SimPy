@@ -1,6 +1,7 @@
 //
 // Created by patryk on 07.09.25.
 //
+
 #ifndef MATRIX_OP_H
 #define MATRIX_OP_H
 

@@ -2,15 +2,18 @@
 // Created by patryk on 11.09.25.
 //
 
-#include "DSP.h"
 #include <numbers>
-
+// std::setprecision, std::fixed
+#include <iomanip>
+#include "DSP.h"
 #include "math/math_help_fun/math_help_fun.h"
 
 using cd = std::complex<double>;
 
 
-/////////////////////////////////////////////////////////////////// ten fragment trzeba przekminic czy wywalic do math czy dac jako metody klasy ///////////
+
+// TODO: ten fragment trzeba przekminic czy wywalic do math czy dac jako metody klasy
+//////////////////////////////////////////////////////////////////////////////
 // FFT dla długości potęgi 2
 void dsp::fft(std::vector<cd> &a, bool invert) {
     int n = a.size();
@@ -36,7 +39,7 @@ void dsp::fft(std::vector<cd> &a, bool invert) {
     if (invert) for (cd &x : a) x /= n;
 }
 
-// Konwolucja przez FFT
+// konwolucja przez FFT
 std::vector<cd> dsp::convolve(std::vector<cd> const& a, std::vector<cd> const& b) {
     std::vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());
     int n = 1;
@@ -50,7 +53,7 @@ std::vector<cd> dsp::convolve(std::vector<cd> const& a, std::vector<cd> const& b
     return fa;
 }
 
-// Algorytm Bluesteina
+// algorytm Bluesteina
 std::vector<cd> dsp::bluestein(std::vector<cd> const& x) {
     int N = x.size();
     std::vector<cd> a(N), b(2*N-1);
@@ -67,13 +70,13 @@ std::vector<cd> dsp::bluestein(std::vector<cd> const& x) {
     }
     return X;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//////////////////////////////////////////////////////////////////////////////
 // funkja do debugowania
-#include <iomanip>  // std::setprecision, std::fixed
-
 void dsp::printStateSpace(const MatOp::StateSpace& ss) {
-    std::cout << std::fixed << std::setprecision(10);  // 10 miejsc po przecinku
+    // 10 miejsc po przecinku
+    std::cout << std::fixed << std::setprecision(10);
 
     std::cout << "A:\n";
     for (const auto& row : ss.A) {
@@ -103,7 +106,6 @@ void dsp::printStateSpace(const MatOp::StateSpace& ss) {
     for (double v : ss.x) std::cout << v << " ";
     std::cout << "\n";
 }
-
 
 // transmitancja operaotorowa
 MatOp::StateSpace dsp::tf2ss(std::vector<double> numerator, std::vector<double> denominator) {
@@ -239,12 +241,9 @@ dsp::Bode dsp::bode_characteristic(const tf& Tf) {
 }
 
 
-
+//////////////////////////////////////////////////////////////////////////////
 // filtry
-
-// Zamysl jest taki. Na poaczku projektujemy prototyp filtra (LPF dla cutof = 1) Nastepnie modyfikujemy go jedna funkja na juz ionne typu o konretnych cutoff
-
-
+// TODO: zamysl jest taki - na poczatku projektujemy prototyp filtra (LPF dla cutof = 1), nastepnie modyfikujemy go jedna funkja na juz ionne typu o konretnych cutoff
 dsp::FilterDesigner::FilterDesigner() {
     Tf = dsp::FilterDesigner::butterworth_proto();
     dsp::FilterDesigner::apply_filter_subtype();
@@ -262,9 +261,12 @@ dsp::tf dsp::FilterDesigner::butterworth_proto() {
         }
     }
 
-    Tf.zeros = {};      // brak zer w prototypie
-    Tf.poles = poles;   // bieguny na lewej półpłaszczyźnie
-    Tf.gain = 1.0;      // normalizacja
+    // brak zer w prototypie
+    Tf.zeros = {};
+    // bieguny na lewej półpłaszczyźnie
+    Tf.poles = poles;
+    // normalizacja
+    Tf.gain = 1.0;
 
     return Tf;
 }
@@ -283,7 +285,7 @@ dsp::tf dsp::FilterDesigner::chebyshev_i_proto() {
             -std::sinh(beta / N) * std::sin(theta),
              std::cosh(beta / N) * std::cos(theta)
         );
-        //if (pole.real() < 0.0)  // tylko lewa półpłaszczyzna
+        // if (pole.real() < 0.0) // tylko lewa półpłaszczyzna
             poles.push_back(pole);
     }
 
@@ -294,7 +296,8 @@ dsp::tf dsp::FilterDesigner::chebyshev_i_proto() {
     return Tf;
 }
 
-dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() { // ni huja on nie dziala
+// TODO: ni huja on nie dziala
+dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() {
     tf Tf;
     std::vector<cd> poles;
     std::vector<cd> zeros;
@@ -302,7 +305,8 @@ dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() { // ni huja on nie dziala
     int N = order;
 
     // epsilon dla Chebyshev II (z tłumieniem w paśmie zaporowym)
-    double Rs = ripple; // tłumienie w paśmie zaporowym w dB
+    // tłumienie w paśmie zaporowym w dB
+    double Rs = ripple;
     double epsilon = 1.0 / std::sqrt(std::pow(10.0, Rs / 10.0) - 1.0);
     double beta = std::asinh(1.0 / epsilon) / N;
 
@@ -324,7 +328,7 @@ dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() { // ni huja on nie dziala
     Tf.zeros = zeros;
     Tf.poles = poles;
 
-    // Wzmocnienie prototypu Chebyshev II
+    // wzmocnienie prototypu Chebyshev II
     Tf.gain = 1.0;
 
     return Tf;
@@ -333,7 +337,8 @@ dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() { // ni huja on nie dziala
 dsp::tf dsp::FilterDesigner::besel_proto() {
     tf Tf;
     std::vector<cd> poles;
-    std::vector<cd> zeros; // Bessel LP ma zera w ∞ → pusty wektor
+    // Bessel LP ma zera w ∞ → pusty wektor
+    std::vector<cd> zeros;
 
     int N = order;
 
@@ -346,14 +351,14 @@ dsp::tf dsp::FilterDesigner::besel_proto() {
     }
 
     if (N > 1) {
-        // Wyliczamy współczynniki wielomianu Bessela rekurencyjnie
+        // wyliczamy współczynniki wielomianu Bessela rekurencyjnie
         std::vector<double> an(N+1, 0.0);
         an[0] = 1.0;
         for (int k = 1; k <= N; ++k) {
             an[k] = an[k-1] * 2.0 * (N - k + 1) / (k * (2*N - k + 1));
         }
 
-        // Odwracamy, bo polyRoots_DK oczekuje współczynników od x^N do x^0
+        // odwracamy, bo polyRoots_DK oczekuje współczynników od x^N do x^0
         // std::reverse(an.begin(), an.end());
 
         poles = math::polyRoots_DK(an); // obliczamy bieguny
@@ -371,9 +376,7 @@ dsp::tf dsp::FilterDesigner::besel_proto() {
     return Tf;
 }
 
-
-
-// idk czy ja mam w cutoff robic normalziacje czy w pkt odniesienia
+// TODO: idk czy ja mam w cutoff robic normalziacje czy w pkt odniesienia
 double eval_H(const dsp::tf& Tf, double omega) {
     cd s(0, omega);
 
@@ -388,7 +391,6 @@ double eval_H(const dsp::tf& Tf, double omega) {
     return std::abs(H);
 }
 
-
 void dsp::FilterDesigner::apply_filter_subtype() {
     std::vector<cd> new_poles;
     std::vector<cd> new_zeros;
@@ -399,7 +401,7 @@ void dsp::FilterDesigner::apply_filter_subtype() {
         // Skala biegunów
         for (auto& p : Tf.poles)
             new_poles.push_back(p * wc);
-        // Skala zer jeśli są w prototypie
+        // skala zer jeśli są w prototypie
         for (auto& z : Tf.zeros)
             new_zeros.push_back(z * wc);
 
@@ -412,11 +414,11 @@ void dsp::FilterDesigner::apply_filter_subtype() {
 
     } else if (filter_subtype == HPF) {
         double wc = cutoff[0];
-        // Transformacja biegunów LPF → HPF
+        // transformacja biegunów LPF → HPF
         for (auto& p : Tf.poles)
             new_poles.push_back(wc / p);
 
-        // Transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, dodajemy w 0
+        // transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, dodajemy w 0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size(); i++)
                 new_zeros.push_back(cd(0, 0));
@@ -437,7 +439,7 @@ void dsp::FilterDesigner::apply_filter_subtype() {
         double B = w2 - w1;
         double w0 = std::sqrt(w1 * w2);
 
-        // Transformacja biegunów LPF → BPF
+        // transformacja biegunów LPF → BPF
         for (auto& p : Tf.poles) {
             cd A = p * B / 2.0;
             cd delta = std::sqrt(A*A - w0*w0);
@@ -445,7 +447,7 @@ void dsp::FilterDesigner::apply_filter_subtype() {
             new_poles.push_back(A - delta);
         }
 
-        // Transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, tworzymy w 0
+        // transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, tworzymy w 0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size() / 2; i++) {
                 new_zeros.push_back(cd(0, 0));
@@ -463,7 +465,7 @@ void dsp::FilterDesigner::apply_filter_subtype() {
         Tf.poles = new_poles;
         Tf.zeros = new_zeros;
 
-        // Normalizacja w ω = w0 (środek pasma)
+        // normalizacja w ω = w0 (środek pasma)
         double Hmid = eval_H(Tf, w0);
         Tf.gain /= Hmid;
 
@@ -481,7 +483,7 @@ void dsp::FilterDesigner::apply_filter_subtype() {
             new_poles.push_back(w0*w0 / (A - delta));
         }
 
-        // Transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, dodajemy ±j*w0
+        // transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, dodajemy ±j*w0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size() / 2; i++) {
                 new_zeros.push_back(cd(0, w0));
@@ -515,7 +517,7 @@ void dsp::FilterDesigner::apply_setting(int order, int filter_type, int filter_s
     if (filter_subtype == LPF || filter_subtype == HPF)
         this->cutoff[1] = this->cutoff[0];
 
-    //std::cout << this->filter_type << std::endl;
+    // std::cout << this->filter_type << std::endl;
 
     if (this->filter_type == BUTTERWORTH)
         Tf = FilterDesigner::butterworth_proto();
@@ -534,13 +536,7 @@ dsp::tf dsp::FilterDesigner::get_tf() {
 }
 
 
-
-
-
-
-
-
-
+//////////////////////////////////////////////////////////////////////////////
 // // filtr butherwortha
 // dsp::tf dsp::butterworth_proto(const int& order) {
 //     dsp::tf Tf;

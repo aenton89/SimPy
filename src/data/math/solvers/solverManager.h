@@ -2,11 +2,11 @@
 // Created by patryk on 07.09.25.
 //
 
-#include <memory>
-#include "solver.h"
-
 #ifndef SOLVERMANAGER_H
 #define SOLVERMANAGER_H
+
+#include <memory>
+#include "solver.h"
 
 
 
