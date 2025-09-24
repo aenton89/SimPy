@@ -933,9 +933,9 @@ void guiClass::drawMenu() {
         // bloki zwzane z HIL i coderem esp
         if (ImGui::CollapsingHeader("ESP Coder")) {
             if (ImGui::Button("Add ESP output"))
-                model.getBlocks().push_back(std::make_shared<ESPoutBlock>(next_id++));
+                model.addBlock<ESPoutBlock>();
             if (ImGui::Button("Add ESP input")) {
-                model.getBlocks().push_back(std::make_shared<ESPinBlock>(next_id++));
+                model.addBlock<ESPinBlock>();
             }
         }
 

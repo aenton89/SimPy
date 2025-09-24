@@ -1935,6 +1935,10 @@ void ESPinBlock::process() {
 
 void ESPinBlock::drawContent() {
     ImGui::Text("ESP input");
+    if (connected).
+        ImGui::TextColored(ImVec4(0,1,0,1), "Connected");
+    else
+        ImGui::TextColored(ImVec4(1,0,0,1), "Disconnected");
     Block::drawContent();
 }
 
