@@ -27,6 +27,8 @@ add_executable(SimPy
         src/data/math/solvers/solverManager.cpp
         src/data/math/digital_signal_processing/DSP.cpp
         src/data/math/math_help_fun/math_help_fun.cpp
+        src/data/data_sender/ESP_communication.h
+        src/data/data_sender/ESP_communication.cpp
 )
 
 target_compile_definitions(SimPy PRIVATE

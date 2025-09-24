@@ -11,6 +11,12 @@
 #include <fstream>
 #include <numeric>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+
 
 // w tym pliku są implementacje specyficznych bloków
 
@@ -1855,6 +1861,113 @@ void DataSenderBlock::resetAfter() {
     // }
 }
 
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// bloki zwazane z esp i HIL
+
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// esp output
+ESPoutBlock::ESPoutBlock(int _id) : BlockCloneable(_id, 0, 1, true) {
+    size = ImVec2(200, 120);
+}
+
+void ESPoutBlock::drawContent() {
+    ImGui::Text("ESP output");
+    Block::drawContent();
+}
+
+void ESPoutBlock::drawMenu() {
+
+}
+
+
+
+void ESPoutBlock::process() {
+
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// esp input
+
+void ESPinBlock::connect() {
+    // próbujemy od razu otworzyć port
+    fd = ::open(ESP_com::listSerialPorts()[selectedPort].c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+    if (fd != -1) {
+        connected = true; // port otwarty
+        struct termios tty;
+        memset(&tty, 0, sizeof tty);
+        if (tcgetattr(fd, &tty) == 0) {
+            cfsetospeed(&tty, B115200);
+            cfsetispeed(&tty, B115200);
+            tty.c_cflag |= (CLOCAL | CREAD);
+            tty.c_cflag &= ~CSIZE; tty.c_cflag |= CS8;
+            tty.c_cflag &= ~PARENB; tty.c_cflag &= ~CSTOPB;
+            tty.c_cc[VMIN] = 0; tty.c_cc[VTIME] = 1;
+            tcsetattr(fd, TCSANOW, &tty);
+        }
+    } else {
+        connected = false;
+    }
+}
+
+
+ESPinBlock::ESPinBlock(int _id) : BlockCloneable(_id, 1, 0, true) {
+    size = ImVec2(200, 120);
+
+    ESPinBlock::connect();
+}
+
+ESPinBlock::~ESPinBlock() {
+    if (fd != -1) close(fd);
+}
+
+void ESPinBlock::process() {
+    if (!connected) return;  // działaj tylko, jeśli jest połączenie
+
+    char buf[64];
+    int n = read(fd, buf, sizeof(buf)-1);
+    if (n > 0) {
+        buf[n] = 0;
+        int sample = atoi(buf);
+        outputValues[0] = (float)sample;
+    }
+}
+
+void ESPinBlock::drawContent() {
+    ImGui::Text("ESP input");
+    Block::drawContent();
+}
+
+void ESPinBlock::drawMenu() {
+    std::vector<std::string> serialPorts = ESP_com::listSerialPorts();
+
+    if (ImGui::BeginCombo("Serial Port", serialPorts[selectedPort].c_str())) {
+        for (int i = 0; i < serialPorts.size(); i++) {
+            bool is_selected = (selectedPort == i);
+            if (ImGui::Selectable(serialPorts[i].c_str(), is_selected)) {
+                selectedPort = i;
+            }
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    ESPinBlock::connect();
+    if (!connected) {
+        ImGui::TextColored(ImVec4(1,0,0,1), "ESP disconnected");
+
+        // opcjonalnie: próbujemy na żywo połączyć w menu
+        int tmp_fd = ::open(serialPorts[selectedPort].c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+        if (tmp_fd != -1) {
+            fd = tmp_fd;
+            connected = true;
+            ImGui::TextColored(ImVec4(0,1,0,1), "ESP connected!");
+        }
+    } else {
+        ImGui::TextColored(ImVec4(0,1,0,1), "ESP connected");
+    }
+}
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -1891,3 +2004,4 @@ REGISTER_BLOCK_TYPE(logicORBlock);
 REGISTER_BLOCK_TYPE(logicANDBlock);
 REGISTER_BLOCK_TYPE(logicNOTBlock);
 REGISTER_BLOCK_TYPE(logicNORBlock);
+REGISTER_BLOCK_TYPE(ESPoutBlock);

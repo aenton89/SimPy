@@ -930,6 +930,16 @@ void guiClass::drawMenu() {
             if (ImGui::Button("Add NOR Box"))
                 model.addBlock<logicNORBlock>();
         }
+        // bloki zwzane z HIL i coderem esp
+        if (ImGui::CollapsingHeader("ESP Coder")) {
+            if (ImGui::Button("Add ESP output"))
+                model.getBlocks().push_back(std::make_shared<ESPoutBlock>(next_id++));
+            if (ImGui::Button("Add ESP input")) {
+                model.getBlocks().push_back(std::make_shared<ESPinBlock>(next_id++));
+            }
+        }
+
+
 
         // wysylanie danych
         if (ImGui::CollapsingHeader("Sender")) {

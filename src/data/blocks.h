@@ -14,6 +14,7 @@
 
 #include "structures.h"
 #include "data_sender/data_channel_manager.h"
+#include "data_sender/ESP_communication.h"
 #include "math/matrix_operation/matrix_op.h"
 #include "math/digital_signal_processing/DSP.h"
 #include "math/math_help_fun/math_help_fun.h"
@@ -895,6 +896,46 @@ public:
     void serialize(Archive& ar) {
         ar(cereal::base_class<Block>(this));
     }
+};
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ESP - output (blok ktory odbiera dane z esp)
+class ESPoutBlock : public BlockCloneable<ESPoutBlock> {
+public:
+    ESPoutBlock() : BlockCloneable<ESPoutBlock>(-1, 0, 1, false) {} // w przyszloci zorbic zeby odbeiral wiecje niz jedno wysjcie
+    ESPoutBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(cereal::base_class<Block>(this));
+    }
+};
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ESP input block (blok ktory wrzuca pkt do generownaia po przez dac esp)
+class ESPinBlock : public BlockCloneable<ESPinBlock> {
+public:
+    ESPinBlock() : BlockCloneable<ESPinBlock>(-1, 1, 0, false) {} // w prszysloci zrobic tak zeby odbieral wiecej niz jedno wejscie
+    ESPinBlock(int _id);
+    ~ESPinBlock();
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+
+    void connect();
+
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(cereal::base_class<Block>(this));
+    }
+private:
+    int fd;               // deskryptor portu
+    bool connected;       // flaga połączenia
+
+    int selectedPort = 0;
 };
 
 #endif
