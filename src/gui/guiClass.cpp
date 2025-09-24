@@ -63,64 +63,17 @@ void guiClass::newFrame() {
 void guiClass::update() {
     ImGuiIO& io = ImGui::GetIO();
 
-    // logika czyszczenia zaznaczeń
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !io.KeyShift) {
-        ImVec2 mousePos = io.MousePos;
-        bool clickedOnAnyTitle = false;
-        for (auto& b : model.getBlocks()) {
-            ImVec2 screen_pos = ImVec2(b->position.x * zoomAmount + viewOffset.x, b->position.y * zoomAmount + viewOffset.y);
-            ImVec2 screen_size = ImVec2(b->size.x * zoomAmount, b->size.y * zoomAmount);
-            ImVec2 title_min = screen_pos;
-            ImVec2 title_max = ImVec2(screen_pos.x + screen_size.x, screen_pos.y + ImGui::GetFrameHeight());
-            if (mousePos.x >= title_min.x && mousePos.x <= title_max.x && mousePos.y >= title_min.y && mousePos.y <= title_max.y) {
-                clickedOnAnyTitle = true;
-                break;
-            }
-        }
-        if (!clickedOnAnyTitle) {
-            // klik poza titlebarami -> odznacz wszystko
-            selectedBlocks.clear();
-        }
-    }
-    // logika kopiowania bloczków przez CTRL+D
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D, false)) {
-        if (!selectedBlocks.empty()) {
-            std::set<int> newSelection;
+    // logika zaznaczania/odznaczania boxów
+    clearSelectedBlocks(io);
+    duplicateSelectedBlocks(io);
+    deleteSelectedBlocks(io);
+    selectAllBlocks(io);
 
-            for (int id : selectedBlocks) {
-                auto it = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b){ return b->id == id; });
-                if (it != model.getBlocks().end()) {
-                    std::shared_ptr<Block> copy = (*it)->clone();
-                    copy->id = next_id++;
-                    copy->position = ImVec2((*it)->position.x + 20, (*it)->position.y + 20);
+    // skróty klawiszowe
+    turnLightModeOn(io);
+    turnGridOn(io);
 
-                    newSelection.insert(copy->id);
-                    model.getBlocks().push_back(std::move(copy));
-                }
-            }
-
-            // przenosimy zaznaczenie na nowo dodane bloczki
-            selectedBlocks = newSelection;
-        }
-    }
-    // usuwanie bloczków przez DEL
-    if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
-        if (!selectedBlocks.empty()) {
-            auto& blocks = model.getBlocks();
-            blocks.erase(std::remove_if(blocks.begin(), blocks.end(),[&](auto& b) {return selectedBlocks.count(b->id) > 0;}), blocks.end());
-
-            // wyczyść zaznaczenie
-            selectedBlocks.clear();
-        }
-    }
-    // logika settings'ów z menu bar
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_L, false))
-        lightMode = !lightMode;
-    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G, false))
-        gridEnabled = !gridEnabled;
-
-
-    // Wywołaj nowe funkcje
+    // wywołaj nowe funkcje
     drawMenu();
     drawStartButton();
     drawMenuBar();
@@ -161,6 +114,89 @@ void guiClass::update() {
     // MAMMA MIA last time i forgor about de grid
     drawGrid();
 }
+
+// logika czyszczenia zaznaczeń
+void guiClass::clearSelectedBlocks(const ImGuiIO &io) {
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !io.KeyShift) {
+        ImVec2 mousePos = io.MousePos;
+        bool clickedOnAnyTitle = false;
+        for (auto& b : model.getBlocks()) {
+            ImVec2 screen_pos = ImVec2(b->position.x * zoomAmount + viewOffset.x, b->position.y * zoomAmount + viewOffset.y);
+            ImVec2 screen_size = ImVec2(b->size.x * zoomAmount, b->size.y * zoomAmount);
+            ImVec2 title_min = screen_pos;
+            ImVec2 title_max = ImVec2(screen_pos.x + screen_size.x, screen_pos.y + ImGui::GetFrameHeight());
+            if (mousePos.x >= title_min.x && mousePos.x <= title_max.x && mousePos.y >= title_min.y && mousePos.y <= title_max.y) {
+                clickedOnAnyTitle = true;
+                break;
+            }
+        }
+        if (!clickedOnAnyTitle) {
+            // klik poza titlebarami -> odznacz wszystko
+            selectedBlocks.clear();
+        }
+    }
+}
+
+// logika kopiowania bloczków przez CTRL+D
+void guiClass::duplicateSelectedBlocks(const ImGuiIO &io) {
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D, false)) {
+        if (!selectedBlocks.empty()) {
+            std::set<int> newSelection;
+
+            for (int id : selectedBlocks) {
+                auto it = std::find_if(model.getBlocks().begin(), model.getBlocks().end(), [&](auto& b){ return b->id == id; });
+                if (it != model.getBlocks().end()) {
+                    std::shared_ptr<Block> copy = (*it)->clone();
+                    copy->id = model.next_id++;
+                    copy->position = ImVec2((*it)->position.x + 20, (*it)->position.y + 20);
+
+                    newSelection.insert(copy->id);
+                    model.getBlocks().push_back(std::move(copy));
+                }
+            }
+
+            // przenosimy zaznaczenie na nowo dodane bloczki
+            selectedBlocks = newSelection;
+        }
+    }
+}
+
+// usuwanie bloczków przez DEL
+void guiClass::deleteSelectedBlocks(const ImGuiIO &io) {
+    if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
+        if (!selectedBlocks.empty()) {
+            auto& blocks = model.getBlocks();
+            blocks.erase(std::remove_if(blocks.begin(), blocks.end(),[&](auto& b) {return selectedBlocks.count(b->id) > 0;}), blocks.end());
+
+            // wyczyść zaznaczenie
+            selectedBlocks.clear();
+        }
+    }
+}
+
+// zaznaczanie wszystkich blocków przez CTRL+A
+void guiClass::selectAllBlocks(const ImGuiIO& io) {
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_A, false)) {
+        selectedBlocks.clear();
+        for (const auto& block : model.getBlocks()) {
+            selectedBlocks.insert(block->id);
+        }
+    }
+}
+
+// włączanie i wyłączanie light mode przez CTRL+L
+void guiClass::turnLightModeOn(const ImGuiIO &io) {
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_L, false))
+        lightMode = !lightMode;
+}
+
+// włączanie i wyłączanie siatki przez CTRL+G
+void guiClass::turnGridOn(const ImGuiIO &io) {
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G, false))
+        gridEnabled = !gridEnabled;
+}
+
+
 
 // funkcja pomocnicza do obliczania pozycji zadockowanego okna
 ImVec2 guiClass::calculateDockedPosition(DockPosition position, DockableWindowType windowType) {
@@ -808,97 +844,97 @@ void guiClass::drawMenu() {
         // modul math
         if (ImGui::CollapsingHeader("Math")) {
             if (ImGui::Button("Add Sum Box"))
-                model.getBlocks().push_back(std::make_shared<SumBlock>(next_id++));
+                model.addBlock<SumBlock>();
             if (ImGui::Button("Add Multiply Box"))
-                model.getBlocks().push_back(std::make_shared<MultiplyBlock>(next_id++));
+                model.addBlock<MultiplyBlock>();
             if (ImGui::Button("Add Integrator Box"))
-                model.getBlocks().push_back(std::make_shared<IntegratorBlock>(next_id++));
+                model.addBlock<IntegratorBlock>();
             if (ImGui::Button("Add Diff Box"))
-                model.getBlocks().push_back(std::make_shared<DifferentiatorBlock>(next_id++));
+                model.addBlock<DifferentiatorBlock>();
             if (ImGui::Button("Add Trigonometric Funcion Box"))
-                model.getBlocks().push_back(std::make_shared<TrigonometricFunctionBlock>(next_id++));
+                model.addBlock<TrigonometricFunctionBlock>();
             if (ImGui::Button("Add Sqrt Box"))
-                model.getBlocks().push_back(std::make_shared<sqrtBlock>(next_id++));
+                model.addBlock<sqrtBlock>();
             if (ImGui::Button("Add Squered Box"))
-                model.getBlocks().push_back(std::make_shared<squaredBlock>(next_id++));
+                model.addBlock<squaredBlock>();
         }
 
         // modul contorl
         if (ImGui::CollapsingHeader("Control Continous")) {
             if (ImGui::Button("Add Tf box"))
-                model.getBlocks().push_back(std::make_shared<TransferFuncionContinous>(next_id++));
+                model.addBlock<TransferFuncionContinous>();
             if (ImGui::Button("Add PID box"))
-                model.getBlocks().push_back(std::make_shared<PID_regulator>(next_id++));
+                model.addBlock<PID_regulator>();
             if (ImGui::Button("Add Gain Box"))
-                model.getBlocks().push_back(std::make_shared<GainBlock>(next_id++));
+                model.addBlock<GainBlock>();
             if (ImGui::Button("Add Saturation Box"))
-                model.getBlocks().push_back(std::make_shared<SaturationBlock>(next_id++));
+                model.addBlock<SaturationBlock>();
             if (ImGui::Button("Add DeadZone Box"))
-                model.getBlocks().push_back(std::make_shared<DeadZoneBlock>(next_id++));
+                model.addBlock<DeadZoneBlock>();
         }
 
         // modul inputy
         if (ImGui::CollapsingHeader("Input")) {
             if (ImGui::Button("Add Step Box"))
-                model.getBlocks().push_back(std::make_shared<StepBlock>(next_id++));
+                model.addBlock<StepBlock>();
             if (ImGui::Button("Add SinusInput Box"))
-                model.getBlocks().push_back(std::make_shared<SinusInputBlock>(next_id++));
+                model.addBlock<SinusInputBlock>();
             if (ImGui::Button("Add PWM Input"))
-                model.getBlocks().push_back(std::make_shared<PWMInputBlock>(next_id++));
+                model.addBlock<PWMInputBlock>();
             if (ImGui::Button("Add WhiteNoise Box"))
-                model.getBlocks().push_back(std::make_shared<WhiteNoiseInputBlock>(next_id++));
+                model.addBlock<WhiteNoiseInputBlock>();
             if (ImGui::Button("Add Input form File"))
-                model.getBlocks().push_back(std::make_shared<SignalFromFileBlock>(next_id++));
+                model.addBlock<SignalFromFileBlock>();
         }
 
         // modul spketum czestoliwosciowego
         if (ImGui::CollapsingHeader("DSP")) {
             if (ImGui::Button("Add STFT Box (work in progres)"))
-                model.getBlocks().push_back(std::make_shared<STFT_block>(next_id++));
+                model.addBlock<STFT_block>();
             if (ImGui::Button("Add filter Box"))
-                model.getBlocks().push_back(std::make_shared<filterImplementationBlock>(next_id++));
+                model.addBlock<filterImplementationBlock>();
             if (ImGui::Button("Add MovAvg Box"))
-                model.getBlocks().push_back(std::make_shared<meanFilter1DBlock>(next_id++));
+                model.addBlock<meanFilter1DBlock>();
             if (ImGui::Button("Add MedianFilter Box"))
-                model.getBlocks().push_back(std::make_shared<medianFilter1DBlock>(next_id++));
+                model.addBlock<medianFilter1DBlock>();
         }
 
         // modul print/ploty
         if (ImGui::CollapsingHeader("Print")) {
             if (ImGui::Button("Add Print Box"))
-                model.getBlocks().push_back(std::make_shared<PrintBlock>(next_id++));
+                model.addBlock<PrintBlock>();
             if (ImGui::Button("Add Plot Box"))
-                model.getBlocks().push_back(std::make_shared<PlotBlock>(next_id++));
+                model.addBlock<PlotBlock>();
             if (ImGui::Button("Add Plot XY Box"))
-                model.getBlocks().push_back(std::make_shared<PlotXYBlock>(next_id++));
+                model.addBlock<PlotXYBlock>();
             if (ImGui::Button("Add Spectogram Box (work in progres)"))
-                model.getBlocks().push_back(std::make_shared<PlotHeatmapBlock>(next_id++));
+                model.addBlock<PlotHeatmapBlock>();
         }
 
         // moduł code
         if (ImGui::CollapsingHeader("Code Box")) {
             if (ImGui::Button("Add Python Box"))
-                model.getBlocks().push_back(std::make_shared<pythonBlock>(next_id++));
+                model.addBlock<pythonBlock>();
             if (ImGui::Button("Add C++ Box"))
-                model.getBlocks().push_back(std::make_shared<cppBlock>(next_id++));
+                model.addBlock<cppBlock>();
         }
 
         // bloki logiczne (sprawdzenie czy aktualna struktra sie do tego nadaje)
         if (ImGui::CollapsingHeader("Logic")) {
             if (ImGui::Button("Add OR Box"))
-                model.getBlocks().push_back(std::make_shared<logicORBlock>(next_id++));
+                model.addBlock<logicORBlock>();
             if (ImGui::Button("Add AND Box"))
-                model.getBlocks().push_back(std::make_shared<logicANDBlock>(next_id++));
+                model.addBlock<logicANDBlock>();
             if (ImGui::Button("Add NOT Box"))
-                model.getBlocks().push_back(std::make_shared<logicNOTBlock>(next_id++));
+                model.addBlock<logicNOTBlock>();
             if (ImGui::Button("Add NOR Box"))
-                model.getBlocks().push_back(std::make_shared<logicNORBlock>(next_id++));
+                model.addBlock<logicNORBlock>();
         }
 
         // wysylanie danych
         if (ImGui::CollapsingHeader("Sender")) {
             if (ImGui::Button("Add Sender Box"))
-                model.getBlocks().push_back(std::make_shared<DataSenderBlock>(next_id++));
+                model.addBlock<DataSenderBlock>();
         }
 
         ImGui::Separator();

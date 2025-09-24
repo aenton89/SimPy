@@ -189,13 +189,19 @@ public:
     // te dwie zmainne zeby po przez menu mozna bylo ustawiac czas symuliociu i dt
     static double timeStep;
     static double simTime;
-    // dodanie bloku do modelu
+    // przeniesione z guiClass
+    int next_id = 0;
+
+
+    // dodanie i usuwanie bloku do modelu
     template<typename BlockType, typename... Args>
     std::shared_ptr<Block> addBlock(Args&&... args) {
-        auto block = std::make_shared<BlockType>(std::forward<Args>(args)...);
+        auto block = std::make_shared<BlockType>(next_id++, std::forward<Args>(args)...);
         blocks.push_back(block);
         return block;
     }
+    void removeBlock(int removeId);
+
     // dodanie połączenia między blokami do modelu
     bool connect(std::shared_ptr<Block> source, int sourcePort, std::shared_ptr<Block> target, int targetPort);
     void disconnectAll();
@@ -220,11 +226,7 @@ public:
 
     // TODO: łączenie w całość
     void makeConnections();
-    // metoda pomoicncza do usuwania polaczen. Ma je robic od nowa
-    
-    // dodawanie i usuwanie bloków
-    void addBlock(std::shared_ptr<Block> block);
-    void removeBlock(int removeId);
+    // metoda pomocnicza do usuwania polaczen, ma je robic od nowa; TODO:(to niby gdzie jest xd??)
 
     // inplentacja solvera dla symulacji
     void setSolver(std::shared_ptr<Solver> solver);
@@ -236,7 +238,8 @@ public:
         ar(CEREAL_NVP(blocks),
            CEREAL_NVP(connections),
            CEREAL_NVP(timeStep),
-           CEREAL_NVP(simTime));
+           CEREAL_NVP(simTime),
+           CEREAL_NVP(next_id));
 
         // reinitialize solver after loading
         if constexpr (Archive::is_loading::value) {

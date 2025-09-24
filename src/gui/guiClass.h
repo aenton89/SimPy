@@ -11,14 +11,17 @@
 #include <memory>
 #include <string>
 #include <optional>
-#include "../data/structures.h"
-#include "../data/blocks.h"
 #include <implot.h>
 #include <thread>
 #include <algorithm>
 #include <map>
 #include <set>
 #include <unordered_map>
+#include <cereal/types/set.hpp>
+#include <cereal/types/unordered_map.hpp>
+#include <cereal/types/atomic.hpp>
+#include "../data/structures.h"
+#include "../data/blocks.h"
 
 
 const ImVec2 DEFAULT_DOCKED_START_SIZE = ImVec2(195, 180);
@@ -80,6 +83,25 @@ public:
         ImVec2 undockedPos = ImVec2(100, 100);
         ImVec2 dockedPos = ImVec2(100, 100);
         bool isDocked = false;
+
+        template<class Archive>
+        void serialize(Archive& ar) {
+            int pos = static_cast<int>(position);
+            ar(CEREAL_NVP(pos),
+               CEREAL_NVP(isDocked));
+
+            // serializacja ImVec2 jako vector<float>
+            std::vector<float> undocked = {undockedPos.x, undockedPos.y};
+            std::vector<float> docked = {dockedPos.x, dockedPos.y};
+            ar(cereal::make_nvp("undockedPos", undocked),
+               cereal::make_nvp("dockedPos", docked));
+
+            if constexpr (Archive::is_loading::value) {
+                position = static_cast<DockPosition>(pos);
+                undockedPos = ImVec2(undocked[0], undocked[1]);
+                dockedPos = ImVec2(docked[0], docked[1]);
+            }
+        }
     };
 
 private:
@@ -98,9 +120,16 @@ private:
     ImVec2 calculateDockedSize(DockPosition position, DockableWindowType windowType);
     DockPosition checkDockPosition(ImVec2 windowPos, ImVec2 windowSize);
 
+    // funkcje używane w update() do zaznaczania/odznaczania box'ów
+    void clearSelectedBlocks(const ImGuiIO& io);
+    void duplicateSelectedBlocks(const ImGuiIO& io);
+    void deleteSelectedBlocks(const ImGuiIO& io);
+    void selectAllBlocks(const ImGuiIO& io);
 
+    // skróty klawiszowe
+    void turnLightModeOn(const ImGuiIO& io);
+    void turnGridOn(const ImGuiIO& io);
 
-    int next_id = 0;
     std::optional<int> dragging_from;
     GLFWwindow* window = nullptr;
     const char* glsl_version = nullptr;
@@ -151,6 +180,68 @@ private:
 
 
     Model model;
+
+public:
+    /* NIE jest serializowane:
+    - wskaźniki systemowe: window, glsl_version - to musi być zainicjalizowane przez system
+    - stany runtime: simulationRunning, canvasDragging, isDraggingWindow - to są stany tymczasowe
+    - pozycje myszy/drag: dragStartPos, windowDragOffset - bo to są stany tymczasowe
+    - dragging_from: reset przy ładowaniu
+     */
+    template<class Archive>
+    void serialize(Archive& ar) {
+        // podstawowe dane stanu
+        // ar(CEREAL_NVP(next_id));
+
+        // parametry zoom i view
+        ar(CEREAL_NVP(zoomAmount),
+           CEREAL_NVP(zoomSpeed));
+
+        // serializacja ImVec2 viewOffset
+        std::vector<float> offset = {viewOffset.x, viewOffset.y};
+        ar(cereal::make_nvp("viewOffset", offset));
+
+        // docking windows
+        ar(CEREAL_NVP(menuWindow),
+           CEREAL_NVP(startWindow),
+           CEREAL_NVP(settingsWindow),
+           CEREAL_NVP(dockedWindows),
+           CEREAL_NVP(dockSnapDistance));
+
+        // solver settings
+        ar(CEREAL_NVP(solverName));
+
+        // UI preferences
+        ar(CEREAL_NVP(lightMode),
+           CEREAL_NVP(gridEnabled),
+           CEREAL_NVP(gridSpacing),
+           CEREAL_NVP(gridThickness));
+
+        // grid color jako uint32
+        uint32_t gridCol = gridColor;
+        ar(cereal::make_nvp("gridColor", gridCol));
+
+        // selection state
+        ar(CEREAL_NVP(selectedBlocks),
+           CEREAL_NVP(isMultiSelectMode));
+
+        // model
+        ar(CEREAL_NVP(model));
+
+        if constexpr (Archive::is_loading::value) {
+            viewOffset = ImVec2(offset[0], offset[1]);
+            gridColor = static_cast<ImU32>(gridCol);
+
+            // Reset runtime state
+            simulationRunning = false;
+            canvasDragging = false;
+            isDraggingWindow = false;
+            draggedWindowId = -1;
+            isGroupDragging = false;
+            dragging_from.reset();
+            groupInitialPositions.clear();
+        }
+    }
 };
 
 #endif //GUICLASS_H

@@ -167,7 +167,6 @@ void Model::makeConnections() {
     }
 }
 
-
 void Model::disconnectAll() {
     connections.clear();
 }
@@ -235,11 +234,6 @@ const std::vector<std::shared_ptr<Block>>& Model::getBlocks() const {
 
 const std::vector<Connection>& Model::getConnections() const {
     return connections;
-}
-
-
-void Model::addBlock(std::shared_ptr<Block> block) {
-    blocks.push_back(std::move(block));
 }
 
 void Model::removeBlock(int removeId) {
