@@ -1,7 +1,6 @@
 //
 // Created by tajbe on 18.04.2025.
 //
-
 #include "guiClass.h"
 #include "structures.h"
 #include <functional>
@@ -242,28 +241,18 @@ guiClass::DockPosition guiClass::checkDockPosition(ImVec2 windowPos, ImVec2 wind
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 displaySize = io.DisplaySize;
 
-    std::cout << "Checking dock position - windowPos: " << windowPos.x << "," << windowPos.y << " size: " << windowSize.x << "," << windowSize.y << " displaySize: " << displaySize.x << "," << displaySize.y << std::endl;
-
     // lewa krawędź
-    if (windowPos.x < dockSnapDistance) {
-        std::cout << "Should dock LEFT" << std::endl;
+    if (windowPos.x < dockSnapDistance)
         return DockPosition::Left;
-    }
     // prawą krawędź
-    if (windowPos.x + windowSize.x > displaySize.x - dockSnapDistance) {
-        std::cout << "Should dock RIGHT" << std::endl;
+    if (windowPos.x + windowSize.x > displaySize.x - dockSnapDistance)
         return DockPosition::Right;
-    }
     // górna krawędź
-    if (windowPos.y < dockSnapDistance) {
-        std::cout << "Should dock TOP" << std::endl;
+    if (windowPos.y < dockSnapDistance)
         return DockPosition::Top;
-    }
     // dolną krawędź
-    if (windowPos.y + windowSize.y > displaySize.y - dockSnapDistance) {
-        std::cout << "Should dock BOTTOM" << std::endl;
+    if (windowPos.y + windowSize.y > displaySize.y - dockSnapDistance)
         return DockPosition::Bottom;
-    }
 
     return DockPosition::None;
 }
@@ -406,7 +395,6 @@ void guiClass::zoom() {
         canvasDragging = true;
         dragStartPos = io.MousePos;
         dragStartOffset = viewOffset;
-        std::cout << "Started canvas dragging at: " << dragStartPos.x << ", " << dragStartPos.y << std::endl;
     }
 
     // kontynuacja przeciągania canvas'u
@@ -414,18 +402,15 @@ void guiClass::zoom() {
         if (ImGui::IsMouseDown(ImGuiMouseButton_Middle)) {
             ImVec2 delta = ImVec2(io.MousePos.x - dragStartPos.x, io.MousePos.y - dragStartPos.y);
             viewOffset = ImVec2(dragStartOffset.x + delta.x, dragStartOffset.y + delta.y);
-            std::cout << "Canvas dragging - delta: " << delta.x << ", " << delta.y << " offset: " << viewOffset.x << ", " << viewOffset.y << std::endl;
         } else {
             // środkowy przycisk został puszczony
             canvasDragging = false;
-            std::cout << "Stopped canvas dragging" << std::endl;
         }
     }
 
     // jeśli przeciągamy okno, zatrzymaj przeciąganie canvas'u
     if (isDraggingWindow && canvasDragging) {
         canvasDragging = false;
-        std::cout << "Canvas dragging stopped due to window dragging" << std::endl;
     }
 }
 
@@ -930,16 +915,16 @@ void guiClass::drawMenu() {
             if (ImGui::Button("Add NOR Box"))
                 model.addBlock<logicNORBlock>();
         }
-        // bloki zwzane z HIL i coderem esp
-        if (ImGui::CollapsingHeader("ESP Coder")) {
-            if (ImGui::Button("Add ESP output"))
-                model.addBlock<ESPoutBlock>();
-            if (ImGui::Button("Add ESP input")) {
-                model.addBlock<ESPinBlock>();
+
+        #ifdef __linux__
+            // bloki zwzane z HIL i coderem esp
+            if (ImGui::CollapsingHeader("ESP Coder")) {
+                if (ImGui::Button("Add ESP output"))
+                    model.addBlock<ESPoutBlock>();
+                if (ImGui::Button("Add ESP input"))
+                    model.addBlock<ESPinBlock>();
             }
-        }
-
-
+        #endif
 
         // wysylanie danych
         if (ImGui::CollapsingHeader("Sender")) {

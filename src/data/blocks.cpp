@@ -1,7 +1,6 @@
 //
 // Created by tajbe on 24.03.2025.
 //
-
 #include "blocks.h"
 #include <sstream>
 #include <cmath>
@@ -12,12 +11,12 @@
 #include <numeric>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-
-
+#ifdef __linux__
+    #include <termios.h>
+    #include <unistd.h>
+#endif
 // w tym pliku są implementacje specyficznych bloków
 
 
@@ -38,7 +37,6 @@ void SumBlock::process() {
 
         outputValues[0] += inputValues[i];
     }
-    std::cout<<"sum: "<<inputValues[0]<<" + "<<inputValues[1]<<" = "<<outputValues[0]<<std::endl;
 }
 
 // TODO: GUI
@@ -52,7 +50,6 @@ void SumBlock::drawMenu() {
         if (numInputs < 2)
             numInputs = 2;
         else {
-            std::cout<<"changed number of inputs: "<<numInputs<<std::endl;
             inputValues.resize(numInputs);
             negate_inputs.resize(numInputs, 0);
         }
@@ -90,7 +87,6 @@ MultiplyBlock::MultiplyBlock(int _id) : BlockCloneable(_id, 2, 1, true) {
 
 void MultiplyBlock::process() {
     outputValues[0] = inputValues[0] * inputValues[1];
-    std::cout<<"multiply: "<<inputValues[0]<<" * "<<inputValues[1]<<" = "<<outputValues[0]<<std::endl;
 }
 
 // TODO: GUI
@@ -104,7 +100,6 @@ void MultiplyBlock::drawMenu() {
         if (numInputs < 2)
             numInputs = 2;
         else {
-            std::cout<<"changed number of inputs: "<<numInputs<<std::endl;
             inputValues.resize(numInputs);
         }
     }
@@ -143,8 +138,6 @@ void IntegratorBlock::process() {
     std::vector<double> yvec = MatOp::matVecMul(ss.C, ss.x);
     double y = yvec[0] + ss.D[0][0] * inputValues[0];
     outputValues[0] = y;
-
-    //std::cout<<"integrator: "<<inputValues[0]<<" * "<<timeStep<<" = "<<outputValues[0]<<std::endl;
 }
 
 // TODO: GUI
@@ -184,7 +177,7 @@ void sqrtBlock::process() {
             inputValues[0] = 0.0;
         outputValues[0] = std::sqrt(inputValues[0]);
     }
-    // TODO Trzeba dorobic takz zeby prznosl sie wartosc rzeczywista i zeoslona i zeby te wartsoci byly np ploktowane na wykresie jako dwie ine wykresy
+    // TODO: trzeba dorobic takz zeby prznosl sie wartosc rzeczywista i zeoslona i zeby te wartsoci byly np ploktowane na wykresie jako dwie ine wykresy
     else if (mode == "complex value") {
 
     }
@@ -411,7 +404,8 @@ float SignalFromFileBlock::readNextValue() {
         currentLine++;
     }
 
-    i++; // przy następnym wywołaniu weź następny wiersz
+    // przy następnym wywołaniu weź następny wiersz
+    i++;
 
     std::string cell;
     if (std::getline(ss, cell, ',')) {
@@ -430,8 +424,6 @@ float SignalFromFileBlock::readNextValue() {
 
     return 0.0f;
 }
-
-
 
 void SignalFromFileBlock::process() {
     if (current_read_mode == 0) { // read all
@@ -456,7 +448,6 @@ void SignalFromFileBlock::resetAfter() {
     i=0;
 }
 
-
 void PWMInputBlock::resetBefore() {
     currentTime = 0;
 
@@ -465,7 +456,7 @@ void PWMInputBlock::resetBefore() {
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
-// Generator bilalego szumu
+// generator bilalego szumu
 WhiteNoiseInputBlock::WhiteNoiseInputBlock(int id_) : BlockCloneable(id_, 0, 1, true), distribution(mean, std) {
     size = ImVec2(150, 80);
     std::random_device rd;
@@ -531,8 +522,6 @@ void PlotBlock::process() {
 
         // dodajemy nową wartość na końcu wektora
         data[i].push_back(inputValues[i]);
-
-        std::cout << "plot's new value: " << inputValues[i] << std::endl;
     }
 
     // x_limMax teraz jest po prostu długością danych
@@ -580,7 +569,6 @@ void PlotBlock::drawMenu() {
         if (numInputs < 1)
             numInputs = 1;
         else {
-            std::cout << "changed number of inputs: " << numInputs << std::endl;
             data.resize(numInputs);
             inputValues.resize(numInputs);
             for (int i = 0; i < numInputs; ++i) {
@@ -679,7 +667,6 @@ void PlotXYBlock::drawMenu() {
         if (numInputs < 1)
             numInputs = 1;
         else {
-            std::cout << "changed number of inputs: " << numInputs << std::endl;
             data.resize(numInputs);
             inputValues.resize(numInputs);
             for (int i = 0; i < numInputs; ++i) {
@@ -747,7 +734,6 @@ void PlotHeatmapBlock::drawContent() {
     }
 
     Block::drawContent();
-
 
     // int i = 0;
     // for (auto &arr : data) {
@@ -1332,7 +1318,7 @@ void filterImplementationBlock::drawMenu() {
     }
     lower_limit = (lower_limit == 0) ? 0.001 : lower_limit;
     lower_limit = (lower_limit > higher_limit) ? 0.001 : lower_limit;
-    //std::cout << lower_limit << " " << higher_limit << std::endl;
+    // std::cout << lower_limit << " " << higher_limit << std::endl;
 
     range = {lower_limit * 2 * std::numbers::pi, higher_limit * 2 * std::numbers::pi};
 
@@ -1861,118 +1847,121 @@ void DataSenderBlock::resetAfter() {
     // }
 }
 
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// bloki zwazane z esp i HIL
 
+#ifdef __linux__
+    // --------------------------------------------------------------------------------------------------------------------------------------------
+    // bloki zwazane z esp i HIL
 
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// esp output
-ESPoutBlock::ESPoutBlock(int _id) : BlockCloneable(_id, 0, 1, true) {
-    size = ImVec2(200, 120);
-}
-
-void ESPoutBlock::drawContent() {
-    ImGui::Text("ESP output");
-    Block::drawContent();
-}
-
-void ESPoutBlock::drawMenu() {
-
-}
-
-
-
-void ESPoutBlock::process() {
-
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// esp input
-
-void ESPinBlock::connect() {
-    // próbujemy od razu otworzyć port
-    fd = ::open(ESP_com::listSerialPorts()[selectedPort].c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-    if (fd != -1) {
-        connected = true; // port otwarty
-        struct termios tty;
-        memset(&tty, 0, sizeof tty);
-        if (tcgetattr(fd, &tty) == 0) {
-            cfsetospeed(&tty, B115200);
-            cfsetispeed(&tty, B115200);
-            tty.c_cflag |= (CLOCAL | CREAD);
-            tty.c_cflag &= ~CSIZE; tty.c_cflag |= CS8;
-            tty.c_cflag &= ~PARENB; tty.c_cflag &= ~CSTOPB;
-            tty.c_cc[VMIN] = 0; tty.c_cc[VTIME] = 1;
-            tcsetattr(fd, TCSANOW, &tty);
-        }
-    } else {
-        connected = false;
+    // --------------------------------------------------------------------------------------------------------------------------------------------
+    // esp output
+    ESPoutBlock::ESPoutBlock(int _id) : BlockCloneable(_id, 0, 1, true) {
+        size = ImVec2(200, 120);
     }
-}
 
-
-ESPinBlock::ESPinBlock(int _id) : BlockCloneable(_id, 1, 0, true) {
-    size = ImVec2(200, 120);
-
-    ESPinBlock::connect();
-}
-
-ESPinBlock::~ESPinBlock() {
-    if (fd != -1) close(fd);
-}
-
-void ESPinBlock::process() {
-    if (!connected) return;  // działaj tylko, jeśli jest połączenie
-
-    char buf[64];
-    int n = read(fd, buf, sizeof(buf)-1);
-    if (n > 0) {
-        buf[n] = 0;
-        int sample = atoi(buf);
-        inputValues[0] = (float)sample;
+    void ESPoutBlock::drawContent() {
+        ImGui::Text("ESP output");
+        Block::drawContent();
     }
-}
 
-void ESPinBlock::drawContent() {
-    ImGui::Text("ESP input");
-    if (connected)
-        ImGui::TextColored(ImVec4(0,1,0,1), "Connected");
-    else
-        ImGui::TextColored(ImVec4(1,0,0,1), "Disconnected");
+    void ESPoutBlock::drawMenu() {
 
-    Block::drawContent();
-}
+    }
 
-void ESPinBlock::drawMenu() {
-    std::vector<std::string> serialPorts = ESP_com::listSerialPorts();
+    void ESPoutBlock::process() {
 
-    if (ImGui::BeginCombo("Serial Port", serialPorts[selectedPort].c_str())) {
-        for (int i = 0; i < serialPorts.size(); i++) {
-            bool is_selected = (selectedPort == i);
-            if (ImGui::Selectable(serialPorts[i].c_str(), is_selected)) {
-                selectedPort = i;
+    }
+
+
+
+    // --------------------------------------------------------------------------------------------------------------------------------------------
+    // esp input
+    void ESPinBlock::connect() {
+        // próbujemy od razu otworzyć port
+        fd = ::open(ESP_com::listSerialPorts()[selectedPort].c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+        if (fd != -1) {
+            connected = true; // port otwarty
+            struct termios tty;
+            memset(&tty, 0, sizeof tty);
+            if (tcgetattr(fd, &tty) == 0) {
+                cfsetospeed(&tty, B115200);
+                cfsetispeed(&tty, B115200);
+                tty.c_cflag |= (CLOCAL | CREAD);
+                tty.c_cflag &= ~CSIZE; tty.c_cflag |= CS8;
+                tty.c_cflag &= ~PARENB; tty.c_cflag &= ~CSTOPB;
+                tty.c_cc[VMIN] = 0; tty.c_cc[VTIME] = 1;
+                tcsetattr(fd, TCSANOW, &tty);
             }
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
+        } else {
+            connected = false;
         }
-        ImGui::EndCombo();
     }
 
-    ESPinBlock::connect();
-    if (!connected) {
-        ImGui::TextColored(ImVec4(1,0,0,1), "ESP disconnected");
+    ESPinBlock::ESPinBlock(int _id) : BlockCloneable(_id, 1, 0, true) {
+        size = ImVec2(200, 120);
 
-        // opcjonalnie: próbujemy na żywo połączyć w menu
-        int tmp_fd = ::open(serialPorts[selectedPort].c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-        if (tmp_fd != -1) {
-            fd = tmp_fd;
-            connected = true;
-            ImGui::TextColored(ImVec4(0,1,0,1), "ESP connected!");
-        }
-    } else {
-        ImGui::TextColored(ImVec4(0,1,0,1), "ESP connected");
+        ESPinBlock::connect();
     }
-}
+
+    ESPinBlock::~ESPinBlock() {
+        if (fd != -1) close(fd);
+    }
+
+    void ESPinBlock::process() {
+        // działaj tylko, jeśli jest połączenie
+        if (!connected)
+            return;
+
+        char buf[64];
+        int n = read(fd, buf, sizeof(buf)-1);
+        if (n > 0) {
+            buf[n] = 0;
+            int sample = atoi(buf);
+            inputValues[0] = (float)sample;
+        }
+    }
+
+    void ESPinBlock::drawContent() {
+        ImGui::Text("ESP input");
+        if (connected)
+            ImGui::TextColored(ImVec4(0,1,0,1), "Connected");
+        else
+            ImGui::TextColored(ImVec4(1,0,0,1), "Disconnected");
+
+        Block::drawContent();
+    }
+
+    void ESPinBlock::drawMenu() {
+        std::vector<std::string> serialPorts = ESP_com::listSerialPorts();
+
+        if (ImGui::BeginCombo("Serial Port", serialPorts[selectedPort].c_str())) {
+            for (int i = 0; i < serialPorts.size(); i++) {
+                bool is_selected = (selectedPort == i);
+                if (ImGui::Selectable(serialPorts[i].c_str(), is_selected)) {
+                    selectedPort = i;
+                }
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        ESPinBlock::connect();
+        if (!connected) {
+            ImGui::TextColored(ImVec4(1,0,0,1), "ESP disconnected");
+
+            // opcjonalnie: próbujemy na żywo połączyć w menu
+            int tmp_fd = ::open(serialPorts[selectedPort].c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+            if (tmp_fd != -1) {
+                fd = tmp_fd;
+                connected = true;
+                ImGui::TextColored(ImVec4(0,1,0,1), "ESP connected!");
+            }
+        } else {
+            ImGui::TextColored(ImVec4(0,1,0,1), "ESP connected");
+        }
+    }
+#endif
+
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -2009,5 +1998,7 @@ REGISTER_BLOCK_TYPE(logicORBlock);
 REGISTER_BLOCK_TYPE(logicANDBlock);
 REGISTER_BLOCK_TYPE(logicNOTBlock);
 REGISTER_BLOCK_TYPE(logicNORBlock);
-REGISTER_BLOCK_TYPE(ESPoutBlock);
-REGISTER_BLOCK_TYPE(ESPinBlock);
+#ifdef __linux__
+    REGISTER_BLOCK_TYPE(ESPoutBlock);
+    REGISTER_BLOCK_TYPE(ESPinBlock);
+#endif

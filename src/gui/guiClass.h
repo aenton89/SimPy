@@ -1,7 +1,6 @@
 //
 // Created by tajbe on 18.04.2025.
 //
-
 #ifndef GUICLASS_H
 #define GUICLASS_H
 
