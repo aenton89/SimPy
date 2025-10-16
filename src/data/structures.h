@@ -143,6 +143,7 @@ struct Connection {
     int targetPort;
 
     // konstruktor
+    Connection() = default;
     Connection(std::shared_ptr<Block> src, int srcPort, std::shared_ptr<Block> tgt, int tgtPort);
 
     // dla serializacji

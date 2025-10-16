@@ -19,13 +19,14 @@
 #include "math/digital_signal_processing/DSP.h"
 #include "math/math_help_fun/math_help_fun.h"
 #include "math/solvers/solverMethod.h"
+#include <cereal/archives/xml.hpp>
 
 #if defined(__unix__) || defined(__APPLE__)
     #include <paths.h>
 #endif
 
 // pomocnicze do jednoczesnej rejestracji i bloczków i ich polimorfizmu
-#define REGISTER_BLOCK_TYPE(T) CEREAL_REGISTER_TYPE(T) CEREAL_REGISTER_POLYMORPHIC_RELATION(Block, T)
+#define REGISTER_BLOCK_TYPE(T) CEREAL_REGISTER_TYPE(T); CEREAL_REGISTER_POLYMORPHIC_RELATION(Block, T)
 
 
 

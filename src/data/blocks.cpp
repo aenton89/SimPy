@@ -2002,3 +2002,6 @@ REGISTER_BLOCK_TYPE(logicNORBlock);
     REGISTER_BLOCK_TYPE(ESPoutBlock);
     REGISTER_BLOCK_TYPE(ESPinBlock);
 #endif
+
+// to też jest czemuś potrzebne?
+CEREAL_REGISTER_DYNAMIC_INIT(blocks)

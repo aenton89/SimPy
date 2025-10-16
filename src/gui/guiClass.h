@@ -7,21 +7,30 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <implot.h>
 #include <vector>
 #include <memory>
 #include <string>
 #include <optional>
-#include <implot.h>
 #include <thread>
 #include <algorithm>
 #include <map>
 #include <set>
 #include <unordered_map>
+#include <portable-file-dialogs.h>
 #include <cereal/types/set.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/atomic.hpp>
+#include <cereal/archives/xml.hpp>
 #include "../data/structures.h"
 #include "../data/blocks.h"
+/* TODO:
+ * dodać funcje: void updateWindowTitle(); void markAsModified();
+ * jedna odpowiada za zaznaczanie, że wykonaliśmy zmiany (każde usunięcie/dodanie połączenia/bloczka, zmiana grida)
+ * TODO later:
+ * a z innej beczki to rozbić to wreszcie na więcej plików
+ * also dodać dokumentacje
+ */
 
 
 
@@ -128,8 +137,25 @@ private:
     void selectAllBlocks(const ImGuiIO& io);
 
     // skróty klawiszowe
-    void turnLightModeOn(const ImGuiIO& io);
-    void turnGridOn(const ImGuiIO& io);
+    void turnLightModeOnShortcut(const ImGuiIO& io);
+    void turnGridOnShortcut(const ImGuiIO& io);
+    void saveStateShortcut(const ImGuiIO &io);
+    void loadStateShortcut(const ImGuiIO &io);
+    void exitFileShortcut(const ImGuiIO &io);
+    void newFileShortcut(const ImGuiIO &io);
+
+    // zapis/odczyt stanu do/z pliku
+    bool saveToXML(const std::string& filename);
+    bool loadFromXML(const std::string& filename);
+
+    // do wyboru i odczytu/zapisu plików (otwieraja też okienka dialogowe)
+    void openFileDialog();
+    void saveFileDialog();
+    void saveFile();
+
+    // wyjście z pliku i zrobienie nowego
+    void exitFile();
+    void newFile();
 
     std::optional<int> dragging_from;
     GLFWwindow* window = nullptr;
@@ -178,6 +204,10 @@ private:
     bool isGroupDragging = false;
     ImVec2 groupDragStartMousePos;
     std::unordered_map<int, ImVec2> groupInitialPositions;
+
+    // aktualnie zmiany/zapisywanie
+    std::string currentFilePath;
+    bool hasUnsavedChanges;
 
 
     Model model;
@@ -239,6 +269,7 @@ public:
             isDraggingWindow = false;
             draggedWindowId = -1;
             isGroupDragging = false;
+            hasUnsavedChanges = false;
             dragging_from.reset();
             groupInitialPositions.clear();
         }

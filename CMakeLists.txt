@@ -11,6 +11,7 @@ find_package(glad REQUIRED)
 find_package(implot REQUIRED)
 find_package(cereal REQUIRED)
 find_package(stb REQUIRED)
+find_package(portable-file-dialogs REQUIRED)
 
 # =================== MAIN PROGRAM ===================
 add_executable(SimPy
@@ -27,7 +28,6 @@ add_executable(SimPy
         src/data/math/solvers/solverManager.cpp
         src/data/math/digital_signal_processing/DSP.cpp
         src/data/math/math_help_fun/math_help_fun.cpp
-        src/data/data_sender/ESP_communication.h
         src/data/data_sender/ESP_communication.cpp
 )
 
@@ -43,6 +43,7 @@ target_link_libraries(SimPy PRIVATE
         implot::implot
         cereal::cereal
         stb::stb
+        portable-file-dialogs::portable-file-dialogs
 )
 
 target_include_directories(SimPy PRIVATE
