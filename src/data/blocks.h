@@ -19,13 +19,14 @@
 #include "math/digital_signal_processing/DSP.h"
 #include "math/math_help_fun/math_help_fun.h"
 #include "math/solvers/solverMethod.h"
+#include <cereal/archives/xml.hpp>
 
 #if defined(__unix__) || defined(__APPLE__)
     #include <paths.h>
 #endif
 
 // pomocnicze do jednoczesnej rejestracji i bloczków i ich polimorfizmu
-#define REGISTER_BLOCK_TYPE(T) CEREAL_REGISTER_TYPE(T) CEREAL_REGISTER_POLYMORPHIC_RELATION(Block, T)
+#define REGISTER_BLOCK_TYPE(T) CEREAL_REGISTER_TYPE(T); CEREAL_REGISTER_POLYMORPHIC_RELATION(Block, T)
 
 
 
@@ -898,47 +899,47 @@ public:
     }
 };
 
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ESP - output (blok ktory odbiera dane z esp)
-class ESPoutBlock : public BlockCloneable<ESPoutBlock> {
-public:
-    ESPoutBlock() : BlockCloneable<ESPoutBlock>(-1, 0, 1, false) {} // w przyszloci zorbic zeby odbeiral wiecje niz jedno wysjcie
-    ESPoutBlock(int _id);
-    void process() override;
-    void drawContent() override;
-    void drawMenu() override;
+#ifdef __linux__
+    // ------------------------------------------------------------------------------------------------------------------------------------------------
+    // ESP - output (blok ktory odbiera dane z esp)
+    class ESPoutBlock : public BlockCloneable<ESPoutBlock> {
+    public:
+        ESPoutBlock() : BlockCloneable<ESPoutBlock>(-1, 0, 1, false) {} // w przyszloci zorbic zeby odbeiral wiecje niz jedno wysjcie
+        ESPoutBlock(int _id);
+        void process() override;
+        void drawContent() override;
+        void drawMenu() override;
 
-    template<class Archive>
-    void serialize(Archive& ar) {
-        ar(cereal::base_class<Block>(this));
-    }
-};
+        template<class Archive>
+        void serialize(Archive& ar) {
+            ar(cereal::base_class<Block>(this));
+        }
+    };
 
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ESP input block (blok ktory wrzuca pkt do generownaia po przez dac esp)
-class ESPinBlock : public BlockCloneable<ESPinBlock> {
-public:
-    ESPinBlock() : BlockCloneable<ESPinBlock>(-1, 1, 0, false) {} // w prszysloci zrobic tak zeby odbieral wiecej niz jedno wejscie
-    ESPinBlock(int _id);
-    ~ESPinBlock();
-    void process() override;
-    void drawContent() override;
-    void drawMenu() override;
+    // ------------------------------------------------------------------------------------------------------------------------------------------------
+    // ESP input block (blok ktory wrzuca pkt do generownaia po przez dac esp)
+    class ESPinBlock : public BlockCloneable<ESPinBlock> {
+    public:
+        ESPinBlock() : BlockCloneable<ESPinBlock>(-1, 1, 0, false) {} // w prszysloci zrobic tak zeby odbieral wiecej niz jedno wejscie
+        ESPinBlock(int _id);
+        ~ESPinBlock();
+        void process() override;
+        void drawContent() override;
+        void drawMenu() override;
 
-    void connect();
+        void connect();
 
-    template<class Archive>
-    void serialize(Archive& ar) {
-        ar(cereal::base_class<Block>(this));
-    }
-private:
-    int fd;               // deskryptor portu
-    bool connected;       // flaga połączenia
+        template<class Archive>
+        void serialize(Archive& ar) {
+            ar(cereal::base_class<Block>(this));
+        }
+    private:
+        int fd;               // deskryptor portu
+        bool connected;       // flaga połączenia
 
-    int selectedPort = 0;
+        int selectedPort = 0;
+    };
+#endif
 
-    int buffor_size = 128;
-    float sampleRate = 44100.0f;
-};
 
 #endif

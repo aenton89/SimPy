@@ -1,16 +1,22 @@
 //
 // Created by tajbe on 18.04.2025.
 //
-
 #include "guiClass.h"
 #include "structures.h"
 #include <functional>
 #include <iostream>
 #include <thread>
+#include <filesystem>
+#include <thread>
+#include <chrono>
 #include "GLFW/glfw3.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "math/solvers/solverMethod.h"
+
+
+
+CEREAL_FORCE_DYNAMIC_INIT(blocks)
 
 
 
@@ -70,8 +76,12 @@ void guiClass::update() {
     selectAllBlocks(io);
 
     // skróty klawiszowe
-    turnLightModeOn(io);
-    turnGridOn(io);
+    turnLightModeOnShortcut(io);
+    turnGridOnShortcut(io);
+    saveStateShortcut(io);
+    loadStateShortcut(io);
+    exitFileShortcut(io);
+    newFileShortcut(io);
 
     // wywołaj nowe funkcje
     drawMenu();
@@ -114,6 +124,224 @@ void guiClass::update() {
     // MAMMA MIA last time i forgor about de grid
     drawGrid();
 }
+
+
+
+bool guiClass::saveToXML(const std::string &filename) {
+    std::string tempFilename = filename + ".tmp";
+    std::string backupFilename = filename + ".bak";
+
+    try {
+        // scope jest potrzebny, bo dzięki temu destruktory zamkną i zapiszą plik przed rename
+        {
+            // zapisz do pliku tymczasowego
+            std::ofstream file(tempFilename, std::ios::binary);
+            if (!file.is_open()) {
+                std::cerr << "ERR: can't open temp file " << tempFilename << "\n";
+                return false;
+            }
+
+            cereal::XMLOutputArchive archive(file);
+            archive(cereal::make_nvp("GuiClass", *this));
+        }
+
+        // jeśli istnieje stary plik, zrób backup
+        if (std::filesystem::exists(filename)) {
+            // usuń stary backup jeśli istnieje
+            if (std::filesystem::exists(backupFilename))
+                std::filesystem::remove(backupFilename);
+
+            // przenieś aktualny plik do backupu
+            std::filesystem::rename(filename, backupFilename);
+        }
+
+        // zamień temp na główny plik
+        std::filesystem::rename(tempFilename, filename);
+
+        std::cout << "Save successful to " << filename << "\n";
+        return true;
+
+    } catch (const std::exception& e) {
+        // spróbuj posprzątać
+        if (std::filesystem::exists(tempFilename)) {
+            try {
+                std::filesystem::remove(tempFilename);
+            } catch (...) {
+                // ignoruj błędy przy czyszczeniu; pozdro z fartem
+            }
+        }
+
+        std::cerr << "ERR: save error - " << e.what() << "\n";
+        return false;
+    }
+}
+
+bool guiClass::loadFromXML(const std::string &filename) {
+    std::string backupFilename = filename + ".bak";
+
+    auto tryLoad = [this](const std::string& fname) -> bool {
+        try {
+            std::ifstream file(fname, std::ios::binary);
+            if (!file.is_open())
+                return false;
+
+            cereal::XMLInputArchive archive(file);
+            archive(cereal::make_nvp("GuiClass", *this));
+
+            std::cout << "Loaded successfully from " << fname << "\n";
+            return true;
+
+        } catch (const std::exception& e) {
+            std::cerr << "ERR: failed to load from: " << fname << " - " << e.what() << "\n";
+            return false;
+        }
+    };
+
+    // najpierw spróbuj głównego pliku
+    if (tryLoad(filename))
+        return true;
+
+    // jeśli się nie udało, spróbuj backup
+    std::cerr << "Trying backup file...\n";
+    if (std::filesystem::exists(backupFilename))
+        return tryLoad(backupFilename);
+
+    std::cerr << "ERR: no valid save file found!\n";
+    return false;
+}
+
+
+
+void guiClass::openFileDialog() {
+    // tytuł okna; domyślna ścieżka; filtr; opcje (none = pojedynczy plik, multiselect = wiele plików)
+    auto selection = pfd::open_file(
+        "Select a file",
+        ".",
+        {"XML Files", "*.xml", "All Files", "*"},
+        pfd::opt::none
+    ).result();
+
+    if (!selection.empty()) {
+        std::string filepath = selection[0];
+        std::cout << "Selected file: " << filepath << "\n";
+
+        if (loadFromXML(filepath)) {
+            std::cout << "File loaded successfully!\n";
+            currentFilePath = filepath;
+            hasUnsavedChanges = false;
+        } else {
+            std::cerr << "ERR: failed to load file!\n";
+            // komunikat błędu
+            pfd::message("Error", "Failed to load file: " + filepath, pfd::choice::ok, pfd::icon::error);
+        }
+    } else {
+        std::cout << "No file selected\n";
+    }
+}
+
+void guiClass::saveFileDialog() {
+    // domyślna ścieżka - jeśli nie istnieje to "untitled.xml"
+    std::string defaultPath = currentFilePath.empty() ? "untitled.xml" : currentFilePath;
+    // tytuł okna; domyślna ścieżka; filtr; pytaj o nadpisanie
+    auto destination = pfd::save_file(
+        "Save file",
+        defaultPath,
+        {"XML Files", "*.xml", "All Files", "*"},
+        pfd::opt::force_overwrite
+    ).result();
+
+    if (!destination.empty()) {
+        std::string filepath = destination;
+
+        // dodaj rozszerzenie .xml jeśli nie ma
+        if (filepath.find(".xml") == std::string::npos) {
+            filepath += ".xml";
+        }
+
+        std::cout << "Save to: " << filepath << "\n";
+
+        if (saveToXML(filepath)) {
+            std::cout << "File saved successfully!\n";
+            currentFilePath = filepath;
+            hasUnsavedChanges = false;
+            // pokaż komunikat sukcesu
+            pfd::message("Success", "File saved successfully!", pfd::choice::ok, pfd::icon::info);
+        } else {
+            std::cerr << "Failed to save file!\n";
+            pfd::message("Error", "Failed to save file: " + filepath, pfd::choice::ok, pfd::icon::error);
+        }
+    } else {
+        std::cout << "Save cancelled\n";
+    }
+}
+
+void guiClass::saveFile() {
+    // jeśli nie ma aktualnej ścieżki, otwórz dialog "Save As"
+    if (currentFilePath.empty()) {
+        saveFileDialog();
+        return;
+    }
+
+    // zapisz do bieżącego pliku
+    std::cout << "Saving to: " << currentFilePath << "\n";
+
+    if (saveToXML(currentFilePath)) {
+        std::cout << "File saved successfully!\n";
+        hasUnsavedChanges = false;
+    } else {
+        std::cerr << "ERR: failed to save file!\n";
+        pfd::message("Error", "Failed to save file: " + currentFilePath, pfd::choice::ok, pfd::icon::error);
+    }
+}
+
+void guiClass::exitFile() {
+    if (hasUnsavedChanges) {
+        auto result = pfd::message(
+            "Unsaved changes",
+            "Do you want to save before exiting?",
+            pfd::choice::yes_no_cancel,
+            pfd::icon::question
+        ).result();
+
+        if (result == pfd::button::yes) {
+            saveFile();
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        } else if (result == pfd::button::no) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+        // cancel - nie rób nic
+    } else {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+}
+
+void guiClass::newFile() {
+    // wyczyść projekt
+    if (hasUnsavedChanges) {
+        // zapytaj czy zapisać przed utworzeniem nowego
+        auto result = pfd::message(
+            "Unsaved changes",
+            "Do you want to save before creating new file?",
+            pfd::choice::yes_no_cancel,
+            pfd::icon::question
+        ).result();
+
+        if (result == pfd::button::yes)
+            saveFile();
+        else if (result == pfd::button::cancel) {
+            ImGui::EndMenu();
+            // anuluj tworzenie nowego
+            return;
+        }
+    }
+
+    // i na koniec: wyczyść dane
+    model = Model();
+    currentFilePath.clear();
+    hasUnsavedChanges = false;
+}
+
+
 
 // logika czyszczenia zaznaczeń
 void guiClass::clearSelectedBlocks(const ImGuiIO &io) {
@@ -185,16 +413,44 @@ void guiClass::selectAllBlocks(const ImGuiIO& io) {
 }
 
 // włączanie i wyłączanie light mode przez CTRL+L
-void guiClass::turnLightModeOn(const ImGuiIO &io) {
+void guiClass::turnLightModeOnShortcut(const ImGuiIO &io) {
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_L, false))
         lightMode = !lightMode;
 }
 
 // włączanie i wyłączanie siatki przez CTRL+G
-void guiClass::turnGridOn(const ImGuiIO &io) {
+void guiClass::turnGridOnShortcut(const ImGuiIO &io) {
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G, false))
         gridEnabled = !gridEnabled;
 }
+
+// zapis pod CTRL+S, zapis jako pod CTRL+SHIFT+S
+void guiClass::saveStateShortcut(const ImGuiIO &io) {
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false)){
+        if (io.KeyShift)
+            saveFileDialog();
+        saveFile();
+    }
+}
+
+// wczytywanie pod CTRL+O
+void guiClass::loadStateShortcut(const ImGuiIO &io) {
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_O, false))
+        openFileDialog();
+}
+
+// wyjście pod CTRL+W
+void guiClass::exitFileShortcut(const ImGuiIO &io) {
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_W, false))
+        exitFile();
+}
+
+// nowy plik pod CTRL+N
+void guiClass::newFileShortcut(const ImGuiIO &io) {
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_N, false))
+        newFile();
+}
+
 
 
 
@@ -242,28 +498,18 @@ guiClass::DockPosition guiClass::checkDockPosition(ImVec2 windowPos, ImVec2 wind
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 displaySize = io.DisplaySize;
 
-    std::cout << "Checking dock position - windowPos: " << windowPos.x << "," << windowPos.y << " size: " << windowSize.x << "," << windowSize.y << " displaySize: " << displaySize.x << "," << displaySize.y << std::endl;
-
     // lewa krawędź
-    if (windowPos.x < dockSnapDistance) {
-        std::cout << "Should dock LEFT" << std::endl;
+    if (windowPos.x < dockSnapDistance)
         return DockPosition::Left;
-    }
     // prawą krawędź
-    if (windowPos.x + windowSize.x > displaySize.x - dockSnapDistance) {
-        std::cout << "Should dock RIGHT" << std::endl;
+    if (windowPos.x + windowSize.x > displaySize.x - dockSnapDistance)
         return DockPosition::Right;
-    }
     // górna krawędź
-    if (windowPos.y < dockSnapDistance) {
-        std::cout << "Should dock TOP" << std::endl;
+    if (windowPos.y < dockSnapDistance)
         return DockPosition::Top;
-    }
     // dolną krawędź
-    if (windowPos.y + windowSize.y > displaySize.y - dockSnapDistance) {
-        std::cout << "Should dock BOTTOM" << std::endl;
+    if (windowPos.y + windowSize.y > displaySize.y - dockSnapDistance)
         return DockPosition::Bottom;
-    }
 
     return DockPosition::None;
 }
@@ -406,7 +652,6 @@ void guiClass::zoom() {
         canvasDragging = true;
         dragStartPos = io.MousePos;
         dragStartOffset = viewOffset;
-        std::cout << "Started canvas dragging at: " << dragStartPos.x << ", " << dragStartPos.y << std::endl;
     }
 
     // kontynuacja przeciągania canvas'u
@@ -414,18 +659,15 @@ void guiClass::zoom() {
         if (ImGui::IsMouseDown(ImGuiMouseButton_Middle)) {
             ImVec2 delta = ImVec2(io.MousePos.x - dragStartPos.x, io.MousePos.y - dragStartPos.y);
             viewOffset = ImVec2(dragStartOffset.x + delta.x, dragStartOffset.y + delta.y);
-            std::cout << "Canvas dragging - delta: " << delta.x << ", " << delta.y << " offset: " << viewOffset.x << ", " << viewOffset.y << std::endl;
         } else {
             // środkowy przycisk został puszczony
             canvasDragging = false;
-            std::cout << "Stopped canvas dragging" << std::endl;
         }
     }
 
     // jeśli przeciągamy okno, zatrzymaj przeciąganie canvas'u
     if (isDraggingWindow && canvasDragging) {
         canvasDragging = false;
-        std::cout << "Canvas dragging stopped due to window dragging" << std::endl;
     }
 }
 
@@ -772,9 +1014,10 @@ void guiClass::drawConnections() {
                     if (box->getNumInputs() > 0)
                         box->connections.push_back(*dragging_from);
                 }
+
                 connected = true;
                 break;
-                }
+            }
         }
 
         dragging_from = std::nullopt;
@@ -785,9 +1028,16 @@ void guiClass::drawConnections() {
 void guiClass::drawMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open", "Ctrl+O")) { /* akcja */ }
-            if (ImGui::MenuItem("Save", "Ctrl+S")) { /* akcja */ }
-            if (ImGui::MenuItem("Exit", "Alt+F4")) { /* akcja */ }
+            if (ImGui::MenuItem("New", "Ctrl+N"))
+                newFile();
+            if (ImGui::MenuItem("Open", "Ctrl+O"))
+                openFileDialog();
+            if (ImGui::MenuItem("Save", "Ctrl+S", false, !currentFilePath.empty() || hasUnsavedChanges))
+                saveFile();
+            if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                saveFileDialog();
+            if (ImGui::MenuItem("Exit", "Ctrl+W"))
+                exitFile();
             ImGui::EndMenu();
         }
 
@@ -930,16 +1180,16 @@ void guiClass::drawMenu() {
             if (ImGui::Button("Add NOR Box"))
                 model.addBlock<logicNORBlock>();
         }
-        // bloki zwzane z HIL i coderem esp
-        if (ImGui::CollapsingHeader("ESP Coder")) {
-            if (ImGui::Button("Add ESP output"))
-                model.addBlock<ESPoutBlock>();
-            if (ImGui::Button("Add ESP input")) {
-                model.addBlock<ESPinBlock>();
+
+        #ifdef __linux__
+            // bloki zwzane z HIL i coderem esp
+            if (ImGui::CollapsingHeader("ESP Coder")) {
+                if (ImGui::Button("Add ESP output"))
+                    model.addBlock<ESPoutBlock>();
+                if (ImGui::Button("Add ESP input"))
+                    model.addBlock<ESPinBlock>();
             }
-        }
-
-
+        #endif
 
         // wysylanie danych
         if (ImGui::CollapsingHeader("Sender")) {

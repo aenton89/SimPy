@@ -1,7 +1,6 @@
 //
 // Created by patryk on 07.09.25.
 //
-
 #include <vector>
 #include "matrix_op.h"
 

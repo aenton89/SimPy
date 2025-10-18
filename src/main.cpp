@@ -1,7 +1,6 @@
 //
 // Created by tajbe on 18.04.2025.
 //
-
 #include "gui/guiClass.h"
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
