@@ -936,6 +936,9 @@ private:
     bool connected;       // flaga połączenia
 
     int selectedPort = 0;
+
+    int buffor_size = 128;
+    float sampleRate = 44100.0f;
 };
 
 #endif

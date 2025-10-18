@@ -76,6 +76,8 @@ Connection::Connection(std::shared_ptr<Block> src, int srcPort, std::shared_ptr<
 double Model::timeStep = 0.1;
 double Model::simTime = 10.0;
 
+int Model::simType = OfflineSimMode;
+
 bool Model::hasCycleDFS(int v) {
     visited[v] = true;
     inStack[v] = true;

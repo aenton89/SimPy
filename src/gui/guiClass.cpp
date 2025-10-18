@@ -1009,8 +1009,42 @@ void guiClass::drawStartButton() {
     if (ImGui::Begin("Start / Stop", nullptr, startFlags)) {
         // szerokość w pikselach
         ImGui::PushItemWidth(70.0);
-        ImGui::InputDouble("Sampling Time", &Model::timeStep);
-        ImGui::InputDouble("Simulation Time", &Model::simTime);
+
+        if (Model::simType == HilSimMode) {
+            static double samplingRate = 1000;
+            ImGui::InputDouble("Sampling Rate [Hz]", &samplingRate);
+            Model::timeStep = 1/samplingRate;
+        }
+        else {
+            static double timeStep = 0.001;
+            static double simTime = 10.0;
+            ImGui::InputDouble("Sampling Time [s]", &timeStep);
+            ImGui::InputDouble("Simulation Time [s]", &simTime);
+            Model::timeStep = timeStep;
+            Model::simTime = simTime;
+        }
+
+
+        // opcje odpowiedzilane za rodzaj symualcji
+        //ImGui::SameLine();
+        static int current_simMode = OfflineSimMode;
+        const static char* simModes[] = {"Offline Simulation", "HiL Simulation"};
+
+        if (ImGui::BeginCombo("Simulation Type: ", simModes[current_simMode], false)) {
+            for (int i = 0; i < IM_ARRAYSIZE(simModes); i++) {
+                bool is_selected = (current_simMode == i);
+                if (ImGui::Selectable(simModes[i], is_selected)) {
+                    current_simMode = i;
+                    this->model.simType = current_simMode;
+                }
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        // Sprawdzenie czy w modelu sa bloki zwazane z esp coderem. Jak tak przelaczamy tryb z symualcji na HiL (RTOS)
+
 
         // combo odpowiedialne za wybor solver i precyzje obliczen (musisz Antek zrobic templeta do tego bo ja nie umim XD)
         static int current_solver = 2;

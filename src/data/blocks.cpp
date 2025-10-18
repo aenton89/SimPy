@@ -1972,6 +1972,9 @@ void ESPinBlock::drawMenu() {
     } else {
         ImGui::TextColored(ImVec4(0,1,0,1), "ESP connected");
     }
+
+    ImGui::InputInt("Buffor Size", &buffor_size);
+    ImGui::InputFloat("Frequency [Hz]", &sampleRate);
 }
 
 

@@ -5,6 +5,9 @@
 #ifndef STRUCTURES_H
 #define STRUCTURES_H
 
+#define OfflineSimMode 0 // typowa symualja nieliniowego ODE
+#define HilSimMode 1 // Hardwer in loop (RTOS)
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -190,6 +193,7 @@ public:
     // te dwie zmainne zeby po przez menu mozna bylo ustawiac czas symuliociu i dt
     static double timeStep;
     static double simTime;
+    static int simType;
     // przeniesione z guiClass
     int next_id = 0;
 
