@@ -1,7 +1,7 @@
 //
 // Created by patryk on 23.09.25.
 //
-#include "ESP_communication.h"
+#include "ESPCommunication.h"
 
 #ifdef __linux__
     #include <dirent.h>

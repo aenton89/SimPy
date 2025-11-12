@@ -2,7 +2,7 @@
 // Created by patryk on 12.09.25.
 //
 
-#include "math_help_fun.h"
+#include "MathHelperFunctions.h"
 #include <numbers>
 
 

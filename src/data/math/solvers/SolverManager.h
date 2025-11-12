@@ -6,7 +6,7 @@
 #define SOLVERMANAGER_H
 
 #include <memory>
-#include "solver.h"
+#include "Solver.h"
 
 
 

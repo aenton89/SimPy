@@ -1,18 +1,15 @@
 //
 // Created by tajbe on 18.04.2025.
 //
-#include "gui/guiClass.h"
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
-#include <vector>
-#include <memory>
+#include "gui/GUICore.h"
 
 
 
 int main() {
     // setup glfw + open gl bedzie potrzebny tutaj
     // ---------------------------------------------------------------------------------------
-
 
     // setup windows
     if (!glfwInit())
@@ -43,9 +40,9 @@ int main() {
     // background color
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
-
     // ---------------------------------------------------------------------------------------
-    guiClass guiInterface;
+
+    GUICore guiInterface;
 
     guiInterface.init(window, glsl_version);
     while(!glfwWindowShouldClose(window)){

@@ -2,7 +2,7 @@
 // Created by tajbe on 16.09.2025.
 //
 
-#include "solverManager.h"
+#include "SolverManager.h"
 
 
 

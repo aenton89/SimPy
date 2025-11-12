@@ -5,7 +5,7 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#include "../matrix_operation/matrix_op.h"
+#include "../matrix_operation/MatrixOperations.h"
 #include "ISolverMethod.h"
 
 

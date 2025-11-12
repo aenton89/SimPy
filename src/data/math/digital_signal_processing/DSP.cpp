@@ -6,7 +6,7 @@
 // std::setprecision, std::fixed
 #include <iomanip>
 #include "DSP.h"
-#include "math/math_help_fun/math_help_fun.h"
+#include "math/math_help_fun/MathHelperFunctions.h"
 
 using cd = std::complex<double>;
 
