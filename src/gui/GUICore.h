@@ -51,9 +51,6 @@ public:
     // awkward ale chyba tu zostanie xddd
     void drawMenuBar();
 
-    // inicjalizacja modułów - przenieść do konstruktora
-    // void initChilds();
-
     // nowe manager'y
     DockableWindowManager dockingManager;
     FileManager fileManager;

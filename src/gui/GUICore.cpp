@@ -63,21 +63,7 @@ void GUICore::init(GLFWwindow* win, const char* version) {
     style.Colors[ImGuiCol_WindowBg] = gray;
     style.Colors[ImGuiCol_ChildBg] = gray;
     style.Colors[ImGuiCol_PopupBg]= gray;
-
-    // TODO: DockingManager
-    // initChilds();
-    // TODO: DockingManager - END
 }
-
-// TODO: nowe Manager'y
-// void GUICore::initChilds() {
-//     dockingManager.setGUICore(this);
-//     fileManager.setGUICore(this);
-//     viewportManager.setGUICore(this);
-//     blocksManager.setGUICore(this);
-//     connectionManager.setGUICore(this);
-// }
-// TODO: nowe Manager'y - END
 
 void GUICore::newFrame() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -151,6 +137,18 @@ void GUICore::update() {
     viewportManager.drawGrid();
 }
 
+void GUICore::render() {
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void GUICore::shutdown() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    ImPlot::DestroyContext();
+}
+
 void GUICore::drawMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -194,16 +192,4 @@ void GUICore::drawMenuBar() {
 
         ImGui::EndMainMenuBar();
     }
-}
-
-void GUICore::render() {
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void GUICore::shutdown() {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    ImPlot::DestroyContext();
 }
