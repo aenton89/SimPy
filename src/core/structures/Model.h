@@ -105,6 +105,10 @@ public:
     void setSolver(std::shared_ptr<Solver> solver);
     void cleanSolver();
 
+    // pod dodanie węzłów do krzywych
+    Connection* findConnection(std::shared_ptr<Block> source, std::shared_ptr<Block> target);
+    std::shared_ptr<Block> findBlockById(int id) const;
+
     // dla serializacji
     template<class Archive>
     void serialize(Archive& ar) {

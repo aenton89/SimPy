@@ -200,4 +200,19 @@ void Model::cleanSolver() {
     solver.reset();
 }
 
+Connection* Model::findConnection(std::shared_ptr<Block> source, std::shared_ptr<Block> target) {
+    for (auto& conn : connections) {
+        if (conn.sourceBlock == source && conn.targetBlock == target)
+            return &conn;
+    }
+    return nullptr;
+}
+
+std::shared_ptr<Block> Model::findBlockById(int id) const {
+    for (auto& block : blocks) {
+        if (block->id == id)
+            return block;
+    }
+    return nullptr;
+}
 

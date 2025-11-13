@@ -243,12 +243,12 @@ void BlocksManager::drawBlock(Block& box) {
     if (!isDraggingWindow || draggedWindowId != box.id) {
         if (isClicked && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             if (box.getNumOutputs() > 0)
-                guiCore->connectionManager.dragging_from = box.id;
+                guiCore->connectionManager.draggingFrom = box.id;
         }
 
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             if (box.getNumOutputs() > 0)
-                guiCore->connectionManager.dragging_from = box.id;
+                guiCore->connectionManager.draggingFrom = box.id;
         }
     }
 

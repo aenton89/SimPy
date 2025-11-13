@@ -9,19 +9,10 @@
 #include <iostream>
 #include <cmath>
 #include <imgui.h>
-#include <cereal/types/vector.hpp>
 #include <cereal/types/memory.hpp>
 #include <cereal/archives/json.hpp>
-#include <cereal/archives/binary.hpp>
 #include <cereal/types/array.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
 #include <cereal/types/complex.hpp>
-// dla serializacji - pod polimorfizm
-#include <cereal/types/polymorphic.hpp>
-// dla serializacji pointer'ów
-#include <cereal/types/memory.hpp>
-#include "../../data/math/solvers/SolverManager.h"
 #include "BasicBlock.h"
 
 
@@ -36,6 +27,8 @@ struct Connection {
 	int sourcePort;
 	std::shared_ptr<Block> targetBlock;
 	int targetPort;
+	// dodatkowe węzły kontrolne na krzywej (punkty do manipulacji)
+	std::vector<ImVec2> controlNodes;
 
 	// konstruktor
 	Connection() = default;
@@ -48,5 +41,21 @@ struct Connection {
 		   CEREAL_NVP(sourcePort),
 		   CEREAL_NVP(targetBlock),
 		   CEREAL_NVP(targetPort));
+
+		// jeszcze zapis controlNodes
+		if constexpr (Archive::is_saving::value) {
+			std::vector<std::array<float, 2>> temp;
+			temp.reserve(controlNodes.size());
+			for (auto& v : controlNodes)
+				temp.push_back({v.x, v.y});
+			ar(cereal::make_nvp("controlNodes", temp));
+		} else {
+			std::vector<std::array<float, 2>> temp;
+			ar(cereal::make_nvp("controlNodes", temp));
+			controlNodes.clear();
+			controlNodes.reserve(temp.size());
+			for (auto& t : temp)
+				controlNodes.emplace_back(t[0], t[1]);
+		}
 	}
 };

@@ -6,6 +6,8 @@
 #include <imgui.h>
 #include <optional>
 #include <cereal/archives/xml.hpp>
+#include "../core/structures/BasicBlock.h"
+#include "../core/structures/Connection.h"
 
 class GUICore;
 
@@ -37,6 +39,16 @@ static ImVec2 BezierCubicCalc(const ImVec2& p1, const ImVec2& c1, const ImVec2& 
 	return result;
 }
 
+/*
+ * pomocnicza struktura do przechowywania informacji o węźle w krzywej
+ */
+struct DraggingNode {
+	// wskaźnik do Connection w Model
+	Connection* connection;
+	// indeks węzła w controlNodes
+	int nodeIndex;
+};
+
 
 
 /*
@@ -44,10 +56,18 @@ static ImVec2 BezierCubicCalc(const ImVec2& p1, const ImVec2& c1, const ImVec2& 
  */
 class ConnectionManager {
 private:
-	class GUICore* guiCore = nullptr;
+	GUICore* guiCore = nullptr;
+
+	// jakieś helpery
+	ImVec2 worldToScreen(const ImVec2& worldPos) const;
+	ImVec2 screenToWorld(const ImVec2& screenPos) const;
+	void drawSingleConnection(Connection& conn, const ImVec2& mousePos, const ImVec2& mousePosWorld, ImDrawList* drawList);
+	void handleNodeDragging(const ImVec2& mousePosWorld);
+	void handleConnectionCreation(const ImVec2& mousePos, ImDrawList* drawList);
 
 public:
-	std::optional<int> dragging_from;
+	std::optional<int> draggingFrom;
+	std::optional<DraggingNode> draggingNode;
 
 	void setGUICore(GUICore* gui);
 
@@ -57,7 +77,8 @@ public:
 	void serialize(Archive& ar) {
 		if constexpr (Archive::is_loading::value) {
 			// reset runtime state
-			dragging_from.reset();
+			draggingFrom.reset();
+			draggingNode.reset();
 		}
 	}
 };
