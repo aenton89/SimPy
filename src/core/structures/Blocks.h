@@ -12,13 +12,14 @@
 #include <filesystem>
 #include <fstream>
 
-#include "structures.h"
-#include "data_sender/data_channel_manager.h"
-#include "data_sender/ESP_communication.h"
-#include "math/matrix_operation/matrix_op.h"
-#include "math/digital_signal_processing/DSP.h"
-#include "math/math_help_fun/math_help_fun.h"
-#include "math/solvers/solverMethod.h"
+#include "BasicBlock.h"
+#include "Model.h"
+#include "../../data/data_sender/DataChannelManager.h"
+#include "../../data/data_sender/ESPCommunication.h"
+#include "../../data/math/matrix_operation/MatrixOperations.h"
+#include "../../data/math/digital_signal_processing/DSP.h"
+#include "../../data/math/math_help_fun/MathHelperFunctions.h"
+#include "../../data/math/solvers/SolverMethod.h"
 #include <cereal/archives/xml.hpp>
 
 #if defined(__unix__) || defined(__APPLE__)

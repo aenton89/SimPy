@@ -1,7 +1,7 @@
 //
 // Created by tajbe on 24.03.2025.
 //
-#include "blocks.h"
+#include "Blocks.h"
 #include <sstream>
 #include <cmath>
 #include <numbers>
