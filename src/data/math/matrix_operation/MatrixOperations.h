@@ -39,6 +39,38 @@ namespace MatOp {
                CEREAL_NVP(x));
         }
     };
+
+    // lekka inplemntacja macierzy w cpp
+    class Matrix {
+    public:
+        Matrix() = delete;
+
+        Matrix(std::size_t rows, std::size_t cols);
+
+        Matrix(Matrix &&) noexcept = default;
+
+        Matrix &operator=(Matrix &&) noexcept = default;
+
+        Matrix &operator=(const Matrix &) = default;
+
+        void setData(std::vector<double> data);
+
+        unsigned int getRows() const;
+        unsigned int getCols() const;
+        double* getData();
+        const double* getData() const;
+
+        // do debugowania
+        void PrintData() const;
+    private:
+        std::size_t rows;
+        std::size_t cols;
+        std::vector<double> data_;
+    };
+
+    Matrix CPUMatMul(const Matrix& A, const Matrix& B);
+    Matrix CPUMatAdd(const Matrix& A , const Matrix& B);
+    Matrix CPUMatMulScalar(const Matrix& A, double s);
 }
 
 #endif //MATRIX_OP_H
