@@ -44,7 +44,7 @@ void Model::updateAdjacencyMatrix() {
     }
 }
 
-int Model::getBlockIndex(std::shared_ptr<Block> block) const {
+int Model::getBlockIndex(const std::shared_ptr<Block> &block) const {
     for (size_t i = 0; i < blocks.size(); i++) {
         if (blocks[i] == block) {
             return static_cast<int>(i);
@@ -53,7 +53,7 @@ int Model::getBlockIndex(std::shared_ptr<Block> block) const {
     return -1;
 }
 
-bool Model::connect(std::shared_ptr<Block> source, int sourcePort, std::shared_ptr<Block> target, int targetPort) {
+bool Model::connect(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort) {
     if (!source || !target)
         return false;
     if (sourcePort < 0 || sourcePort >= source->getNumOutputs())
@@ -83,17 +83,16 @@ void Model::makeConnections() {
     for (auto& boxPtr : blocks) {
         boxPtr->numConnected = 0; // reset licznika!
         for (auto connId : boxPtr->connections) {
-            auto it = std::find_if(blocks.begin(), blocks.end(),
-                [connId](const std::shared_ptr<Block>& b) {
-                    return b->id == connId;
-                });
+            auto it = std::ranges::find_if(blocks,
+                                           [connId](const std::shared_ptr<Block>& b) {
+                                               return b->id == connId;
+                                           });
 
             if (it != blocks.end()) {
-                auto connectedBlock = *it;
+                const auto& connectedBlock = *it;
                 connect(connectedBlock, 0, boxPtr, boxPtr->numConnected);
                 boxPtr->numConnected++;
-                // std::cout << "Connected block " << boxPtr->id
-                //           << " to block " << connectedBlock->id << std::endl;
+                // std::cout << "Connected block " << boxPtr->id << " to block " << connectedBlock->id << std::endl;
             } else {
                 std::cerr << "Warning: Block with ID " << connId << " not found.\n";
             }
@@ -119,13 +118,13 @@ bool Model::hasCycles() {
     return false;
 }
 
-void Model::simulate() {
+void Model::simulate() const {
    // std::cout<<"simulate() called"<<std::endl;
-    if (connections.size() > 0) {
+    if (!connections.empty()) {
         //std::cout<<"connections.size() > 0"<<std::endl;
         // jeśli mamy cykle, W TEORII potrzebna jest specjalna obsługa (np. iteracyjne rozwiązanie) -> ALE narazie ignorujemy problem
         // bo i tak w naszym przypadku cykle są na sprzężeniach zwrotnych, a w nich ustaliliśmy, że wstawiamy 0.0
-        //bool hasCyclesInModel = hasCycles();
+        // bool hasCyclesInModel = hasCycles();
 
         // zbieranie wejść dla każdego bloku
         for (const auto& conn : connections) {
@@ -135,20 +134,20 @@ void Model::simulate() {
 
         // przetwarzanie bloków
         for (auto& block : blocks) {
-            //std::cout<<"Processing block ID: " << block->getId() << std::endl;
+            // std::cout<<"Processing block ID: " << block->getId() << std::endl;
             block->process();
         }
 
         // jeśli mamy cykle, możemy potrzebować dodatkowych iteracji do zbieżności
         // ALE, ignorujemy, tho zostawiam komentarz i bloczek warunkowy na przyszłość
-        //if (hasCyclesInModel) {
+        // if (hasCyclesInModel) {
             // tutaj np. implementacja iteracyjnego rozwiązania dla cykli
             // np. powtórz symulację kilka razy, aż do osiągnięcia zbieżności
         //}
     }
 }
 
-void Model::simulateMultipleSteps(int steps) {
+void Model::simulateMultipleSteps(int steps) const {
     for (int i = 0; i < steps; i++) {
         simulate();
     }
@@ -171,20 +170,19 @@ const std::vector<Connection>& Model::getConnections() const {
 }
 
 void Model::removeBlock(int removeId) {
-    blocks.erase(std::remove_if(blocks.begin(), blocks.end(),
-        [removeId](const std::shared_ptr<Block>& block) {
-            return block->getId() == removeId;
-        }), blocks.end());
+    std::erase_if(blocks, [removeId](const std::shared_ptr<Block>& block) {
+                    return block->getId() == removeId;
+                });
 }
 
-void Model::cleanupAfter() {
+void Model::cleanupAfter() const {
     for (auto& block : blocks) {
         // resetujemy stan każdego bloku
         block->resetAfter();
     }
 }
 
-void Model::cleanupBefore() {
+void Model::cleanupBefore() const {
     for (auto& block : blocks) {
         // resetujemy stan każdego bloku
         block->resetBefore();
@@ -200,7 +198,7 @@ void Model::cleanSolver() {
     solver.reset();
 }
 
-Connection* Model::findConnection(std::shared_ptr<Block> source, std::shared_ptr<Block> target) {
+Connection* Model::findConnection(const std::shared_ptr<Block> &source, const std::shared_ptr<Block> &target) {
     for (auto& conn : connections) {
         if (conn.sourceBlock == source && conn.targetBlock == target)
             return &conn;

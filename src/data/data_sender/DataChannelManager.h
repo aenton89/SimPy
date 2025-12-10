@@ -1,12 +1,7 @@
 //
 // Created by tajbe on 21.08.2025.
 //
-#ifndef DATA_CHANNEL_MANAGER_H
-#define DATA_CHANNEL_MANAGER_H
-
-#include <vector>
-#include <string>
-#include <memory>
+#pragma once
 
 #ifdef _WIN32
     #define NOMINMAX
@@ -14,6 +9,9 @@
 #else
     #include <unistd.h>
 #endif
+// #include <vector>
+// #include <string>
+// #include <memory>
 
 
 
@@ -49,10 +47,9 @@ public:
     // close connection
     void close();
     // check if connected
+    [[nodiscard]]
     bool isConnected() const { return is_connected; }
     // get last error message
+    [[nodiscard]]
     std::string getLastError() const;
 };
-
-
-#endif // DATA_CHANNEL_MANAGER_H

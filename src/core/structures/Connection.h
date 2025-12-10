@@ -3,17 +3,11 @@
 //
 #pragma once
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <iostream>
-#include <cmath>
-#include <imgui.h>
-#include <cereal/types/memory.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/types/array.hpp>
-#include <cereal/types/complex.hpp>
 #include "BasicBlock.h"
+// #include <imgui.h>
+// #include <vector>
+// #include <memory>
+// #include <cereal/types/array.hpp>
 
 
 
@@ -24,9 +18,9 @@
  */
 struct Connection {
 	std::shared_ptr<Block> sourceBlock;
-	int sourcePort;
+	int sourcePort{};
 	std::shared_ptr<Block> targetBlock;
-	int targetPort;
+	int targetPort{};
 	// dodatkowe węzły kontrolne na krzywej (punkty do manipulacji)
 	std::vector<ImVec2> controlNodes;
 
@@ -42,6 +36,7 @@ struct Connection {
 		   CEREAL_NVP(targetBlock),
 		   CEREAL_NVP(targetPort));
 
+		// TODO: przenieść do ConectionManager
 		// jeszcze zapis controlNodes
 		if constexpr (Archive::is_saving::value) {
 			std::vector<std::array<float, 2>> temp;

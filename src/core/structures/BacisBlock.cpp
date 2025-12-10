@@ -1,7 +1,6 @@
 //
 // Created by tajbe on 24.03.2025.
 //
-
 #include "BasicBlock.h"
 
 
@@ -9,7 +8,7 @@
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // implementacja metod klasy Block
 Block::Block(int _id, int _numInputs, int _numOutputs, bool _has_menu)
-    : id(_id), numInputs(_numInputs), numOutputs(_numOutputs), has_menu(_has_menu) {
+    : numInputs(_numInputs), numOutputs(_numOutputs), has_menu(_has_menu), id(_id) {
     inputValues.resize(numInputs, 0.0);
     outputValues.resize(numOutputs, 0.0);
 }

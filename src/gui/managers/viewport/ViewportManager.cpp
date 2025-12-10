@@ -2,13 +2,10 @@
 // Created by tajbe on 07.11.2025.
 //
 #include "ViewportManager.h"
-#include "../GUICore.h"
+#include "../../GUICore.h"
+#include "../../ui/UIStyles.h"
 
 
-
-void ViewportManager::setGUICore(GUICore *gui) {
-	guiCore = gui;
-}
 
 void ViewportManager::zoomAndPanning() {
 	ImGuiIO& io = ImGui::GetIO();
@@ -60,7 +57,7 @@ void ViewportManager::zoomAndPanning() {
 	}
 }
 
-void ViewportManager::drawGrid() {
+void ViewportManager::drawGrid() const {
     if (!guiCore->uiPreferences.gridEnabled)
         return;
 
@@ -100,7 +97,7 @@ void ViewportManager::drawGrid() {
     }
 
     // apply alpha to grid color
-    ImU32 faded_color = (guiCore->uiPreferences.gridColor & 0x00FFFFFF) | ((int)(((guiCore->uiPreferences.gridColor >> 24) & 0xFF) * alpha_factor) << 24);
+    ImU32 faded_color = (guiCore->uiPreferences.gridColor & 0x00FFFFFF) | (static_cast<int>(((guiCore->uiPreferences.gridColor >> 24) & 0xFF) * alpha_factor) << 24);
 
     // skip drawing if too faded
     if (alpha_factor < 0.1f)
@@ -137,7 +134,7 @@ void ViewportManager::drawGrid() {
     }
 }
 
-void ViewportManager::lightMode() {
+void ViewportManager::lightMode() const {
     if (guiCore->uiPreferences.lightMode)
         UIStyles::applyLightStyle();
     else
@@ -145,13 +142,13 @@ void ViewportManager::lightMode() {
 }
 
 // włączanie i wyłączanie light mode przez CTRL+L
-void ViewportManager::turnLightModeOnShortcut(const ImGuiIO &io) {
+void ViewportManager::turnLightModeOnShortcut(const ImGuiIO &io) const {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_L, false))
 		guiCore->uiPreferences.lightMode = !guiCore->uiPreferences.lightMode;
 }
 
 // włączanie i wyłączanie siatki przez CTRL+G
-void ViewportManager::turnGridOnShortcut(const ImGuiIO &io) {
+void ViewportManager::turnGridOnShortcut(const ImGuiIO &io) const {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G, false))
 		guiCore->uiPreferences.gridEnabled = !guiCore->uiPreferences.gridEnabled;
 }

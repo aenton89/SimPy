@@ -1,11 +1,11 @@
 //
 // Created by patryk on 07.09.25.
 //
-
-#ifndef SOLVERMETHOD_H
-#define SOLVERMETHOD_H
+#pragma once
 
 #include "ISolverMethod.h"
+// #include <cereal/types/polymorphic.hpp>
+// #include <cereal/types/base_class.hpp>
 
 #define REGISTER_SOLVER_TYPE(T) CEREAL_REGISTER_TYPE(T) CEREAL_REGISTER_POLYMORPHIC_RELATION(ISolverMethod, T)
 
@@ -37,5 +37,3 @@ public:
     template <class Archive>
     void serialize(Archive&) {}
 };
-
-#endif //SOLVERMETHOD_H

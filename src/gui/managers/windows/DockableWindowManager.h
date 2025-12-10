@@ -3,12 +3,12 @@
 //
 #pragma once
 
-#include <imgui.h>
-#include <vector>
-#include <cereal/archives/xml.hpp>
 #include <thread>
+#include "managers/BasicManager.h"
+// #include <imgui.h>
+// #include <vector>
+// #include <cereal/archives/xml.hpp>
 
-class GUICore;
 class Model;
 
 
@@ -16,8 +16,8 @@ class Model;
 /*
  * helper structs, classes and constats required for docking
  */
-const ImVec2 DEFAULT_DOCKED_START_SIZE = ImVec2(195, 180);
-const ImVec2 DEFAULT_DOCKED_MENU_SIZE = ImVec2(245, 200);
+constexpr ImVec2 DEFAULT_DOCKED_START_SIZE = ImVec2(195, 180);
+constexpr ImVec2 DEFAULT_DOCKED_MENU_SIZE = ImVec2(245, 200);
 
 enum class DockableWindowType {
 	Menu,
@@ -64,30 +64,28 @@ struct DockableWindow {
 /*
  * manages windows which dock to screen edges with snap functionality
  */
-class DockableWindowManager {
+class DockableWindowManager : public BasicManager {
 private:
-	// forward declaration + wskaźnik do rodzica
-	class GUICore* guiCore = nullptr;
-
 	DockableWindow menuWindow;
 	DockableWindow startWindow;
 	std::vector<DockableWindow> dockedWindows;
 	// odległość od krawędzi do snap'owania
 	float dockSnapDistance = 50.0f;
 
-	ImVec2 calculateDockedPosition(DockPosition position, DockableWindowType windowType);
-	ImVec2 calculateDockedSize(DockPosition position, DockableWindowType windowType);
-	DockPosition checkDockPosition(ImVec2 windowPos, ImVec2 windowSize);
+	[[nodiscard]]
+	DockPosition checkDockPosition(ImVec2 windowPos, ImVec2 windowSize) const;
+	[[nodiscard]]
+	ImVec2 calculateDockedPosition(DockPosition position, DockableWindowType windowType) const;
+	static ImVec2 calculateDockedSize(DockPosition position, DockableWindowType windowType);
 
 public:
-	// i funkcja która go ustawi
-	void setGUICore(GUICore* gui);
-
 	void drawStartButton();
 	void drawMenu();
 
 	template<class Archive>
 	void serialize(Archive& ar) {
+		ar(cereal::base_class<BasicManager>(this));
+
 		ar(CEREAL_NVP(menuWindow),
 		   CEREAL_NVP(startWindow),
 		   CEREAL_NVP(dockedWindows),

@@ -4,19 +4,18 @@
 #include "Blocks.h"
 #include <sstream>
 #include <cmath>
-#include <numbers>
-#include <complex>
 #include <algorithm>
-#include <fstream>
 #include <numeric>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
+#include "../../data/data_sender/ESPCommunication.h"
+#include "../../data/math/math_help_fun/MathHelperFunctions.h"
 #ifdef __linux__
     #include <termios.h>
     #include <unistd.h>
 #endif
+// #include <implot.h>
 // w tym pliku są implementacje specyficznych bloków
 
 
@@ -73,8 +72,8 @@ void SumBlock::drawMenu() {
 }
 
 void SumBlock::resetBefore() {
-    std::fill(inputValues.begin(), inputValues.end(), 0);
-    std::fill(outputValues.begin(), outputValues.end(), 0);
+    std::ranges::fill(inputValues, 0);
+    std::ranges::fill(outputValues, 0);
 }
 
 
@@ -106,8 +105,8 @@ void MultiplyBlock::drawMenu() {
 }
 
 void MultiplyBlock::resetBefore() {
-    std::fill(inputValues.begin(), inputValues.end(), 0);
-    std::fill(outputValues.begin(), outputValues.end(), 0);
+    std::ranges::fill(inputValues, 0);
+    std::ranges::fill(outputValues, 0);
 }
 
 
@@ -472,7 +471,7 @@ void WhiteNoiseInputBlock::drawMenu() {
         distribution = std::normal_distribution<double>(mean, std);
     if (ImGui::InputDouble("Std", &std))
         distribution = std::normal_distribution<double>(mean, std);
-    if (ImGui::InputDouble("Seed", &seed));
+    if (ImGui::InputDouble("Seed", &seed))
         generator.seed(seed);
 }
 
@@ -508,7 +507,7 @@ PlotBlock::PlotBlock(int _id) : BlockCloneable(_id, 1, 0, true) {
     size = ImVec2(350, 200);
     data.resize(numInputs);
     for (auto& arr : data) {
-        std::fill(arr.begin(), arr.end(), 0.0f);
+        std::ranges::fill(arr, 0.0f);
     }
 }
 
@@ -530,7 +529,7 @@ void PlotBlock::process() {
 
 
 void PlotBlock::resetBefore() {
-    std::fill(inputValues.begin(), inputValues.end(), 0);
+    std::ranges::fill(inputValues, 0);
 
     x_limMax = 0;
     y_limMin = -1.0f;
@@ -628,7 +627,7 @@ void PlotXYBlock::process() {
     }
 
     // zapisz nową próbkę
-    if (sampleIndex < (int)data[0].size()) {
+    if (sampleIndex < static_cast<int>(data[0].size())) {
         data[0][sampleIndex] = x;
         data[1][sampleIndex] = y;
         sampleIndex++;
@@ -670,7 +669,7 @@ void PlotXYBlock::drawMenu() {
             data.resize(numInputs);
             inputValues.resize(numInputs);
             for (int i = 0; i < numInputs; ++i) {
-                std::fill(data[i].begin(), data[i].end(), 0.0f);
+                std::ranges::fill(data[i], 0.0f);
             }
         }
     }
@@ -948,10 +947,10 @@ void TransferFuncionContinous::process() {
 
 
 void TransferFuncionContinous::resetBefore() {
-    for (int i = 0; i < outputValues.size(); i++) {
-        outputValues[i] = 0.0;
+    for (double & outputValue : outputValues) {
+        outputValue = 0.0;
     }
-    std::fill(ss.x.begin(), ss.x.end(), 0.0);
+    std::ranges::fill(ss.x, 0.0);
 }
 
 
@@ -1215,14 +1214,14 @@ void filterImplementationBlock::drawContent() {
 
 void filterImplementationBlock::drawBodePlot(const dsp::Bode& bode) {
     // wykres modułu
-    double min_omega = *std::min_element(bode.omega.begin(), bode.omega.end());
-    double max_omega = *std::max_element(bode.omega.begin(), bode.omega.end());
+    double min_omega = *std::ranges::min_element(bode.omega);
+    double max_omega = *std::ranges::max_element(bode.omega);
 
-    double min_mag = *std::min_element(bode.magnitude.begin(), bode.magnitude.end());
-    double max_mag = *std::max_element(bode.magnitude.begin(), bode.magnitude.end());
+    double min_mag = *std::ranges::min_element(bode.magnitude);
+    double max_mag = *std::ranges::max_element(bode.magnitude);
 
-    double min_phase = *std::min_element(bode.phase.begin(), bode.phase.end());
-    double max_phase = *std::max_element(bode.phase.begin(), bode.phase.end());
+    double min_phase = *std::ranges::min_element(bode.phase);
+    double max_phase = *std::ranges::max_element(bode.phase);
 
     if (ImPlot::BeginPlot("Bode Diagram")) {
         ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
@@ -1232,7 +1231,7 @@ void filterImplementationBlock::drawBodePlot(const dsp::Bode& bode) {
         ImPlot::SetupAxisLimits(ImAxis_X1, min_omega - 0.1*min_omega, max_omega + 0.1*max_omega, ImGuiCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, min_mag - 0.1*min_mag, max_mag + 0.1*max_mag, ImGuiCond_Always);
 
-        ImPlot::PlotLine("Magnitude", bode.omega.data(), bode.magnitude.data(), (int)bode.omega.size());
+        ImPlot::PlotLine("Magnitude", bode.omega.data(), bode.magnitude.data(), static_cast<int>(bode.omega.size()));
         ImPlot::EndPlot();
     }
 
@@ -1245,7 +1244,7 @@ void filterImplementationBlock::drawBodePlot(const dsp::Bode& bode) {
         ImPlot::SetupAxisLimits(ImAxis_X1, min_omega - 0.1*min_omega, max_omega + 0.1*max_omega, ImGuiCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, min_phase - 0.1*min_phase, max_phase + 0.1*max_phase, ImGuiCond_Always);
 
-        ImPlot::PlotLine("Phase", bode.omega.data(), bode.phase.data(), (int)bode.omega.size());
+        ImPlot::PlotLine("Phase", bode.omega.data(), bode.phase.data(), static_cast<int>(bode.omega.size()));
         ImPlot::EndPlot();
     }
 }
@@ -1364,7 +1363,7 @@ void filterImplementationBlock::resetBefore() {
         outputValues[i] = 0.0;
         inputValues[i] = 0.0;
     }
-    std::fill(ss.x.begin(), ss.x.end(), 0.0);
+    std::ranges::fill(ss.x, 0.0);
 }
 
 
@@ -1417,7 +1416,7 @@ void medianFilter1DBlock::drawMenu() {
 }
 
 double Median(std::vector<double>& vec) {
-    std::sort(vec.begin(), vec.end());
+    std::ranges::sort(vec);
 
     size_t size = vec.size();
 
@@ -1575,8 +1574,8 @@ void GainBlock::drawMenu() {
 }
 
 void GainBlock::resetBefore() {
-    std::fill(inputValues.begin(), inputValues.end(), 0);
-    std::fill(outputValues.begin(), outputValues.end(), 0);
+    std::ranges::fill(inputValues, 0);
+    std::ranges::fill(outputValues, 0);
 }
 
 
@@ -1831,12 +1830,10 @@ void DataSenderBlock::resetBefore() {
 
 void DataSenderBlock::resetAfter() {
     // wyślij dane do Pythona
-    if (dataManager && dataManager->isConnected()) {
-        if (!dataManager->sendData(data, dt, simTime)) {
-            std::cerr << "[DataSender " << id << "] Failed to send data" << std::endl;
-            // spróbuj ponownie połączyć przy następnym wywołaniu
-            isInitialized = false;
-        }
+    if (dataManager && dataManager->isConnected() && !dataManager->sendData(data, dt, simTime)) {
+        std::cerr << "[DataSender " << id << "] Failed to send data" << std::endl;
+        // spróbuj ponownie połączyć przy następnym wywołaniu
+        isInitialized = false;
     }
 
     // // nie wiem czy będzie potrzebne, ale - wysyłanie pustego pakietu jako reset

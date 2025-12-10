@@ -3,23 +3,20 @@
 //
 #pragma once
 
-#include <imgui.h>
 #include <set>
-#include <cereal/archives/xml.hpp>
-#include "../../core/structures/Blocks.h"
-#include "../../core/structures/Model.h"
-
-class GUICore;
+#include "../../../core/structures/Blocks.h"
+#include "../../../core/structures/Model.h"
+#include "managers/BasicManager.h"
+// #include <imgui.h>
+// #include <cereal/types/set.hpp>
+// #include <cereal/archives/xml.hpp>
 
 
 
 /*
  * manages blocks operations - moving, selection and overall existence
  */
-class BlocksManager {
-private:
-	class GUICore* guiCore = nullptr;
-
+class BlocksManager : public BasicManager {
 public:
 	// dla zaznaczania wielu box'ów
 	std::set<int> selectedBlocks;
@@ -32,8 +29,6 @@ public:
 	bool isDraggingWindow = false;
 	int draggedWindowId = -1;
 
-	void setGUICore(GUICore* gui);
-
 	// drawing blocks
 	void drawBlock(Block& box);
 	// moving, selection
@@ -44,6 +39,8 @@ public:
 
 	template<class Archive>
 	void serialize(Archive& ar) {
+		ar(cereal::base_class<BasicManager>(this));
+
 		ar(CEREAL_NVP(selectedBlocks),
 		   CEREAL_NVP(isMultiSelectMode));
 

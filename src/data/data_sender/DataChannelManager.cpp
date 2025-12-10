@@ -1,14 +1,12 @@
 //
 // Created by tajbe on 21.08.2025.
 //
-
 #include "DataChannelManager.h"
 #include <sstream>
 #include <iomanip>
 #include <cstring>
 #include <iostream>
 #include <fcntl.h>
-#include <sys/stat.h>
 
 
 
@@ -57,7 +55,7 @@ bool DataChannelManager::initialize(const std::string& pipeName) {
         65536,                                   // rozmiar bufora wyjściowego
         65536,                                   // rozmiar bufora wejściowego
         0,                                       // domyślny timeout
-        NULL                                     // domyślne atrybuty bezpieczeństwa
+        nullptr        // domyślne atrybuty bezpieczeństwa
     );
 
     if (hPipe == INVALID_HANDLE_VALUE) {
@@ -70,7 +68,7 @@ bool DataChannelManager::initialize(const std::string& pipeName) {
     std::cout << "Waiting for Python client to connect..." << std::endl;
 
     // czekaj na połączenie klienta (Python)
-    BOOL connected = ConnectNamedPipe(hPipe, NULL);
+    BOOL connected = ConnectNamedPipe(hPipe, nullptr);
 
     if (!connected) {
         DWORD error = GetLastError();
@@ -147,7 +145,7 @@ bool DataChannelManager::sendData(const std::vector<double>& data, float dt, flo
         jsonData.c_str(),
         static_cast<DWORD>(jsonData.length()),
         &bytesWritten,
-        NULL
+        nullptr
     );
 
     if (!success || bytesWritten != jsonData.length()) {
@@ -210,8 +208,8 @@ std::string DataChannelManager::getLastError() const {
     LPSTR messageBuffer = nullptr;
     size_t size = FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR)&messageBuffer, 0, NULL
+        nullptr, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        reinterpret_cast<LPSTR>(&messageBuffer), 0, nullptr
     );
 
     std::string message(messageBuffer, size);

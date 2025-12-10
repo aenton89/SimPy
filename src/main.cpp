@@ -16,14 +16,14 @@ int main() {
         return 1;
 
     // GL 3.0 + GLSL
-    const char *glsl_version = "#version 130";
+    auto glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
 
     // create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "SimPy", NULL, NULL);
-    if (window == NULL)
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "SimPy", nullptr, nullptr);
+    if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
 
@@ -31,8 +31,8 @@ int main() {
     glfwSwapInterval(1);
 
     // tie window context to glad's openGL loader
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        throw("unable to context to openGL");
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+        throw std::runtime_error("unable to context to openGL");
 
     int screen_width, screen_height;
     glfwGetWindowSize(window, &screen_width, &screen_height);

@@ -1,15 +1,10 @@
 //
 // Created by patryk on 07.09.25.
 //
+#pragma once
 
-#ifndef MATRIX_OP_H
-#define MATRIX_OP_H
-
-#include <vector>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/binary.hpp>
+// #include <vector>
+// #include <cereal/cereal.hpp>
 
 
 
@@ -44,24 +39,21 @@ namespace MatOp {
     class Matrix {
     public:
         Matrix() = delete;
-
         Matrix(std::size_t rows, std::size_t cols);
-
         Matrix(Matrix &&) noexcept = default;
 
         Matrix &operator=(Matrix &&) noexcept = default;
-
         Matrix &operator=(const Matrix &) = default;
 
-        void setData(std::vector<double> data);
 
-        unsigned int getRows() const;
-        unsigned int getCols() const;
+        void setData(const std::vector<double> &data);
         double* getData();
         const double* getData() const;
+        unsigned int getRows() const;
+        unsigned int getCols() const;
 
         // do debugowania
-        void PrintData() const;
+        void printData() const;
     private:
         std::size_t rows;
         std::size_t cols;
@@ -72,5 +64,3 @@ namespace MatOp {
     Matrix CPUMatAdd(const Matrix& A , const Matrix& B);
     Matrix CPUMatMulScalar(const Matrix& A, double s);
 }
-
-#endif //MATRIX_OP_H

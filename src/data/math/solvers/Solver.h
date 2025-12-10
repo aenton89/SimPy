@@ -1,9 +1,7 @@
 //
 // Created by patryk on 07.09.25.
 //
-
-#ifndef SOLVER_H
-#define SOLVER_H
+#pragma once
 
 #include "../matrix_operation/MatrixOperations.h"
 #include "ISolverMethod.h"
@@ -15,7 +13,7 @@ public:
     Solver(double dt, std::shared_ptr<ISolverMethod> method);
 
     // krok solvera dla danego układu
-    std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u);
+    std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u) const;
 
     template <class Archive>
     void serialize(Archive& ar) {
@@ -27,6 +25,3 @@ private:
     double dt;
     std::shared_ptr<ISolverMethod> method;
 };
-
-
-#endif //SOLVER_H

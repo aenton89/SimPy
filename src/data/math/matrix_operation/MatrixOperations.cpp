@@ -1,8 +1,8 @@
 //
 // Created by patryk on 07.09.25.
 //
-#include <vector>
 #include "MatrixOperations.h"
+
 
 
 // stare funkje do operacji ma vectorach 2d 3d ...
@@ -60,11 +60,11 @@ const double* MatOp::Matrix::getData() const {
 }
 
 
-void MatOp::Matrix::setData(const std::vector<double> data) {
+void MatOp::Matrix::setData(const std::vector<double> &data) {
     this->data_ = data;
 }
 
-void MatOp::Matrix::PrintData() const
+void MatOp::Matrix::printData() const
 {
     for (int i = 0; i < this->getRows(); i++) {
         for (int j = 0; j < this->getCols(); j++) {
@@ -76,7 +76,7 @@ void MatOp::Matrix::PrintData() const
 
 MatOp::Matrix MatOp::CPUMatAdd(const Matrix& A, const Matrix& B) {
     if (A.getCols() != B.getCols() || A.getRows() != B.getRows())
-        throw std::runtime_error("Different sizes");
+        throw std::runtime_error("ERR: Different sizes");
 
     Matrix result(A.getRows(), A.getCols());
     std::vector<double> data(A.getRows() * A.getCols());
@@ -100,14 +100,14 @@ MatOp::Matrix MatOp::CPUMatMul(const Matrix& A, const Matrix& B) {
     size_t k = B.getCols();
 
     if (n != B.getRows())
-        throw std::runtime_error("Matrix size mismatch in CPUMatMul");
+        throw std::runtime_error("ERR: Matrix size mismatch in CPUMatMul");
 
     Matrix result(m, k);
     const double* Ad = A.getData();
     const double* Bd = B.getData();
     double* Rd = result.getData();
 
-    const size_t BLOCK = 32;
+    constexpr size_t BLOCK = 32;
 
     // Tiling
     for (size_t ii = 0; ii < m; ii += BLOCK) {

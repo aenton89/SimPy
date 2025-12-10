@@ -3,27 +3,11 @@
 //
 #pragma once
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <iostream>
-#include <cmath>
-#include <imgui.h>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/types/array.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/complex.hpp>
-// dla serializacji - pod polimorfizm
-#include <cereal/types/polymorphic.hpp>
-// dla serializacji pointer'ów
-#include <cereal/types/memory.hpp>
 #include "../../data/math/solvers/SolverManager.h"
 #include "BasicBlock.h"
 #include "Connection.h"
+// #include <vector>
+// #include <memory>
 
 
 
@@ -51,7 +35,8 @@ private:
     void updateAdjacencyMatrix();
 
     // znalezienie indeksu bloku
-    int getBlockIndex(std::shared_ptr<Block> block) const;
+    [[nodiscard]]
+    int getBlockIndex(const std::shared_ptr<Block> &block) const;
 
     // solver dla modelu
     std::shared_ptr<Solver> solver;
@@ -76,25 +61,27 @@ public:
     void removeBlock(int removeId);
 
     // dodanie połączenia między blokami do modelu
-    bool connect(std::shared_ptr<Block> source, int sourcePort, std::shared_ptr<Block> target, int targetPort);
+    bool connect(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort);
     void disconnectAll();
 
     // sprawdzenie czy model zawiera cykle
     bool hasCycles();
 
     // symulacja, pojedyńczy krok
-    void simulate();
+    void simulate() const;
     // symulacja, wiele kroków
-    void simulateMultipleSteps(int steps);
+    void simulateMultipleSteps(int steps) const;
 
     // czyszczenie na koniec symulacji
-    void cleanupBefore();
-    void cleanupAfter();
+    void cleanupBefore() const;
+    void cleanupAfter() const;
 
     // gettery listy bloków i połączeń - przeciążone na const i nie-const
     std::vector<std::shared_ptr<Block>>& getBlocks();
     std::vector<Connection>& getConnections();
+    [[nodiscard]]
     const std::vector<std::shared_ptr<Block>>& getBlocks() const;
+    [[nodiscard]]
     const std::vector<Connection>& getConnections() const;
 
     // TODO: łączenie w całość
@@ -106,7 +93,8 @@ public:
     void cleanSolver();
 
     // pod dodanie węzłów do krzywych
-    Connection* findConnection(std::shared_ptr<Block> source, std::shared_ptr<Block> target);
+    Connection* findConnection(const std::shared_ptr<Block> &source, const std::shared_ptr<Block> &target);
+    [[nodiscard]]
     std::shared_ptr<Block> findBlockById(int id) const;
 
     // dla serializacji

@@ -1,19 +1,18 @@
 //
 // Created by tajbe on 18.04.2025.
 //
+#include "GUICore.h"
+#include <imgui_impl_opengl3.h>
+#include "GLFW/glfw3.h"
 #include <functional>
 #include <iostream>
 #include <thread>
 #include <filesystem>
-#include <thread>
 #include <chrono>
-#include "GLFW/glfw3.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include "GUICore.h"
 #include "../core/structures/BasicBlock.h"
-#include "math/solvers/SolverMethod.h"
-#include "ui/UIStyles.h"
+// #include <implot.h>
 
 CEREAL_FORCE_DYNAMIC_INIT(blocks)
 
@@ -35,7 +34,7 @@ void GUICore::init(GLFWwindow* win, const char* version) {
     // jakaś defaultowa ikonka, potem zmienie
     GLFWimage images[1];
     std::string iconPath = std::string(ASSETS_DIR) + "/app_icons/icon_v3.png";
-    images[0].pixels = stbi_load(iconPath.c_str(), &images[0].width, &images[0].height, 0, 4);
+    images[0].pixels = stbi_load(iconPath.c_str(), &images[0].width, &images[0].height, nullptr, 4);
     glfwSetWindowIcon(window, 1, images);
     stbi_image_free(images[0].pixels);
     if (!images[0].pixels) {
@@ -121,17 +120,15 @@ void GUICore::update() {
     // usuwamy połączenia do/z tych boxów
     for (auto& box : model.getBlocks()) {
         auto& conns = box->connections;
-        conns.erase(std::remove_if(conns.begin(), conns.end(),
-            [&](int id) {
-                return std::find(to_remove.begin(), to_remove.end(), id) != to_remove.end();
-            }), conns.end());
+        std::erase_if(conns, [&](int id) {
+                          return std::ranges::find(to_remove, id) != to_remove.end();
+                      });
     }
 
     // usuwamy same boxy
-    model.getBlocks().erase(std::remove_if(model.getBlocks().begin(), model.getBlocks().end(),
-        [](const std::shared_ptr<Block>& box) {
-            return !box->open;
-        }), model.getBlocks().end());
+    std::erase_if(model.getBlocks(), [](const std::shared_ptr<Block>& box) {
+                      return !box->open;
+                  });
 
     // MAMMA MIA last time i forgor about de grid
     viewportManager.drawGrid();
@@ -181,7 +178,7 @@ void GUICore::drawMenuBar() {
 
                 // color picker for grid
                 ImVec4 grid_color = ImGui::ColorConvertU32ToFloat4(uiPreferences.gridColor);
-                if (ImGui::ColorEdit4("Grid Color", (float*)&grid_color, ImGuiColorEditFlags_AlphaPreview))
+                if (ImGui::ColorEdit4("Grid Color", reinterpret_cast<float *>(&grid_color), ImGuiColorEditFlags_AlphaPreview))
                     uiPreferences.gridColor = ImGui::ColorConvertFloat4ToU32(grid_color);
 
                 ImGui::EndMenu();

@@ -1,11 +1,10 @@
 //
 // Created by patryk on 11.09.25.
 //
-
-#include <numbers>
-// std::setprecision, std::fixed
-#include <iomanip>
 #include "DSP.h"
+#include <numbers>
+#include <iomanip>
+#include <utility>
 #include "math/math_help_fun/MathHelperFunctions.h"
 
 using cd = std::complex<double>;
@@ -128,8 +127,8 @@ MatOp::StateSpace dsp::tf2ss(std::vector<double> numerator, std::vector<double> 
 
 
 
-    int deg_num = (int)num.size() - 1;
-    int deg_den = (int)den.size() - 1;
+    int deg_num = static_cast<int>(num.size()) - 1;
+    int deg_den = static_cast<int>(den.size()) - 1;
     int n = deg_den;
 
     // normalizacja do wiodącego 1 w mianowniku
@@ -139,7 +138,7 @@ MatOp::StateSpace dsp::tf2ss(std::vector<double> numerator, std::vector<double> 
 
     // wyzerowanie wektora num do długości n+1
     std::vector<double> num_padded(n+1, 0.0);
-    for (int i = 0; i < (int)num.size(); i++) {
+    for (int i = 0; i < static_cast<int>(num.size()); i++) {
         num_padded[n+1 - num.size() + i] = num[i];
     }
 
@@ -249,7 +248,8 @@ dsp::FilterDesigner::FilterDesigner() {
     dsp::FilterDesigner::apply_filter_subtype();
 }
 
-dsp::tf dsp::FilterDesigner::butterworth_proto() {
+dsp::tf dsp::FilterDesigner::butterworth_proto() const {
+    // TODO: to ci nadpisuje pole klasy patryk!
     tf Tf;
     std::vector<cd> poles;
 
@@ -271,7 +271,7 @@ dsp::tf dsp::FilterDesigner::butterworth_proto() {
     return Tf;
 }
 
-dsp::tf dsp::FilterDesigner::chebyshev_i_proto() {
+dsp::tf dsp::FilterDesigner::chebyshev_i_proto() const {
     tf Tf;
     std::vector<cd> poles;
 
@@ -297,7 +297,7 @@ dsp::tf dsp::FilterDesigner::chebyshev_i_proto() {
 }
 
 // TODO: ni huja on nie dziala
-dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() {
+dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() const {
     tf Tf;
     std::vector<cd> poles;
     std::vector<cd> zeros;
@@ -334,7 +334,7 @@ dsp::tf dsp::FilterDesigner::chebyshev_ii_proto() {
     return Tf;
 }
 
-dsp::tf dsp::FilterDesigner::besel_proto() {
+dsp::tf dsp::FilterDesigner::besel_proto() const {
     tf Tf;
     std::vector<cd> poles;
     // Bessel LP ma zera w ∞ → pusty wektor
@@ -343,11 +343,11 @@ dsp::tf dsp::FilterDesigner::besel_proto() {
     int N = order;
 
     if (N == 0) {
-        poles.push_back(cd(0.0, 0.0));
+        poles.emplace_back(0.0, 0.0);
     }
 
     if (N == 1) {
-        poles.push_back(cd(-1.0, 0.0));
+        poles.emplace_back(-1.0, 0.0);
     }
 
     if (N > 1) {
@@ -421,7 +421,7 @@ void dsp::FilterDesigner::apply_filter_subtype() {
         // transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, dodajemy w 0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size(); i++)
-                new_zeros.push_back(cd(0, 0));
+                new_zeros.emplace_back(0, 0);
         } else {
             for (auto& z : Tf.zeros)
                 new_zeros.push_back(wc / z);
@@ -450,8 +450,8 @@ void dsp::FilterDesigner::apply_filter_subtype() {
         // transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, tworzymy w 0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size() / 2; i++) {
-                new_zeros.push_back(cd(0, 0));
-                new_zeros.push_back(cd(0, 0));
+                new_zeros.emplace_back(0, 0);
+                new_zeros.emplace_back(0, 0);
             }
         } else {
             for (auto& z : Tf.zeros) {
@@ -486,8 +486,8 @@ void dsp::FilterDesigner::apply_filter_subtype() {
         // transformacja zer: jeśli prototyp ma zera, przekształcamy je; jeśli nie, dodajemy ±j*w0
         if (Tf.zeros.empty()) {
             for (size_t i = 0; i < Tf.poles.size() / 2; i++) {
-                new_zeros.push_back(cd(0, w0));
-                new_zeros.push_back(cd(0, -w0));
+                new_zeros.emplace_back(0, w0);
+                new_zeros.emplace_back(0, -w0);
             }
         } else {
             for (auto& z : Tf.zeros) {
@@ -512,7 +512,7 @@ void dsp::FilterDesigner::apply_setting(int order, int filter_type, int filter_s
     this->filter_type = filter_type;
     this->filter_subtype = filter_subtype;
     this->ripple = ripple;
-    this->cutoff = cutoff;
+    this->cutoff = std::move(cutoff);
 
     if (filter_subtype == LPF || filter_subtype == HPF)
         this->cutoff[1] = this->cutoff[0];

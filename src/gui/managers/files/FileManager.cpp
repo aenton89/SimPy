@@ -2,15 +2,12 @@
 // Created by tajbe on 07.11.2025.
 //
 #include "FileManager.h"
-#include "../GUICore.h"
+#include <GLFW/glfw3.h>
+#include "../../GUICore.h"
 
 
 
-void FileManager::setGUICore(GUICore *gui) {
-	guiCore = gui;
-}
-
-bool FileManager::saveToXML(const std::string &filename) {
+bool FileManager::saveToXML(const std::string &filename, GUICore& gui) {
 	std::string tempFilename = filename + ".tmp";
 	std::string backupFilename = filename + ".bak";
 
@@ -25,7 +22,7 @@ bool FileManager::saveToXML(const std::string &filename) {
 			}
 
 			cereal::XMLOutputArchive archive(file);
-			archive(cereal::make_nvp("GUICore", *guiCore));
+			archive(cereal::make_nvp("GUICore", gui));
 		}
 
 		// jeśli istnieje stary plik, zrób backup
@@ -59,17 +56,17 @@ bool FileManager::saveToXML(const std::string &filename) {
 	}
 }
 
-bool FileManager::loadFromXML(const std::string &filename) {
+bool FileManager::loadFromXML(const std::string &filename, GUICore& gui) {
 	std::string backupFilename = filename + ".bak";
 
-	auto tryLoad = [this](const std::string& fname) -> bool {
+	auto tryLoad = [this, &gui](const std::string& fname) -> bool {
 		try {
 			std::ifstream file(fname, std::ios::binary);
 			if (!file.is_open())
 				return false;
 
 			cereal::XMLInputArchive archive(file);
-			archive(cereal::make_nvp("GUICore", *guiCore));
+			archive(cereal::make_nvp("GUICore", gui));
 
 			std::cout << "Loaded successfully from " << fname << "\n";
 			return true;
@@ -103,10 +100,10 @@ void FileManager::openFileDialog() {
 	).result();
 
 	if (!selection.empty()) {
-		std::string filepath = selection[0];
+		const std::string& filepath = selection[0];
 		std::cout << "Selected file: " << filepath << "\n";
 
-		if (loadFromXML(filepath)) {
+		if (loadFromXML(filepath, *guiCore)) {
 			std::cout << "File loaded successfully!\n";
 			currentFilePath = filepath;
 			hasUnsavedChanges = false;
@@ -141,7 +138,7 @@ void FileManager::saveFileDialog() {
 
 		std::cout << "Save to: " << filepath << "\n";
 
-		if (saveToXML(filepath)) {
+		if (saveToXML(filepath, *guiCore)) {
 			std::cout << "File saved successfully!\n";
 			currentFilePath = filepath;
 			hasUnsavedChanges = false;
@@ -166,7 +163,7 @@ void FileManager::saveFile() {
 	// zapisz do bieżącego pliku
 	std::cout << "Saving to: " << currentFilePath << "\n";
 
-	if (saveToXML(currentFilePath)) {
+	if (saveToXML(currentFilePath, *guiCore)) {
 		std::cout << "File saved successfully!\n";
 		hasUnsavedChanges = false;
 	} else {

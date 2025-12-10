@@ -3,25 +3,10 @@
 //
 #pragma once
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <iostream>
-#include <cmath>
-#include <imgui.h>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/types/array.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/complex.hpp>
-// dla serializacji - pod polimorfizm
-#include <cereal/types/polymorphic.hpp>
-// dla serializacji pointer'ów
-#include <cereal/types/memory.hpp>
-#include "../../data/math/solvers/SolverManager.h"
+// #include <imgui.h>
+// #include <vector>
+// #include <memory>
+// #include <cereal/cereal.hpp>
 
 
 
@@ -66,12 +51,13 @@ public:
     // gettery i settery
     // const std::string& getName() const;
     void setInput(int port, double value);
+    [[nodiscard]]
     double getOutput(int port) const;
-
+    [[nodiscard]]
     int getNumInputs() const;
+    [[nodiscard]]
     int getNumOutputs() const;
-
-    // TODO: spoza GUI
+    [[nodiscard]]
     int getId() const;
 
     // resetowanie stanu bloku - jeśli jest potrzebne

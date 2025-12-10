@@ -3,34 +3,20 @@
 //
 #pragma once
 
-#include <imgui.h>
 #include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <implot.h>
-#include <vector>
-#include <memory>
-#include <string>
-#include <optional>
-#include <thread>
-#include <algorithm>
-#include <map>
-#include <set>
-#include <unordered_map>
 #include <portable-file-dialogs.h>
-#include <cereal/types/set.hpp>
-#include <cereal/types/unordered_map.hpp>
 #include <cereal/types/atomic.hpp>
-#include <cereal/archives/xml.hpp>
-#include "../core/structures/BasicBlock.h"
 #include "../core/structures/Model.h"
-#include "../core/structures/Connection.h"
 #include "../core/structures/Blocks.h"
-#include "windows/DockableWindowManager.h"
-#include "files/FileManager.h"
-#include "viewport/ViewportManager.h"
 #include "ui/UIPreferences.h"
-#include "windows/BlocksManager.h"
-#include "viewport/ConnectionManager.h"
+#include "managers/windows/DockableWindowManager.h"
+#include "managers/files/FileManager.h"
+#include "managers/viewport/ViewportManager.h"
+#include "managers/windows/BlocksManager.h"
+#include "managers/viewport/ConnectionManager.h"
+// #include <imgui.h>
+// #include <memory>
+// #include <string>
 
 
 

@@ -1,7 +1,6 @@
 //
 // Created by patryk on 07.09.25.
 //
-
 #include "SolverMethod.h"
 
 

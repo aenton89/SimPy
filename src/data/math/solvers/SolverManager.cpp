@@ -1,7 +1,6 @@
 //
 // Created by tajbe on 16.09.2025.
 //
-
 #include "SolverManager.h"
 
 
@@ -11,7 +10,7 @@ std::shared_ptr<Solver>& SolverManager::solver() {
     return instance;
 }
 
-void SolverManager::initSolver(double dt, std::shared_ptr<ISolverMethod> method) {
+void SolverManager::initSolver(double dt, const std::shared_ptr<ISolverMethod>& method) {
     solver() = std::make_shared<Solver>(dt, method);
 }
 

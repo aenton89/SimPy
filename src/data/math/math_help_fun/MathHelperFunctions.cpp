@@ -1,7 +1,6 @@
 //
 // Created by patryk on 12.09.25.
 //
-
 #include "MathHelperFunctions.h"
 #include <numbers>
 

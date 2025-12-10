@@ -1,8 +1,11 @@
 //
 // Created by patryk on 11.09.25.
 //
-#ifndef DSP_H
-#define DSP_H
+#pragma once
+
+#include <complex>
+#include "../matrix_operation/MatrixOperations.h"
+// #include <vector>
 
 #define LPF 0
 #define HPF 1
@@ -14,16 +17,6 @@
 #define CHEBYSHEV_II 2
 #define BESSEL 3
 #define ELLIPTICAL 4
-
-#include <vector>
-#include <numbers>
-#include <complex>
-#include <iostream>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/binary.hpp>
-#include "../matrix_operation/MatrixOperations.h"
 
 using cd = std::complex<double>;
 
@@ -82,10 +75,14 @@ namespace dsp{
         std::vector<double> cutoff = {5, 10};
 
     protected:
-        tf butterworth_proto();
-        tf chebyshev_i_proto();
-        tf chebyshev_ii_proto();
-        tf besel_proto();
+        [[nodiscard]]
+        tf butterworth_proto() const;
+        [[nodiscard]]
+        tf chebyshev_i_proto() const;
+        [[nodiscard]]
+        tf chebyshev_ii_proto() const;
+        [[nodiscard]]
+        tf besel_proto() const;
 
         void apply_filter_subtype();
 
@@ -118,7 +115,5 @@ namespace dsp{
     // // uniwersalna metoda do zamiany LPF na inne
     // tf apply_filter_subtype(const int& filter_type, dsp::tf tf_zp, const std::vector<double>& cutoff);
 
-    //tf butterworth(int order, int filter_type, const std::vector<double>& cutoff);
+    // tf butterworth(int order, int filter_type, const std::vector<double>& cutoff);
 }
-
-#endif //DSP_H

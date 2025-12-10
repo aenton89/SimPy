@@ -3,30 +3,23 @@
 //
 #pragma once
 
-#include <imgui.h>
-#include <cereal/archives/xml.hpp>
-#include <GLFW/glfw3.h>
-
-class GUICore;
+#include "managers/BasicManager.h"
+// #include <imgui.h>
+// #include <cereal/archives/xml.hpp>
 
 
 
 /*
  * manages file operations: new, open, save, save as
  */
-class FileManager {
-private:
-	class GUICore* guiCore = nullptr;
-
+class FileManager : public BasicManager {
 public:
 	std::string currentFilePath;
 	bool hasUnsavedChanges;
 
-	void setGUICore(GUICore* gui);
-
 	// zapis/odczyt stanu do/z pliku
-	bool saveToXML(const std::string& filename);
-	bool loadFromXML(const std::string& filename);
+	bool saveToXML(const std::string& filename, GUICore& gui);
+	bool loadFromXML(const std::string& filename, GUICore& gui);
 	// do wyboru i odczytu/zapisu plików (otwieraja też okienka dialogowe)
 	void openFileDialog();
 	void saveFileDialog();
@@ -42,6 +35,8 @@ public:
 
 	template<class Archive>
 	void serialize(Archive& ar) {
+		ar(cereal::base_class<BasicManager>(this));
+
 		// reset runtime state
 		if constexpr (Archive::is_loading::value) {
 			hasUnsavedChanges = false;

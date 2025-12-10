@@ -3,13 +3,10 @@
 //
 #pragma once
 
-#include <imgui.h>
 #include <optional>
-#include <cereal/archives/xml.hpp>
-#include "../core/structures/BasicBlock.h"
-#include "../core/structures/Connection.h"
-
-class GUICore;
+#include "../BasicManager.h"
+#include "../../../core/structures/Connection.h"
+// #include <imgui.h>
 
 
 
@@ -39,6 +36,7 @@ static ImVec2 BezierCubicCalc(const ImVec2& p1, const ImVec2& c1, const ImVec2& 
 	return result;
 }
 
+// TODO: zmiany - jak coś to jest struktura do przechowywania informacji o obecnie tworzonym node'zie
 /*
  * pomocnicza struktura do przechowywania informacji o węźle w krzywej
  */
@@ -53,28 +51,34 @@ struct DraggingNode {
 
 /*
  * manages drawing connection between blocks
+ * TODO: dodać usuwanie całych połączeń, a nie, że pierwsze każdy node z osobna
+ * TODO: po run pozycje node'ów się resetują - trzeba to naprawić
  */
-class ConnectionManager {
+class ConnectionManager : public BasicManager {
 private:
-	GUICore* guiCore = nullptr;
-
 	// jakieś helpery
+	// TODO: zmiany - czy te dwa są potrzebne? - jeśli tak to przenieść poza klase
+	[[nodiscard]]
 	ImVec2 worldToScreen(const ImVec2& worldPos) const;
+	[[nodiscard]]
 	ImVec2 screenToWorld(const ImVec2& screenPos) const;
+	// TODO: zmiany - rysowanie pojedyńczego połączenia - iterując po wektor_punktow_kontrolnych
 	void drawSingleConnection(Connection& conn, const ImVec2& mousePos, const ImVec2& mousePosWorld, ImDrawList* drawList);
+	// TODO: zmiany
 	void handleNodeDragging(const ImVec2& mousePosWorld);
 	void handleConnectionCreation(const ImVec2& mousePos, ImDrawList* drawList);
 
 public:
+	// TODO: zmiany - dodać strukture do przechowywania punktów kontrolnych? - std::map<std::shared_ptr<Connection> wskaznik_polaczenia, std::vector<std::ImVec2> wektor_punktow_kontrolnych>
 	std::optional<int> draggingFrom;
 	std::optional<DraggingNode> draggingNode;
-
-	void setGUICore(GUICore* gui);
 
 	void drawConnections();
 
 	template<class Archive>
 	void serialize(Archive& ar) {
+		ar(cereal::base_class<BasicManager>(this));
+
 		if constexpr (Archive::is_loading::value) {
 			// reset runtime state
 			draggingFrom.reset();

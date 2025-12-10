@@ -2,17 +2,14 @@
 // Created by tajbe on 25.10.2025.
 //
 #include "DockableWindowManager.h"
-#include "../GUICore.h"
-#include "../../core/structures/Model.h"
-#include "../../core/structures/Blocks.h"
+#include "../../GUICore.h"
+#include "../../../core/structures/Model.h"
+#include "../../../core/structures/Blocks.h"
+#include "../../../data/math/solvers/SolverMethod.h"
 
 
 
-void DockableWindowManager::setGUICore(GUICore *gui) {
-    guiCore = gui;
-}
-
-DockPosition DockableWindowManager::checkDockPosition(ImVec2 windowPos, ImVec2 windowSize) {
+DockPosition DockableWindowManager::checkDockPosition(ImVec2 windowPos, ImVec2 windowSize) const {
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 displaySize = io.DisplaySize;
 
@@ -32,7 +29,7 @@ DockPosition DockableWindowManager::checkDockPosition(ImVec2 windowPos, ImVec2 w
     return DockPosition::None;
 }
 
-ImVec2 DockableWindowManager::calculateDockedPosition(DockPosition position, DockableWindowType windowType) {
+ImVec2 DockableWindowManager::calculateDockedPosition(DockPosition position, DockableWindowType windowType) const {
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 displaySize = io.DisplaySize;
 
@@ -40,27 +37,27 @@ ImVec2 DockableWindowManager::calculateDockedPosition(DockPosition position, Doc
         case DockPosition::Left:
             // jeśli RUN WINDOW i MENU WINDOW jest już zadockowane po lewej, umieść poniżej
             if (windowType == DockableWindowType::Start && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
-                return ImVec2(0, DEFAULT_DOCKED_MENU_SIZE.y + 1 + ImGui::GetFrameHeight());
-            return ImVec2(0, ImGui::GetFrameHeight());
+                return {0, DEFAULT_DOCKED_MENU_SIZE.y + 1 + ImGui::GetFrameHeight()};
+            return {0, ImGui::GetFrameHeight()};
 
         case DockPosition::Right:
             if (windowType == DockableWindowType::Start && menuWindow.isDocked && menuWindow.position == DockPosition::Right)
-                return ImVec2(displaySize.x - DEFAULT_DOCKED_START_SIZE.x, DEFAULT_DOCKED_MENU_SIZE.y + 1 + ImGui::GetFrameHeight());
-            return ImVec2(displaySize.x - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.x : DEFAULT_DOCKED_MENU_SIZE.x), ImGui::GetFrameHeight());
+                return {displaySize.x - DEFAULT_DOCKED_START_SIZE.x, DEFAULT_DOCKED_MENU_SIZE.y + 1 + ImGui::GetFrameHeight()};
+            return {displaySize.x - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.x : DEFAULT_DOCKED_MENU_SIZE.x), ImGui::GetFrameHeight()};
 
         case DockPosition::Top:
             // rozsuń okna w poziomie
             if (windowType == DockableWindowType::Start && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
-                return ImVec2(DEFAULT_DOCKED_MENU_SIZE.x + 1, 20);
-            return ImVec2(0, ImGui::GetFrameHeight());
+                return {DEFAULT_DOCKED_MENU_SIZE.x + 1, 20};
+            return {0, ImGui::GetFrameHeight()};
 
         case DockPosition::Bottom:
             if (windowType == DockableWindowType::Start && menuWindow.isDocked && menuWindow.position == DockPosition::Bottom)
-                return ImVec2(DEFAULT_DOCKED_MENU_SIZE.x + 1, displaySize.y - DEFAULT_DOCKED_START_SIZE.y);
-            return ImVec2(0, displaySize.y - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.y : DEFAULT_DOCKED_MENU_SIZE.y));
+                return {DEFAULT_DOCKED_MENU_SIZE.x + 1, displaySize.y - DEFAULT_DOCKED_START_SIZE.y};
+            return {0, displaySize.y - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.y : DEFAULT_DOCKED_MENU_SIZE.y)};
 
         default:
-            return ImVec2(100, 100);
+            return {100, 100};
     }
 }
 

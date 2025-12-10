@@ -1,12 +1,10 @@
 //
 // Created by patryk on 07.09.25.
 //
+#pragma once
 
-#ifndef BASESOLVER_H
-#define BASESOLVER_H
-
-#include <vector>
 #include "../matrix_operation/MatrixOperations.h"
+// #include <vector>
 
 
 
@@ -20,6 +18,3 @@ public:
         // nic do zapisania w bazie
     }
 };
-
-
-#endif //BASESOLVER_H

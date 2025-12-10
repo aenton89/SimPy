@@ -2,13 +2,9 @@
 // Created by tajbe on 10.11.2025.
 //
 #include "BlocksManager.h"
-#include "../GUICore.h"
+#include "../../GUICore.h"
 
 
-
-void BlocksManager::setGUICore(GUICore *gui) {
-	guiCore = gui;
-}
 
 // logika czyszczenia zaznaczeń
 void BlocksManager::clearSelectedBlocks(const ImGuiIO &io) {
@@ -39,7 +35,7 @@ void BlocksManager::duplicateSelectedBlocks(const ImGuiIO &io) {
             std::set<int> newSelection;
 
             for (int id : selectedBlocks) {
-                auto it = std::find_if(guiCore->model.getBlocks().begin(), guiCore->model.getBlocks().end(), [&](auto& b){ return b->id == id; });
+                auto it = std::ranges::find_if(guiCore->model.getBlocks(), [&](auto& b){ return b->id == id; });
                 if (it != guiCore->model.getBlocks().end()) {
                     std::shared_ptr<Block> copy = (*it)->clone();
                     copy->id = guiCore->model.next_id++;
@@ -61,7 +57,7 @@ void BlocksManager::deleteSelectedBlocks(const ImGuiIO &io) {
     if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
         if (!selectedBlocks.empty()) {
             auto& blocks = guiCore->model.getBlocks();
-            blocks.erase(std::remove_if(blocks.begin(), blocks.end(),[&](auto& b) {return selectedBlocks.count(b->id) > 0;}), blocks.end());
+            std::erase_if(blocks,[&](auto& b) {return selectedBlocks.contains(b->id);});
 
             // wyczyść zaznaczenie
             selectedBlocks.clear();
@@ -107,7 +103,7 @@ void BlocksManager::drawBlock(Block& box) {
 
     // jeśli box jest zaznaczony - ustaw niebieskie titlebary
     bool pushedSelectionStyle = false;
-    if (selectedBlocks.count(box.id)) {
+    if (selectedBlocks.contains(box.id)) {
         // onegdaj niebieski, teraz takied śmiszne cuś
         ImVec4 selColor = ImVec4(0.39f, 0.78f, 0.92f, 0.77f);
         ImGui::PushStyleColor(ImGuiCol_TitleBg, selColor);
@@ -143,7 +139,7 @@ void BlocksManager::drawBlock(Block& box) {
         if (m.x >= window_min.x && m.x <= window_max.x && m.y >= window_min.y && m.y <= window_max.y &&
             !(m.x >= title_bar_min.x && m.x <= title_bar_max.x && m.y >= title_bar_min.y && m.y <= title_bar_max.y)) {
             // toggle zaznaczenia tego boxa
-            if (selectedBlocks.count(box.id))
+            if (selectedBlocks.contains(box.id))
                 selectedBlocks.erase(box.id);
             else
                 selectedBlocks.insert(box.id);
@@ -157,14 +153,14 @@ void BlocksManager::drawBlock(Block& box) {
             m.y >= title_bar_min.y && m.y <= title_bar_max.y) {
             if (io.KeyShift) {
                 // shift+titlebar -> toggle (jak wyżej)
-                if (selectedBlocks.count(box.id))
+                if (selectedBlocks.contains(box.id))
                     selectedBlocks.erase(box.id);
                 else
                     selectedBlocks.insert(box.id);
             } else {
                 // BEZ SHIFT: jeżeli box NIE jest aktualnie zaznaczony -> wybierz tylko ten
                 // jeżeli box JEST zaznaczony -> NIE czyścimy zaznaczeń (tak, żeby drag uruchomił grupowe przesunięcie)
-                if (!selectedBlocks.count(box.id)) {
+                if (!selectedBlocks.contains(box.id)) {
                     selectedBlocks.clear();
                     selectedBlocks.insert(box.id);
                 }
@@ -193,14 +189,14 @@ void BlocksManager::drawBlock(Block& box) {
         draggedWindowId = box.id;
 
         // jeżeli ten box jest częścią zaznaczenia i zaznaczono więcej niż 1 -> rozpocznij grupowe przeciąganie
-        if (selectedBlocks.count(box.id) && selectedBlocks.size() > 1) {
+        if (selectedBlocks.contains(box.id) && selectedBlocks.size() > 1) {
             isGroupDragging = true;
             groupDragStartMousePos = ImGui::GetMousePos();
             groupInitialPositions.clear();
 
             // zapisz początkowe pozycje wszystkich zaznaczonych
             for (int id : selectedBlocks) {
-                auto it = std::find_if(guiCore->model.getBlocks().begin(), guiCore->model.getBlocks().end(), [&](auto& b){ return b->id == id; });
+                auto it = std::ranges::find_if(guiCore->model.getBlocks(), [&](auto& b){ return b->id == id; });
                 if (it != guiCore->model.getBlocks().end())
                     groupInitialPositions[id] = (*it)->position;
             }
@@ -261,7 +257,7 @@ void BlocksManager::drawBlock(Block& box) {
         for (auto& kv : groupInitialPositions) {
             int id = kv.first;
             ImVec2 basePos = kv.second;
-            auto it = std::find_if(guiCore->model.getBlocks().begin(), guiCore->model.getBlocks().end(), [&](auto& b){ return b->id == id; });
+            auto it = std::ranges::find_if(guiCore->model.getBlocks(), [&](auto& b){ return b->id == id; });
             if (it != guiCore->model.getBlocks().end())
                 (*it)->position = ImVec2(basePos.x + worldDelta.x, basePos.y + worldDelta.y);
         }

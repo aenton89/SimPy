@@ -34,8 +34,8 @@ std::vector<std::string> ESP_com::listSerialPorts() {
 
         HANDLE hSerial = CreateFileA(fullName.c_str(),
                                      GENERIC_READ | GENERIC_WRITE,
-                                     0, NULL, OPEN_EXISTING,
-                                     FILE_ATTRIBUTE_NORMAL, NULL);
+                                     0, nullptr, OPEN_EXISTING,
+                                     FILE_ATTRIBUTE_NORMAL, nullptr);
 
         if (hSerial != INVALID_HANDLE_VALUE) {
             serialPorts.push_back(portName);

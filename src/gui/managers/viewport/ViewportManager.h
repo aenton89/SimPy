@@ -3,21 +3,17 @@
 //
 #pragma once
 
-#include <imgui.h>
-#include <cereal/archives/xml.hpp>
-#include "../ui/UIStyles.h"
-
-class GUICore;
+#include "managers/BasicManager.h"
+// #include <imgui.h>
+// #include <cereal/types/vector.hpp>
+// #include <cereal/archives/xml.hpp>
 
 
 
 /*
  * manages viewport operations (zooming, panning), and grid operations
  */
-class ViewportManager {
-private:
-	class GUICore* guiCore = nullptr;
-
+class ViewportManager : public BasicManager {
 public:
 	float zoomAmount = 1.0f;
 	ImVec2 viewOffset = ImVec2(0.0, 0.0);
@@ -27,17 +23,17 @@ public:
 	ImVec2 dragStartPos = ImVec2(0.0, 0.0);
 	ImVec2 dragStartOffset = ImVec2(0.0, 0.0);
 
-	void setGUICore(GUICore* gui);
-
 	void zoomAndPanning();
-	void drawGrid();
-	void lightMode();
+	void drawGrid() const;
+	void lightMode() const;
 	// skróty klawiszowe
-	void turnLightModeOnShortcut(const ImGuiIO& io);
-	void turnGridOnShortcut(const ImGuiIO& io);
+	void turnLightModeOnShortcut(const ImGuiIO& io) const;
+	void turnGridOnShortcut(const ImGuiIO& io) const;
 
 	template<class Archive>
 	void serialize(Archive& ar) {
+		ar(cereal::base_class<BasicManager>(this));
+
 		ar(CEREAL_NVP(zoomAmount),
 		   CEREAL_NVP(zoomSpeed));
 

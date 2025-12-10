@@ -1,30 +1,29 @@
 //
 // Created by tajbe on 24.03.2025.
 //
+#pragma once
 
-#ifndef BLOCKS_H
-#define BLOCKS_H
-
-#include <implot.h>
 #include <array>
 #include <random>
 #include <complex>
 #include <filesystem>
 #include <fstream>
-
+#include <numbers>
+#include <cereal/types/complex.hpp>
 #include "BasicBlock.h"
 #include "Model.h"
 #include "../../data/data_sender/DataChannelManager.h"
-#include "../../data/data_sender/ESPCommunication.h"
 #include "../../data/math/matrix_operation/MatrixOperations.h"
 #include "../../data/math/digital_signal_processing/DSP.h"
-#include "../../data/math/math_help_fun/MathHelperFunctions.h"
-#include "../../data/math/solvers/SolverMethod.h"
-#include <cereal/archives/xml.hpp>
-
 #if defined(__unix__) || defined(__APPLE__)
     #include <paths.h>
 #endif
+// #include <cereal/archives/xml.hpp>
+// #include <cereal/types/polymorphic.hpp>
+// #include <cereal/types/base_class.hpp>
+// #include <cereal/types/set.hpp>
+// #include <cereal/types/array.hpp>
+// #include <cereal/types/vector.hpp>
 
 // pomocnicze do jednoczesnej rejestracji i bloczków i ich polimorfizmu
 #define REGISTER_BLOCK_TYPE(T) CEREAL_REGISTER_TYPE(T); CEREAL_REGISTER_POLYMORPHIC_RELATION(Block, T)
@@ -39,7 +38,7 @@ class SumBlock : public BlockCloneable<SumBlock> {
 public:
     // konstruktor dla cereal
     SumBlock() : BlockCloneable<SumBlock>(-1, 2, 1, false) {}
-    SumBlock(int _id);
+    explicit SumBlock(int _id);
     void process() override;
     // TODO: GUI
     void drawContent() override;
@@ -59,7 +58,7 @@ class MultiplyBlock : public BlockCloneable<MultiplyBlock> {
 public:
     // konstruktor dla cereal
     MultiplyBlock() : BlockCloneable<MultiplyBlock>(-1, 2, 1, false) {}
-    MultiplyBlock(int _id);
+    explicit MultiplyBlock(int _id);
     void process() override;
     // TODO: GUI
     void drawContent() override;
@@ -84,7 +83,7 @@ public:
     // konstruktor dla cereal
     IntegratorBlock() : BlockCloneable<IntegratorBlock>(-1, 2, 1, false) {}
     // default'owo dt = 0.01
-    IntegratorBlock(int _id);
+    explicit IntegratorBlock(int _id);
     void process() override;
     // TODO: GUI
     void drawContent() override;
@@ -110,7 +109,7 @@ public:
     // konstruktor dla cereal
     DifferentiatorBlock() : BlockCloneable<DifferentiatorBlock>(-1, 2, 1, false) {}
     // default'owo dt = 0.01
-    DifferentiatorBlock(int _id);
+    explicit DifferentiatorBlock(int _id);
     void process() override;
     // TODO: GUI
     void drawContent() override;
@@ -142,13 +141,14 @@ public:
 
     // konstruktor dla cereal
     TransferFuncionContinous() : BlockCloneable<TransferFuncionContinous>(-1, 2, 1, false) {}
-    TransferFuncionContinous(int _id);
+    explicit TransferFuncionContinous(int _id);
 
     void process() override;
     void drawMenu() override;
     void drawContent() override;
     void resetBefore() override;
-    std::vector<double> stringToVector(const std::string& s);
+
+    static std::vector<double> stringToVector(const std::string& s);
 
 private:
     bool run_tf2ss;
@@ -188,7 +188,7 @@ private:
 public:
     // konstruktor dla cereal
     PID_regulator() : BlockCloneable<PID_regulator>(-1, 2, 1, false) {}
-    PID_regulator(int _id_);
+    explicit PID_regulator(int _id_);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -228,13 +228,13 @@ private:
 public:
     // konstruktor dla cereal
     STFT_block() : BlockCloneable<STFT_block>(-1, 2, 1, false) {}
-    STFT_block(int _id_);
+    explicit STFT_block(int _id_);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
     void resetBefore() override;
 
-    std::vector<double> generateWindowVector(int N, int idx);
+    static std::vector<double> generateWindowVector(int N, int idx);
 
     template<class Archive>
     void serialize(Archive& ar) {
@@ -271,12 +271,12 @@ private:
     double higher_limit = 10;
     std::vector<double> range = {lower_limit * 2 * std::numbers::pi, higher_limit * 2 * std::numbers::pi};
 
-    void drawBodePlot(const dsp::Bode& bode);
+    static void drawBodePlot(const dsp::Bode& bode);
 
 public:
     // konstruktor dla cereal
     filterImplementationBlock() : BlockCloneable<filterImplementationBlock>(-1, 2, 1, false) {}
-    filterImplementationBlock(int id_);
+    explicit filterImplementationBlock(int id_);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -308,7 +308,7 @@ private:
 public:
     // konstruktor dla cereal
     medianFilter1DBlock() : BlockCloneable<medianFilter1DBlock>(-1, 2, 1, false) {}
-    medianFilter1DBlock(int id_);
+    explicit medianFilter1DBlock(int id_);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -331,7 +331,7 @@ private:
 public:
     // konstruktor dla cereal
     meanFilter1DBlock() : BlockCloneable<meanFilter1DBlock>(-1, 2, 1, false) {}
-    meanFilter1DBlock(int id_);
+    explicit meanFilter1DBlock(int id_);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -352,7 +352,7 @@ class squaredBlock : public BlockCloneable<squaredBlock> {
 public:
     // konstruktor dla cereal
     squaredBlock() : BlockCloneable<squaredBlock>(-1, 2, 1, false) {}
-    squaredBlock(int id_);
+    explicit squaredBlock(int id_);
     void process() override;
     void drawContent() override;
 
@@ -368,7 +368,7 @@ class sqrtBlock : public BlockCloneable<sqrtBlock> {
 public:
     // konstruktor dla cereal
     sqrtBlock() : BlockCloneable<sqrtBlock>(-1, 2, 1, false) {}
-    sqrtBlock(int id_);
+    explicit sqrtBlock(int id_);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -392,7 +392,7 @@ private:
 public:
     // konstruktor dla cereal
     StepBlock() : BlockCloneable<StepBlock>(-1, 2, 1, false) {}
-    StepBlock(int _id);
+    explicit StepBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -419,7 +419,7 @@ private:
 public:
     // konstruktor dla cereal
     SinusInputBlock() : BlockCloneable<SinusInputBlock>(-1, 2, 1, false) {}
-    SinusInputBlock(int _id);
+    explicit SinusInputBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -448,7 +448,7 @@ private:
 public:
     // konstruktor dla cereal
     PWMInputBlock() : BlockCloneable<PWMInputBlock>(-1, 2, 1, false) {}
-    PWMInputBlock(int _id);
+    explicit PWMInputBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -469,7 +469,7 @@ public:
 // TODO: bloczek inputu z pliku? idk patryk doprecyzuj
 class SignalFromFileBlock : public BlockCloneable<SignalFromFileBlock> {
 private:
-    std::string filePath = "";
+    std::string filePath;
     // 1 to odczyt sample po samplu dla duzych plikow a 0 to dla maych zaczytujemy calosc; szybsze gdy wyslamu do ESP
     int current_read_mode = 0;
     std::vector<double> buffor;
@@ -488,7 +488,7 @@ private:
 public:
     // konstruktor dla cereal
     SignalFromFileBlock() : BlockCloneable<SignalFromFileBlock>(-1, 2, 1, false) {}
-    SignalFromFileBlock(int _id_);
+    explicit SignalFromFileBlock(int _id_);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -521,7 +521,7 @@ private:
 public:
     // konstruktor dla cereal
     WhiteNoiseInputBlock() : BlockCloneable<WhiteNoiseInputBlock>(-1, 2, 1, false) {}
-    WhiteNoiseInputBlock(int _id);
+    explicit WhiteNoiseInputBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -549,7 +549,7 @@ class PrintBlock : public BlockCloneable<PrintBlock> {
 public:
     // konstruktor dla cereal
     PrintBlock() : BlockCloneable<PrintBlock>(-1, 2, 1, false) {}
-    PrintBlock(int _id);
+    explicit PrintBlock(int _id);
     void process() override;
     // TODO: GUI
     void drawContent() override;
@@ -573,7 +573,7 @@ class PlotBlock : public BlockCloneable<PlotBlock> {
 public:
     // konstruktor dla cereal
     PlotBlock() : BlockCloneable<PlotBlock>(-1, 2, 1, false) {}
-    PlotBlock(int _id);
+    explicit PlotBlock(int _id);
     void process() override;
     void drawContent() override;
     void resetBefore() override;
@@ -604,7 +604,7 @@ private:
 public:
     // konstruktor dla cereal
     PlotXYBlock() : BlockCloneable<PlotXYBlock>(-1, 2, 1, false) {}
-    PlotXYBlock(int _id);
+    explicit PlotXYBlock(int _id);
     void process() override;
     void drawContent() override;
     void resetBefore() override;
@@ -632,7 +632,7 @@ private:
 public:
     // konstruktor dla cereal
     PlotHeatmapBlock() : BlockCloneable<PlotHeatmapBlock>(-1, 2, 1, false) {}
-    PlotHeatmapBlock(int _id);
+    explicit PlotHeatmapBlock(int _id);
     void process() override;
     void drawContent() override;
     void resetBefore() override;
@@ -654,7 +654,7 @@ private:
 public:
     // konstruktor dla cereal
     SaturationBlock() : BlockCloneable<SaturationBlock>(-1, 2, 1, false) {}
-    SaturationBlock(int _id);
+    explicit SaturationBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -676,7 +676,7 @@ private:
 public:
     // konstruktor dla cereal
     DeadZoneBlock() : BlockCloneable<DeadZoneBlock>(-1, 2, 1, false) {}
-    DeadZoneBlock(int _id);
+    explicit DeadZoneBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -696,7 +696,7 @@ private:
 public:
     // konstruktor dla cereal
     TrigonometricFunctionBlock() : BlockCloneable<TrigonometricFunctionBlock>(-1, 2, 1, false) {}
-    TrigonometricFunctionBlock(int _id);
+    explicit TrigonometricFunctionBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -715,7 +715,7 @@ class GainBlock: public BlockCloneable<GainBlock> {
 public:
     // konstruktor dla cereal
     GainBlock() : BlockCloneable<GainBlock>(-1, 2, 1, false) {}
-    GainBlock(int _id);
+    explicit GainBlock(int _id);
     void process() override;
     // TODO: GUI
     void drawContent() override;
@@ -743,8 +743,8 @@ private:
 public:
     // konstruktor dla cereal
     DataSenderBlock() : BlockCloneable<DataSenderBlock>(-1, 2, 1, false) {}
-    DataSenderBlock(int _id);
-    ~DataSenderBlock();
+    explicit DataSenderBlock(int _id);
+    ~DataSenderBlock() override;
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -775,7 +775,7 @@ class pythonBlock : public BlockCloneable<pythonBlock> {
 public:
     // konstruktor dla cereal
     pythonBlock() : BlockCloneable<pythonBlock>(-1, 2, 1, false) {}
-    pythonBlock(int _id);
+    explicit pythonBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -807,7 +807,7 @@ class cppBlock : public BlockCloneable<cppBlock> {
 public:
     // konstruktor dla cereal
     cppBlock() : BlockCloneable<cppBlock>(-1, 2, 1, false) {}
-    cppBlock(int _id);
+    explicit cppBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -839,7 +839,7 @@ class logicORBlock : public BlockCloneable<logicORBlock> {
 public:
     // konstruktor dla cereal
     logicORBlock() : BlockCloneable<logicORBlock>(-1, 2, 1, false) {}
-    logicORBlock(int _id);
+    explicit logicORBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -856,7 +856,7 @@ class logicANDBlock : public BlockCloneable<logicANDBlock> {
 public:
     // konstruktor dla cereal
     logicANDBlock() : BlockCloneable<logicANDBlock>(-1, 2, 1, false) {}
-    logicANDBlock(int _id);
+    explicit logicANDBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -873,7 +873,7 @@ class logicNOTBlock : public BlockCloneable<logicNOTBlock> {
 public:
     // konstruktor dla cereal
     logicNOTBlock() : BlockCloneable<logicNOTBlock>(-1, 2, 1, false) {}
-    logicNOTBlock(int _id);
+    explicit logicNOTBlock(int _id);
     void process() override;
     void drawContent() override;
 
@@ -889,7 +889,7 @@ class logicNORBlock : public BlockCloneable<logicNORBlock> {
 public:
     // konstruktor dla cereal
     logicNORBlock() : BlockCloneable<logicNORBlock>(-1, 2, 1, false) {}
-    logicNORBlock(int _id);
+    explicit logicNORBlock(int _id);
     void process() override;
     void drawContent() override;
     void drawMenu() override;
@@ -906,7 +906,7 @@ public:
     class ESPoutBlock : public BlockCloneable<ESPoutBlock> {
     public:
         ESPoutBlock() : BlockCloneable<ESPoutBlock>(-1, 0, 1, false) {} // w przyszloci zorbic zeby odbeiral wiecje niz jedno wysjcie
-        ESPoutBlock(int _id);
+        explicit ESPoutBlock(int _id);
         void process() override;
         void drawContent() override;
         void drawMenu() override;
@@ -940,7 +940,4 @@ public:
 
         int selectedPort = 0;
     };
-#endif
-
-
 #endif

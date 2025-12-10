@@ -35,17 +35,22 @@ add_executable(SimPy
         src/data/math/math_help_fun/MathHelperFunctions.cpp
         # gui
         src/gui/GUICore.cpp
-        src/gui/windows/DockableWindowManager.cpp
-        src/gui/files/FileManager.cpp
-        src/gui/viewport/ViewportManager.cpp
-        src/gui/windows/BlocksManager.cpp
-        src/gui/viewport/ConnectionManager.cpp
+        src/gui/managers/windows/DockableWindowManager.cpp
+        src/gui/managers/files/FileManager.cpp
+        src/gui/managers/viewport/ViewportManager.cpp
+        src/gui/managers/windows/BlocksManager.cpp
+        src/gui/managers/viewport/ConnectionManager.cpp
+        src/gui/managers/BasicManager.cpp
         # rdzenio-podobne funkcje
         src/core/project/ProjectMetadata.cpp
 )
 
 target_compile_definitions(SimPy PRIVATE
         IMGUI_IMPL_OPENGL_LOADER_GLAD
+)
+
+target_precompile_headers(SimPy PRIVATE
+        src/pch.h
 )
 
 target_link_libraries(SimPy PRIVATE
@@ -96,6 +101,10 @@ add_executable(tests
 target_include_directories(tests PRIVATE src)
 
 target_compile_definitions(tests PRIVATE UNIT_TESTS)
+
+target_precompile_headers(SimPy PRIVATE
+        src/pch.h
+)
 
 target_link_libraries(tests PRIVATE
         imgui::imgui
