@@ -5,16 +5,17 @@
 
 
 
-// Metody klasy RK1
+// metody klasy RK1
 std::vector<double> RK1Method::step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt) {
     auto Ax = MatOp::matVecMul(ss.A, ss.x);
     auto Bu = MatOp::matVecMul(ss.B, u);
     auto dx = MatOp::vecAdd(Ax, Bu);
+
     ss.x = MatOp::vecAdd(ss.x, MatOp::scalarVecMul(dt, dx));
-    return ss.x; // lub void, jeśli robisz update w ss.x bezpośrednio
+    return ss.x;
 }
 
-// Metody klasy RK4
+// metody klasy RK4
 std::vector<double> RK4Method::step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt) {
     std::vector<double> k1 = MatOp::vecAdd(MatOp::matVecMul(ss.A, ss.x), MatOp::matVecMul(ss.B, u));
     std::vector<double> k2 = MatOp::vecAdd(MatOp::matVecMul(ss.A, MatOp::vecAdd(ss.x, MatOp::scalarVecMul(dt/2, k1))), MatOp::matVecMul(ss.B, u));
@@ -37,14 +38,13 @@ std::vector<double> RK4Method::step(MatOp::StateSpace& ss, const std::vector<dou
     return ss.x;
 }
 
-// Metody kalsy RK2
+// metody kalsy RK2
 std::vector<double> RK2Method::step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt) {
     std::vector<double> k1 = MatOp::matVecMul(ss.A, ss.x);
     std::vector<double> x_mid = MatOp::vecAdd(ss.x, MatOp::scalarVecMul(dt/2, k1));
     std::vector<double> k2 = MatOp::vecAdd(MatOp::matVecMul(ss.A, x_mid), MatOp::matVecMul(ss.B, u));
 
     ss.x = MatOp::vecAdd(ss.x, MatOp::scalarVecMul(dt, k2));
-
     return ss.x;
 }
 
@@ -54,4 +54,3 @@ std::vector<double> RK2Method::step(MatOp::StateSpace& ss, const std::vector<dou
 REGISTER_SOLVER_TYPE(RK1Method);
 REGISTER_SOLVER_TYPE(RK2Method);
 REGISTER_SOLVER_TYPE(RK4Method);
-

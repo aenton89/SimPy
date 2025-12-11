@@ -11,46 +11,51 @@
 
 
 
-/* struktura reprezentująca połączenie między blokami
-- pomaga z procesem łączenia bloczków
-- oraz flow danych między nimi
-- sprzężenia zwrotne itd. też są tu obsługiwane
+/*
+ * struktura reprezentująca pojedyncze połączenie między blokami
+ * jedno połączenie = jeden port wyjściowy -> jeden port wejściowy
  */
 struct Connection {
-	std::shared_ptr<Block> sourceBlock;
-	int sourcePort{};
-	std::shared_ptr<Block> targetBlock;
-	int targetPort{};
-	// dodatkowe węzły kontrolne na krzywej (punkty do manipulacji)
-	std::vector<ImVec2> controlNodes;
+    // bloki i porty
+    std::shared_ptr<Block> sourceBlock;
+    int sourcePort = 0;
+    std::shared_ptr<Block> targetBlock;
+    int targetPort = 0;
 
-	// konstruktor
-	Connection() = default;
-	Connection(std::shared_ptr<Block> src, int srcPort, std::shared_ptr<Block> tgt, int tgtPort);
+    // węzły kontrolne krzywej
+    std::vector<ImVec2> controlNodes;
 
-	// dla serializacji
-	template<class Archive>
-	void serialize(Archive& ar) {
-		ar(CEREAL_NVP(sourceBlock),
-		   CEREAL_NVP(sourcePort),
-		   CEREAL_NVP(targetBlock),
-		   CEREAL_NVP(targetPort));
+    Connection() = default;
+    Connection(std::shared_ptr<Block> src, int srcPort, std::shared_ptr<Block> tgt, int tgtPort);
 
-		// TODO: przenieść do ConectionManager
-		// jeszcze zapis controlNodes
-		if constexpr (Archive::is_saving::value) {
-			std::vector<std::array<float, 2>> temp;
-			temp.reserve(controlNodes.size());
-			for (auto& v : controlNodes)
-				temp.push_back({v.x, v.y});
-			ar(cereal::make_nvp("controlNodes", temp));
-		} else {
-			std::vector<std::array<float, 2>> temp;
-			ar(cereal::make_nvp("controlNodes", temp));
-			controlNodes.clear();
-			controlNodes.reserve(temp.size());
-			for (auto& t : temp)
-				controlNodes.emplace_back(t[0], t[1]);
-		}
-	}
+    [[nodiscard]]
+    bool isValid() const;
+
+    // do sprawdzania duplikatów
+    [[nodiscard]]
+    bool matches(const std::shared_ptr<Block>& src, int srcP, const std::shared_ptr<Block>& tgt, int tgtP) const;
+
+    // dla serializacji
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(CEREAL_NVP(sourceBlock),
+           CEREAL_NVP(sourcePort),
+           CEREAL_NVP(targetBlock),
+           CEREAL_NVP(targetPort));
+
+        if constexpr (Archive::is_saving::value) {
+            std::vector<std::array<float, 2>> temp;
+            temp.reserve(controlNodes.size());
+            for (const auto& v : controlNodes)
+                temp.push_back({v.x, v.y});
+            ar(cereal::make_nvp("controlNodes", temp));
+        } else {
+            std::vector<std::array<float, 2>> temp;
+            ar(cereal::make_nvp("controlNodes", temp));
+            controlNodes.clear();
+            controlNodes.reserve(temp.size());
+            for (const auto& t : temp)
+                controlNodes.emplace_back(t[0], t[1]);
+        }
+    }
 };

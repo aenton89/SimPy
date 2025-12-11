@@ -30,7 +30,7 @@ std::vector<std::string> ESP_com::listSerialPorts() {
 #elif defined(_WIN32)
     for (int i = 1; i <= 255; i++) {
         std::string portName = "COM" + std::to_string(i);
-        std::string fullName = "\\\\.\\" + portName;
+        std::string fullName = R"(\\.\)" + portName;
 
         HANDLE hSerial = CreateFileA(fullName.c_str(),
                                      GENERIC_READ | GENERIC_WRITE,
@@ -45,7 +45,7 @@ std::vector<std::string> ESP_com::listSerialPorts() {
 #endif
 
     if (serialPorts.empty())
-        serialPorts.push_back("USB device is not avalibe");
+        serialPorts.emplace_back("USB device is not avalibe");
     return serialPorts;
 }
 

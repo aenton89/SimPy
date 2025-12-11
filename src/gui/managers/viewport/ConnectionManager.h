@@ -3,86 +3,123 @@
 //
 #pragma once
 
-#include <optional>
 #include "../BasicManager.h"
 #include "../../../core/structures/Connection.h"
 // #include <imgui.h>
 
 
 
-static float LengthSqr(const ImVec2& a, const ImVec2& b) {
-	ImVec2 d = ImVec2(a.x - b.x, a.y - b.y);
-	return d.x * d.x + d.y * d.y;
-}
-
-static ImVec2 BezierCubicCalc(const ImVec2& p1, const ImVec2& c1, const ImVec2& c2, const ImVec2& p2, float t) {
-	float u = 1.0f - t;
-	float tt = t * t;
-	float uu = u * u;
-	float uuu = uu * u;
-	float ttt = tt * t;
-
-	ImVec2 result = ImVec2(0, 0);
-	result.x = uuu * p1.x;
-	result.x += 3 * uu * t * c1.x;
-	result.x += 3 * u * tt * c2.x;
-	result.x += ttt * p2.x;
-
-	result.y = uuu * p1.y;
-	result.y += 3 * uu * t * c1.y;
-	result.y += 3 * u * tt * c2.y;
-	result.y += ttt * p2.y;
-
-	return result;
-}
-
-// TODO: zmiany - jak coś to jest struktura do przechowywania informacji o obecnie tworzonym node'zie
 /*
- * pomocnicza struktura do przechowywania informacji o węźle w krzywej
+ * informacja o połączeniu dla ConnectionManager'a
+ * używana podczas drag & drop tworzenia połączenia
  */
-struct DraggingNode {
-	// wskaźnik do Connection w Model
-	Connection* connection;
-	// indeks węzła w controlNodes
-	int nodeIndex;
+struct ConnectionDraft {
+    int sourceBlockId = -1;
+    int sourcePort = 0;
+
+    [[nodiscard]]
+    bool isActive() const {
+        return sourceBlockId >= 0;
+    }
+
+    void reset() {
+        sourceBlockId = -1; sourcePort = 0;
+    }
+};
+
+/*
+ * informacja o przeciąganym węźle kontrolnym
+ */
+struct DraggingNodeInfo {
+    Connection* connection = nullptr;
+    size_t nodeIndex = 0;
+
+    [[nodiscard]]
+    bool isActive() const {
+        return connection != nullptr;
+    }
+
+    void reset() {
+        connection = nullptr; nodeIndex = 0;
+    }
 };
 
 
 
 /*
- * manages drawing connection between blocks
- * TODO: dodać usuwanie całych połączeń, a nie, że pierwsze każdy node z osobna
- * TODO: po run pozycje node'ów się resetują - trzeba to naprawić
+ * manages drawing connection between blocksć
  */
 class ConnectionManager : public BasicManager {
 private:
-	// jakieś helpery
-	// TODO: zmiany - czy te dwa są potrzebne? - jeśli tak to przenieść poza klase
-	[[nodiscard]]
-	ImVec2 worldToScreen(const ImVec2& worldPos) const;
-	[[nodiscard]]
-	ImVec2 screenToWorld(const ImVec2& screenPos) const;
-	// TODO: zmiany - rysowanie pojedyńczego połączenia - iterując po wektor_punktow_kontrolnych
-	void drawSingleConnection(Connection& conn, const ImVec2& mousePos, const ImVec2& mousePosWorld, ImDrawList* drawList);
-	// TODO: zmiany
-	void handleNodeDragging(const ImVec2& mousePosWorld);
-	void handleConnectionCreation(const ImVec2& mousePos, ImDrawList* drawList);
+    // obecny stan tymczasowy - nie jest serializowane
+    // trwające tworzenie połączenia
+    ConnectionDraft currentDraft;
+    // przeciągany węzeł kontrolny
+    DraggingNodeInfo draggingNode;
+
+    // TODO: parametry przy rysowaniu - gdzieś je przenieść? do UI?
+    struct DrawSettings {
+        float normalThickness = 3.0f;
+        float hoveredThickness = 5.0f;
+        float nodeRadius = 6.0f;
+        float curveDetectionRadius = 10.0f;
+        float bezierControlOffset = 50.0f;
+
+        ImU32 normalColor = IM_COL32(255, 255, 0, 255);
+        ImU32 hoveredColor = IM_COL32(255, 100, 100, 255);
+        ImU32 draftColor = IM_COL32(255, 255, 0, 100);
+        ImU32 nodeNormalColor = IM_COL32(200, 200, 200, 200);
+        ImU32 nodeHoveredColor = IM_COL32(255, 150, 0, 255);
+    } drawSettings;
+
+    // helpery do konwersji współrzędnych
+    [[nodiscard]]
+    ImVec2 worldToScreen(const ImVec2& worldPos) const;
+    [[nodiscard]]
+    ImVec2 screenToWorld(const ImVec2& screenPos) const;
+
+    [[nodiscard]]
+    ImVec2 getBlockOutputPos(const Block& block) const;
+    [[nodiscard]]
+    ImVec2 getBlockInputPos(const Block& block) const;
+    [[nodiscard]]
+    bool isPointNearCurve(const ImVec2& point, const std::vector<ImVec2>& curvePoints, float threshold) const;
+
+    // rysowanie
+    void drawConnection(Connection& conn, ImDrawList* drawList);
+    void drawConnectionCurve(const std::vector<ImVec2>& points, bool hovered, ImDrawList* drawList);
+    void drawControlNodes(Connection& conn, const ImVec2& mousePos, ImDrawList* drawList);
+    void drawDraftConnection(ImDrawList* drawList);
+
+    // obsługa interakcji
+    void handleNodeDragging(const ImVec2& mousePosWorld);
+    void handleConnectionCreation(const ImVec2& mousePos);
+    void handleConnectionDeletion(Connection& conn, bool curveHovered);
+    void handleNodeAddition(Connection& conn, bool curveHovered, const ImVec2& mousePosWorld);
 
 public:
-	// TODO: zmiany - dodać strukture do przechowywania punktów kontrolnych? - std::map<std::shared_ptr<Connection> wskaznik_polaczenia, std::vector<std::ImVec2> wektor_punktow_kontrolnych>
-	std::optional<int> draggingFrom;
-	std::optional<DraggingNode> draggingNode;
+    ConnectionManager() = default;
 
-	void drawConnections();
+    // główna metoda zawiera i rysowanie i obsługę połączeń
+    void drawConnections();
 
-	template<class Archive>
-	void serialize(Archive& ar) {
-		ar(cereal::base_class<BasicManager>(this));
+    // API do rozpoczęcia tworzenia połączenia (wywoływane w BlocksManager)
+    void startConnectionDraft(int blockId, int portIndex);
+    // TODO: czy ta metoda jest w ogóle potrzebna? 0
+    void cancelConnectionDraft();
 
-		if constexpr (Archive::is_loading::value) {
-			// reset runtime state
-			draggingFrom.reset();
-			draggingNode.reset();
-		}
-	}
+    [[nodiscard]]
+    bool isDraftingConnection() const;
+
+    // do serializacji
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(cereal::base_class<BasicManager>(this));
+
+        if constexpr (Archive::is_loading::value) {
+            // reset stanu runtime
+            currentDraft.reset();
+            draggingNode.reset();
+        }
+    }
 };

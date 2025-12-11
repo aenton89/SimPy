@@ -6,8 +6,8 @@
 
 
 
+
 ImVec2 ConnectionManager::worldToScreen(const ImVec2& worldPos) const {
-    // konwersja pozycji ze świata (stała skala) do pozycji ekranu (powiększenie + przesunięcie widoku)
     return {
         worldPos.x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x,
         worldPos.y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y
@@ -15,252 +15,277 @@ ImVec2 ConnectionManager::worldToScreen(const ImVec2& worldPos) const {
 }
 
 ImVec2 ConnectionManager::screenToWorld(const ImVec2& screenPos) const {
-    // konwersja pozycji ekranu do współrzędnych świata (odwrócenie zoom + offset)
     return {
         (screenPos.x - guiCore->viewportManager.viewOffset.x) / guiCore->viewportManager.zoomAmount,
         (screenPos.y - guiCore->viewportManager.viewOffset.y) / guiCore->viewportManager.zoomAmount
     };
 }
 
-void ConnectionManager::drawSingleConnection(Connection& conn, const ImVec2& mousePos, const ImVec2& mousePosWorld, ImDrawList* drawList) {
-    // jeśli połączenie nie ma źródła albo celu — nic nie rysujemy
-    if (!conn.sourceBlock || !conn.targetBlock)
+ImVec2 ConnectionManager::getBlockOutputPos(const Block& block) const {
+    ImVec2 pos = worldToScreen(block.position);
+    ImVec2 size = ImVec2(
+        block.size.x * guiCore->viewportManager.zoomAmount,
+        block.size.y * guiCore->viewportManager.zoomAmount
+    );
+    // TODO: narazie środek prawej krawędzi - ale jakby był wybór output portów to by się zmieniło
+    return {pos.x + size.x, pos.y + size.y * 0.5f};
+}
+
+ImVec2 ConnectionManager::getBlockInputPos(const Block& block) const {
+    ImVec2 pos = worldToScreen(block.position);
+    ImVec2 size = ImVec2(
+        block.size.x * guiCore->viewportManager.zoomAmount,
+        block.size.y * guiCore->viewportManager.zoomAmount
+    );
+    // TODO: narazie środek lewej krawędzi - ale jakby był wybór input portów to by się zmieniło
+    return {pos.x, pos.y + size.y * 0.5f};
+}
+
+void ConnectionManager::drawConnections() {
+    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+    ImVec2 mousePos = ImGui::GetMousePos();
+    ImVec2 mousePosWorld = screenToWorld(mousePos);
+
+    // rysuj wszystkie istniejące połączenia
+    for (auto& conn : guiCore->model.getConnections()) {
+        drawConnection(conn, drawList);
+    }
+
+    // rysuj draft (tworzone połączenie)
+    if (currentDraft.isActive())
+        drawDraftConnection(drawList);
+
+    // obsługa przeciągania węzłów
+    handleNodeDragging(mousePosWorld);
+
+    // obsługa tworzenia nowych połączeń
+    if (currentDraft.isActive())
+        handleConnectionCreation(mousePos);
+}
+
+void ConnectionManager::drawConnection(Connection& conn, ImDrawList* drawList) {
+    if (!conn.isValid())
         return;
 
-    // --- OBLICZANIE POZYCJI BLOKÓW NA EKRANIE ---
+    ImVec2 mousePos = ImGui::GetMousePos();
+    ImVec2 mousePosWorld = screenToWorld(mousePos);
 
-    // pozycja i rozmiar bloku źródłowego
-    ImVec2 source_pos = worldToScreen(conn.sourceBlock->position);
-    ImVec2 source_size = ImVec2(
-        conn.sourceBlock->size.x * guiCore->viewportManager.zoomAmount,
-        conn.sourceBlock->size.y * guiCore->viewportManager.zoomAmount
-    );
+    // pozycje końców
+    ImVec2 startPos = getBlockOutputPos(*conn.sourceBlock);
+    ImVec2 endPos = getBlockInputPos(*conn.targetBlock);
 
-    // pozycja i rozmiar bloku docelowego
-    ImVec2 target_pos = worldToScreen(conn.targetBlock->position);
-    ImVec2 target_size = ImVec2(
-        conn.targetBlock->size.x * guiCore->viewportManager.zoomAmount,
-        conn.targetBlock->size.y * guiCore->viewportManager.zoomAmount
-    );
-
-    // punkt wyjściowy krzywej = środek prawej krawędzi bloku źródłowego
-    ImVec2 p1 = ImVec2(source_pos.x + source_size.x, source_pos.y + source_size.y * 0.5f);
-
-    // punkt końcowy krzywej = środek lewej krawędzi bloku docelowego
-    ImVec2 p2 = ImVec2(target_pos.x, target_pos.y + target_size.y * 0.5f);
-
-    // --- RYSOWANIE WĘZŁÓW KONTROLNYCH (custom handles) ---
-    bool anyNodeHovered = false;
-
-    for (size_t i = 0; i < conn.controlNodes.size(); ++i) {
-        constexpr float nodeRadius = 6.0f;
-
-        // ekranowa pozycja węzła
-        ImVec2 nodeScreenPos = worldToScreen(conn.controlNodes[i]);
-
-        // sprawdzanie hover
-        bool nodeHovered = LengthSqr(nodeScreenPos, mousePos) < (nodeRadius * 3.0f) * (nodeRadius * 3.0f);
-
-        if (nodeHovered)
-            anyNodeHovered = true;
-
-        // kolor zależny od hover
-        ImU32 nodeColor = nodeHovered ? IM_COL32(255, 150, 0, 255) : IM_COL32(200, 200, 200, 200);
-
-        float visualRadius = nodeRadius * guiCore->viewportManager.zoomAmount;
-
-        // rysowanie koła węzła
-        drawList->AddCircleFilled(nodeScreenPos, visualRadius, nodeColor);
-        drawList->AddCircle(nodeScreenPos, visualRadius, IM_COL32(50, 50, 50, 255), 12, 2.0f);
-
-        // kliknięcie LPM — rozpoczęcie przeciągania węzła
-        if (nodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !draggingNode)
-            draggingNode = DraggingNode{&conn, static_cast<int>(i)};
-
-        // kliknięcie PPM — usunięcie węzła
-        if (nodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-            conn.controlNodes.erase(conn.controlNodes.begin() + i);
-            return; // nie rysujemy dalej — wektor zmieniony
-        }
+    // zbieranie wszystkich punktów krzywej: start -> węzły -> koniec
+    std::vector<ImVec2> curvePoints;
+    curvePoints.push_back(startPos);
+    for (const auto& node : conn.controlNodes) {
+        curvePoints.push_back(worldToScreen(node));
     }
+    curvePoints.push_back(endPos);
 
-    // --- HOVER NA KRZYWEJ GŁÓWNEJ (jeśli nie są hoverowane węzły) ---
-    const float detectRadius = 10.0f * guiCore->viewportManager.zoomAmount;
-    bool curveHovered = false;
+    // sprawdzenie hover'a na krzywej
+    float threshold = drawSettings.curveDetectionRadius * guiCore->viewportManager.zoomAmount;
+    bool curveHovered = isPointNearCurve(mousePos, curvePoints, threshold);
 
-    // definiowanie kontrolnych punktów krzywej bazowej
-    ImVec2 c1 = ImVec2(p1.x + 50 * guiCore->viewportManager.zoomAmount, p1.y);
-    ImVec2 c2 = ImVec2(p2.x - 50 * guiCore->viewportManager.zoomAmount, p2.y);
+    // rysowanie krzywej i węzłów
+    drawConnectionCurve(curvePoints, curveHovered, drawList);
+    if (!conn.controlNodes.empty())
+        drawControlNodes(conn, mousePos, drawList);
 
-    // sprawdzanie czy kursor jest blisko krzywej
-    for (int step = 0; step <= 30; ++step) {
-        float t = step / 30.0f;
-        ImVec2 pt = BezierCubicCalc(p1, c1, c2, p2, t);
-        if (LengthSqr(pt, mousePos) < detectRadius * detectRadius) {
-            curveHovered = true;
-            break;
-        }
-    }
+    // i na koniec obsługa interakcji
+    handleConnectionDeletion(conn, curveHovered);
+    handleNodeAddition(conn, curveHovered, mousePosWorld);
+}
 
-    // kolor i grubość krzywej zależne od hover
-    ImU32 curveColor = (curveHovered && !anyNodeHovered) ? IM_COL32(255, 100, 100, 255) : IM_COL32(255, 255, 0, 255);
-    float thickness = ((curveHovered && !anyNodeHovered) ? 5.0f : 3.0f) * guiCore->viewportManager.zoomAmount;
+void ConnectionManager::drawConnectionCurve(const std::vector<ImVec2>& points, bool hovered, ImDrawList* drawList) {
+    if (points.size() < 2)
+        return;
 
-    // --- RYSOWANIE CAŁEJ KRZYWEJ Z DODATKOWYMI WĘZŁAMI ---
+    float thickness = (hovered ? drawSettings.hoveredThickness : drawSettings.normalThickness) * guiCore->viewportManager.zoomAmount;
+    ImU32 color = hovered ? drawSettings.hoveredColor : drawSettings.normalColor;
+    float offset = drawSettings.bezierControlOffset * guiCore->viewportManager.zoomAmount;
 
-    // zbieramy wszystkie punkty po kolei: start → węzły kontrolne → koniec
-    std::vector<ImVec2> points;
-    points.push_back(p1);
-    for (auto& node : conn.controlNodes)
-        points.push_back(worldToScreen(node));
-    points.push_back(p2);
-
-    // rysowanie segmentów krzywych pomiędzy punktami
+    // rysuj segmenty krzywej Bezier'a
     for (size_t i = 0; i + 1 < points.size(); ++i) {
+        ImVec2 c1 = ImVec2(points[i].x + offset, points[i].y);
+        ImVec2 c2 = ImVec2(points[i+1].x - offset, points[i+1].y);
+
         drawList->AddBezierCubic(
-            points[i],
-            ImVec2(points[i].x + 50 * guiCore->viewportManager.zoomAmount, points[i].y),
-            ImVec2(points[i+1].x - 50 * guiCore->viewportManager.zoomAmount, points[i+1].y),
-            points[i+1],
-            curveColor,
-            thickness
+            points[i], c1, c2, points[i+1],
+            color, thickness
         );
     }
+}
 
-    // --- DODAWANIE WĘZŁA PODWÓJNYM KLIKNIĘCIEM ---
-    if (curveHovered && !anyNodeHovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-        conn.controlNodes.push_back(mousePosWorld);
-    }
+void ConnectionManager::drawControlNodes(Connection& conn, const ImVec2& mousePos, ImDrawList* drawList) {
+    float radius = drawSettings.nodeRadius * guiCore->viewportManager.zoomAmount;
 
-    // --- PPM NA KRZYWEJ — USUWANIE POŁĄCZENIA ---
-    if (curveHovered && !anyNodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+    for (size_t i = 0; i < conn.controlNodes.size(); ++i) {
+        ImVec2 nodeScreenPos = worldToScreen(conn.controlNodes[i]);
 
-        // usuwanie z listy globalnych połączeń
-        auto& connections = guiCore->model.getConnections();
-        std::erase_if(connections, [&](const Connection& c) {
-                          return c.sourceBlock == conn.sourceBlock && c.targetBlock == conn.targetBlock;
-                      });
+        // sprawdzanie hover'a
+        float distSq = (nodeScreenPos.x - mousePos.x) * (nodeScreenPos.x - mousePos.x) +
+                      (nodeScreenPos.y - mousePos.y) * (nodeScreenPos.y - mousePos.y);
+        bool hovered = distSq < (radius * 3.0f) * (radius * 3.0f);
 
-        // usuwanie z listy lokalnej bloku
-        if (conn.sourceBlock) {
-            auto& sourceConns = conn.sourceBlock->connections;
-            std::erase(sourceConns, conn.targetBlock->id);
+        ImU32 color = hovered ? drawSettings.nodeHoveredColor : drawSettings.nodeNormalColor;
+
+        // rysuj węzeł
+        drawList->AddCircleFilled(nodeScreenPos, radius, color);
+        drawList->AddCircle(nodeScreenPos, radius, IM_COL32(50, 50, 50, 255), 12, 2.0f);
+
+        // obsługa kliknięcia - rozpocznij przeciąganie
+        if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !draggingNode.isActive()) {
+            draggingNode.connection = &conn;
+            draggingNode.nodeIndex = i;
+        }
+
+        // PPM - usuń węzeł
+        if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+            conn.controlNodes.erase(conn.controlNodes.begin() + i);
+            // wektor zmieniony, więc koniec
+            return;
         }
     }
 }
 
 void ConnectionManager::handleNodeDragging(const ImVec2& mousePosWorld) {
+    if (!draggingNode.isActive())
+        return;
 
-    // kiedy trzymamy LPM — przeciągamy aktywny węzeł
-    if (draggingNode && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-
-        // aktualizacja pozycji węzła w świecie
-        if (draggingNode->connection &&
-            draggingNode->nodeIndex < draggingNode->connection->controlNodes.size()) {
-
-            draggingNode->connection->controlNodes[draggingNode->nodeIndex] = mousePosWorld;
-        }
+    if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        // aktualizuj pozycję węzła
+        if (draggingNode.nodeIndex < draggingNode.connection->controlNodes.size())
+            draggingNode.connection->controlNodes[draggingNode.nodeIndex] = mousePosWorld;
     }
 
-    // po puszczeniu LPM — kończymy przeciąganie
-    if (draggingNode && !ImGui::IsMouseDown(ImGuiMouseButton_Left))
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
         draggingNode.reset();
 }
 
-void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos, ImDrawList* drawList) {
+void ConnectionManager::startConnectionDraft(int blockId, int portIndex) {
+    currentDraft.sourceBlockId = blockId;
+    currentDraft.sourcePort = portIndex;
+}
 
-    // --- RYSOWANIE PODGLĄDU TWORZONEGO POŁĄCZENIA ---
+void ConnectionManager::cancelConnectionDraft() {
+    currentDraft.reset();
+}
 
-    if (draggingFrom) {
+void ConnectionManager::drawDraftConnection(ImDrawList* drawList) {
+    auto sourceBlock = guiCore->model.findBlockById(currentDraft.sourceBlockId);
 
-        // szukamy bloku, z którego zaczęto przeciągać
-        auto it = std::ranges::find_if(guiCore->model.getBlocks(),[&](auto& b) {
-            return b->id == *draggingFrom;
-        });
+    if (!sourceBlock)
+        return;
 
-        if (it != guiCore->model.getBlocks().end()) {
+    ImVec2 startPos = getBlockOutputPos(*sourceBlock);
+    ImVec2 endPos = ImGui::GetMousePos();
 
-            // oblicz ekranowe pozycje punktu startowego
-            ImVec2 source_pos = worldToScreen((*it)->position);
-            ImVec2 source_size = ImVec2(
-                (*it)->size.x * guiCore->viewportManager.zoomAmount,
-                (*it)->size.y * guiCore->viewportManager.zoomAmount
-            );
+    float offset = drawSettings.bezierControlOffset * guiCore->viewportManager.zoomAmount;
 
-            ImVec2 p1 = ImVec2(source_pos.x + source_size.x, source_pos.y + source_size.y * 0.5f);
-            ImVec2 p2 = mousePos; // bieżąca pozycja kursora
+    ImVec2 c1 = ImVec2(startPos.x + offset, startPos.y);
+    ImVec2 c2 = ImVec2(endPos.x - offset, endPos.y);
 
-            // rysujemy poglądową linię
-            drawList->AddBezierCubic(
-                p1,
-                ImVec2(p1.x + 50 * guiCore->viewportManager.zoomAmount, p1.y),
-                ImVec2(p2.x - 50 * guiCore->viewportManager.zoomAmount, p2.y),
-                p2,
-                IM_COL32(255, 255, 0, 100),
-                2.0f * guiCore->viewportManager.zoomAmount
-            );
-        }
-    }
+    drawList->AddBezierCubic(
+        startPos, c1, c2, endPos,
+        drawSettings.draftColor,
+        2.0f * guiCore->viewportManager.zoomAmount
+    );
+}
 
-    // --- PUSZCZENIE LPM — PRÓBUJEMY ZŁĄCZYĆ Z BLOKIEM ---
+void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos) {
+    // puszczono LPM - próba połączenia
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        auto sourceBlock = guiCore->model.findBlockById(currentDraft.sourceBlockId);
 
-    if (draggingFrom && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        if (sourceBlock) {
+            // czy kursor jest nad jakimś blokiem
+            for (auto& targetBlock : guiCore->model.getBlocks()) {
+                if (targetBlock->id == currentDraft.sourceBlockId)
+                    continue;
 
-        // iterujemy po wszystkich blokach
-        for (auto& box : guiCore->model.getBlocks()) {
+                ImVec2 blockMin = worldToScreen(targetBlock->position);
+                ImVec2 blockSize = ImVec2(
+                    targetBlock->size.x * guiCore->viewportManager.zoomAmount,
+                    targetBlock->size.y * guiCore->viewportManager.zoomAmount
+                );
+                ImVec2 blockMax = ImVec2(
+                    blockMin.x + blockSize.x,
+                    blockMin.y + blockSize.y
+                );
 
-            // ekranowy bounding box
-            ImVec2 boxMin = worldToScreen(box->position);
-            ImVec2 boxSize = ImVec2(
-                box->size.x * guiCore->viewportManager.zoomAmount,
-                box->size.y * guiCore->viewportManager.zoomAmount
-            );
-            ImVec2 boxMax = ImVec2(boxMin.x + boxSize.x, boxMin.y + boxSize.y);
+                // sprawdź hitbox
+                if (mousePos.x >= blockMin.x && mousePos.x <= blockMax.x && mousePos.y >= blockMin.y && mousePos.y <= blockMax.y) {
+                    // próbuj dodać połączenie - addConnection() wykonuje walidacje
+                    // TODO: Dodać UI do wyboru konkretnego portu
+                    int targetPort = targetBlock->getCurrentNumInputs();
 
-            // sprawdzanie hitboxa
-            if (mousePos.x >= boxMin.x && mousePos.x <= boxMax.x &&
-                mousePos.y >= boxMin.y && mousePos.y <= boxMax.y) {
+                    guiCore->model.addConnection(
+                        sourceBlock, currentDraft.sourcePort,
+                        targetBlock, targetPort
+                    );
 
-                // upewniamy się, że łączymy dwa różne bloki
-                if (box->id != *draggingFrom && box->getNumInputs() > 0) {
-
-                    // dodajemy połączenie do listy wejść bloku docelowego
-                    box->connections.push_back(*draggingFrom);
-
-                    // tworzymy globalne połączenie w modelu
-                    if (auto source = guiCore->model.findBlockById(*draggingFrom)) {
-                        Connection newConn;
-                        newConn.sourceBlock = source;
-                        newConn.targetBlock = box;
-                        guiCore->model.getConnections().push_back(newConn);
-                    }
+                    break;
                 }
-
-                break;
             }
         }
 
-        // resetujemy stan przeciągania
-        draggingFrom.reset();
+        currentDraft.reset();
     }
 }
 
-void ConnectionManager::drawConnections() {
+void ConnectionManager::handleConnectionDeletion(Connection& conn, bool curveHovered) {
+    if (curveHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+        guiCore->model.removeConnection(
+            conn.sourceBlock, conn.sourcePort,
+            conn.targetBlock, conn.targetPort
+        );
+    }
+}
 
-    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+void ConnectionManager::handleNodeAddition(Connection& conn, bool curveHovered, const ImVec2& mousePosWorld) {
+    if (curveHovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        conn.controlNodes.push_back(mousePosWorld);
+}
 
-    // pozycja myszy — ekran i świat
-    ImVec2 mousePos = ImGui::GetMousePos();
-    ImVec2 mousePosWorld = screenToWorld(mousePos);
+bool ConnectionManager::isPointNearCurve(
+    const ImVec2& point,
+    const std::vector<ImVec2>& curvePoints,
+    float threshold) const
+{
+    if (curvePoints.size() < 2)
+        return false;
 
-    // --- RYSOWANIE WSZYSTKICH ISTNIEJĄCYCH POŁĄCZEŃ ---
-    for (auto& conn : guiCore->model.getConnections()) {
-        drawSingleConnection(conn, mousePos, mousePosWorld, drawList);
+    float offset = drawSettings.bezierControlOffset * guiCore->viewportManager.zoomAmount;
+
+    for (size_t i = 0; i + 1 < curvePoints.size(); ++i) {
+        ImVec2 c1 = ImVec2(curvePoints[i].x + offset, curvePoints[i].y);
+        ImVec2 c2 = ImVec2(curvePoints[i+1].x - offset, curvePoints[i+1].y);
+
+        // próbkuj krzywą Beziera
+        for (int step = 0; step <= 30; ++step) {
+            float t = step / 30.0f;
+
+            // oblicz punkt na krzywej
+            float u = 1.0f - t;
+            float tt = t * t;
+            float uu = u * u;
+            float uuu = uu * u;
+            float ttt = tt * t;
+
+            ImVec2 pt;
+            pt.x = uuu * curvePoints[i].x + 3 * uu * t * c1.x + 3 * u * tt * c2.x + ttt * curvePoints[i+1].x;
+            pt.y = uuu * curvePoints[i].y + 3 * uu * t * c1.y + 3 * u * tt * c2.y + ttt * curvePoints[i+1].y;
+
+            float distSq = (pt.x - point.x) * (pt.x - point.x) + (pt.y - point.y) * (pt.y - point.y);
+
+            if (distSq < threshold * threshold)
+                return true;
+        }
     }
 
-    // --- OBSŁUGA PRZECIĄGANIA WĘZŁÓW ---
-    handleNodeDragging(mousePosWorld);
+    return false;
+}
 
-    // --- OBSŁUGA TWORZENIA NOWYCH POŁĄCZEŃ ---
-    handleConnectionCreation(mousePos, drawList);
+bool ConnectionManager::isDraftingConnection() const {
+    return currentDraft.isActive();
 }

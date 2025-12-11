@@ -19,7 +19,7 @@ add_executable(SimPy
         src/imgui_backends/imgui_impl_glfw.cpp
         src/imgui_backends/imgui_impl_opengl3.cpp
         # bloczki i inne dane
-        src/core/structures/BacisBlock.cpp
+        src/core/structures/BasicBlock.cpp
         src/core/structures/Blocks.cpp
         src/core/structures/Model.cpp
         src/core/structures/Connection.cpp
@@ -82,7 +82,7 @@ add_executable(tests
         tests/test.cpp
 
         # bloczki i inne dane
-        src/core/structures/BacisBlock.cpp
+        src/core/structures/BasicBlock.cpp
         src/core/structures/Blocks.cpp
         src/core/structures/Model.cpp
         src/core/structures/Connection.cpp

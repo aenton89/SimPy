@@ -8,8 +8,8 @@
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // implementacja metod klasy Block
 Block::Block(int _id, int _numInputs, int _numOutputs, bool _has_menu)
-    : numInputs(_numInputs), numOutputs(_numOutputs), has_menu(_has_menu), id(_id) {
-    inputValues.resize(numInputs, 0.0);
+    : maxNumInputs(_numInputs), numOutputs(_numOutputs), has_menu(_has_menu), id(_id) {
+    inputValues.resize(maxNumInputs, 0.0);
     outputValues.resize(numOutputs, 0.0);
 }
 
@@ -19,6 +19,22 @@ void Block::setInput(int port, double value) {
     }
 }
 
+void Block::setCurrentNumOutputs(const int num) {
+    numOutputs = num;
+}
+
+void Block::setCurrentNumInputs(const int num) {
+    numInputs = num;
+}
+
+int Block::getCurrentNumInputs() const {
+    return numInputs;
+}
+
+int Block::getCurrentNumOutputs() const {
+    return numOutputs;
+}
+
 double Block::getOutput(int port) const {
     if (port >= 0 && port < outputValues.size())
         return outputValues[port];
@@ -26,7 +42,7 @@ double Block::getOutput(int port) const {
 }
 
 int Block::getNumInputs() const {
-    return numInputs;
+    return maxNumInputs;
 }
 
 int Block::getNumOutputs() const {

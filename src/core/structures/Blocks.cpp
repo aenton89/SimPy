@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <numeric>
 #include <fcntl.h>
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 #include "../../data/data_sender/ESPCommunication.h"
 #include "../../data/math/math_help_fun/MathHelperFunctions.h"
 #ifdef __linux__
@@ -24,13 +24,13 @@
 // sumowania
 SumBlock::SumBlock(int _id) : BlockCloneable(_id, 2, 1, true) {
     size = ImVec2(150, 80);
-    if (numInputs != 2)
-        negate_inputs.resize(numInputs, 0);
+    if (maxNumInputs != 2)
+        negate_inputs.resize(maxNumInputs, 0);
 }
 
 void SumBlock::process() {
     outputValues[0] = 0.0;
-    for (int i = 0; i < numInputs; i++) {
+    for (int i = 0; i < maxNumInputs; i++) {
         if (negate_inputs[i])
             inputValues[i] = -inputValues[i];
 
@@ -45,12 +45,12 @@ void SumBlock::drawContent() {
 }
 
 void SumBlock::drawMenu() {
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        if (numInputs < 2)
-            numInputs = 2;
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        if (maxNumInputs < 2)
+            maxNumInputs = 2;
         else {
-            inputValues.resize(numInputs);
-            negate_inputs.resize(numInputs, 0);
+            inputValues.resize(maxNumInputs);
+            negate_inputs.resize(maxNumInputs, 0);
         }
     }
 
@@ -59,7 +59,7 @@ void SumBlock::drawMenu() {
 
     // samo menu
     if (ImGui::BeginPopup("MoreOptionsPopup")) {
-        for (int i = 0; i < numInputs; ++i) {
+        for (int i = 0; i < maxNumInputs; ++i) {
             // rzutujemy char* na bool* - to działa bo bool i char są 1-bajtowe
             ImGui::Checkbox(("Negate Input " + std::to_string(i + 1)).c_str(), reinterpret_cast<bool*>(&negate_inputs[i]));
         }
@@ -95,11 +95,11 @@ void MultiplyBlock::drawContent() {
 }
 
 void MultiplyBlock::drawMenu() {
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        if (numInputs < 2)
-            numInputs = 2;
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        if (maxNumInputs < 2)
+            maxNumInputs = 2;
         else {
-            inputValues.resize(numInputs);
+            inputValues.resize(maxNumInputs);
         }
     }
 }
@@ -505,16 +505,16 @@ void PrintBlock::drawContent() {
 // plot'a
 PlotBlock::PlotBlock(int _id) : BlockCloneable(_id, 1, 0, true) {
     size = ImVec2(350, 200);
-    data.resize(numInputs);
+    data.resize(maxNumInputs);
     for (auto& arr : data) {
         std::ranges::fill(arr, 0.0f);
     }
 }
 
 void PlotBlock::process() {
-    if (data.size() < numInputs) return;
+    if (data.size() < maxNumInputs) return;
 
-    for (int i = 0; i < numInputs; ++i) {
+    for (int i = 0; i < maxNumInputs; ++i) {
         // aktualizacja min/max Y
         if (y_limMax < inputValues[i]) y_limMax = inputValues[i];
         if (y_limMin > inputValues[i]) y_limMin = inputValues[i];
@@ -534,7 +534,7 @@ void PlotBlock::resetBefore() {
     x_limMax = 0;
     y_limMin = -1.0f;
     y_limMax = 1.0f;
-    for (int i = 0; i < numInputs; ++i) {
+    for (int i = 0; i < maxNumInputs; ++i) {
         // resetujemy dane wykresu
         data[i].clear();
     }
@@ -551,7 +551,7 @@ void PlotBlock::drawContent() {
         // Oś Y: zakres 0..1
         ImPlot::SetupAxisLimits(ImAxis_Y1, y_limMin, y_limMax + (y_limMax / 10.0), ImGuiCond_Always);
 
-        for (int i = 0; i < numInputs; ++i) {
+        for (int i = 0; i < maxNumInputs; ++i) {
             if (i >= data.size()) continue;
             ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
             std::string label = "Input " + std::to_string(i + 1);
@@ -564,13 +564,13 @@ void PlotBlock::drawContent() {
 }
 
 void PlotBlock::drawMenu() {
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        if (numInputs < 1)
-            numInputs = 1;
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        if (maxNumInputs < 1)
+            maxNumInputs = 1;
         else {
-            data.resize(numInputs);
-            inputValues.resize(numInputs);
-            for (int i = 0; i < numInputs; ++i) {
+            data.resize(maxNumInputs);
+            inputValues.resize(maxNumInputs);
+            for (int i = 0; i < maxNumInputs; ++i) {
                 data[i].clear();
             }
         }
@@ -662,13 +662,13 @@ void PlotXYBlock::resetBefore() {
 }
 
 void PlotXYBlock::drawMenu() {
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        if (numInputs < 1)
-            numInputs = 1;
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        if (maxNumInputs < 1)
+            maxNumInputs = 1;
         else {
-            data.resize(numInputs);
-            inputValues.resize(numInputs);
-            for (int i = 0; i < numInputs; ++i) {
+            data.resize(maxNumInputs);
+            inputValues.resize(maxNumInputs);
+            for (int i = 0; i < maxNumInputs; ++i) {
                 std::ranges::fill(data[i], 0.0f);
             }
         }
@@ -891,8 +891,8 @@ std::string polyToString(const std::vector<double>& coeffs) {
 void TransferFuncionContinous::drawContent() {
     ImGui::Text("Transfer Funcion Continous");
     ImGui::Separator();
-    std::string num_str = polyToString(this->numerator).c_str();
-    std::string denum_str = polyToString(this->denominator).c_str();
+    std::string num_str = polyToString(this->numerator);
+    std::string denum_str = polyToString(this->denominator);
 
     if (num_str.substr(0, 2) > denum_str.substr(0, 2) ) {
         num_str += " !";
@@ -1138,7 +1138,7 @@ void STFT_block::drawMenu() {
 
 void STFT_block::process() {
     // trzeba tu zrobic myk. Dla okna bedacego potego 2 uzywamy algortymu Cooley-Tukey a dla innych troche wolneiusjzego Bluestein
-    batch_vector.push_back(std::complex<double>(inputValues[0], 0.0));
+    batch_vector.emplace_back(inputValues[0], 0.0);
     if (batch_vector.size() == windowSize) {
         for (int i=0; i < windowSize; i++) {
             batch_vector[i] = batch_vector[i]*window_vector[i];
@@ -1342,7 +1342,7 @@ void filterImplementationBlock::drawMenu() {
 
     filterImplementationBlock::drawBodePlot(bode);
 
-    //dsp::printStateSpace(ss);
+    // dsp::printStateSpace(ss);
 }
 
 void filterImplementationBlock::process() {
@@ -1387,8 +1387,10 @@ void meanFilter1DBlock::process() {
     if (window_vector.size() < window_size)
         window_vector.push_back(inputValues[0]);
     else {
-        window_vector.erase(window_vector.begin()); // usuniecie pierszege elemetu
-        window_vector.push_back(inputValues[0]); // dodanie elementu na koncu listu
+        // usuniecie pierszege elemetu
+        window_vector.erase(window_vector.begin());
+        // dodanie elementu na koncu listu
+        window_vector.push_back(inputValues[0]);
     }
 
     outputValues[0] = std::accumulate(window_vector.begin(), window_vector.end(), 0.0) / window_vector.size();
@@ -1587,7 +1589,7 @@ logicORBlock::logicORBlock(int id_): BlockCloneable(id_, 2, 1, true) {
 }
 
 void logicORBlock::process() {
-    for (int i = 0; i < numInputs; i++) {
+    for (int i = 0; i < maxNumInputs; i++) {
         // to trzeba zmainic i ustwaic zgodnie z cmos
         if (inputValues[i] > 2.3) {
             outputValues[0] = 5;
@@ -1603,11 +1605,11 @@ void logicORBlock::drawContent() {
 }
 
 void logicORBlock::drawMenu() {
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        if (numInputs < 2)
-            numInputs = 2;
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        if (maxNumInputs < 2)
+            maxNumInputs = 2;
         else {
-            inputValues.resize(numInputs);
+            inputValues.resize(maxNumInputs);
         }
     }
 }
@@ -1621,7 +1623,7 @@ logicANDBlock::logicANDBlock(int id_) : BlockCloneable(id_, 2, 1, true) {
 }
 
 void logicANDBlock::process() {
-    for (int i = 0; i < numInputs; i++) {
+    for (int i = 0; i < maxNumInputs; i++) {
         if (inputValues[i] < 2.3) {
             outputValues[0] = 0;
             break;
@@ -1636,12 +1638,12 @@ void logicANDBlock::drawContent() {
 }
 
 void logicANDBlock::drawMenu() {
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        if (numInputs < 2)
-            numInputs = 2;
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        if (maxNumInputs < 2)
+            maxNumInputs = 2;
         else {
            // std::cout<<"changed number of inputs: "<<numInputs<<std::endl;
-            inputValues.resize(numInputs);
+            inputValues.resize(maxNumInputs);
         }
     }
 }
@@ -1672,7 +1674,7 @@ logicNORBlock::logicNORBlock(int id_) : BlockCloneable(id_, 2, 1, true) {
 }
 
 void logicNORBlock::process() {
-    for (int i = 0; i < numInputs; i++) {
+    for (int i = 0; i < maxNumInputs; i++) {
         if (inputValues[i] > 2.3)
             outputValues[0] = 0;
         else
@@ -1686,12 +1688,12 @@ void logicNORBlock::drawContent() {
 }
 
 void logicNORBlock::drawMenu() {
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        if (numInputs < 2)
-            numInputs = 2;
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        if (maxNumInputs < 2)
+            maxNumInputs = 2;
         else {
             //std::cout<<"changed number of inputs: "<<numInputs<<std::endl;
-            inputValues.resize(numInputs);
+            inputValues.resize(maxNumInputs);
         }
     }
 }
@@ -1716,8 +1718,8 @@ void pythonBlock::drawContent() {
 
 void pythonBlock::drawMenu() {
     // TODO: tu jescze ma sie zmainac wewntrzna funjja ze wzgledu an inplentacje
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        inputValues.resize(numInputs);
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        inputValues.resize(maxNumInputs);
     }
     ImGui::SameLine();
     if (ImGui::InputInt("Number of outputs", &numOutputs)) {
@@ -1747,8 +1749,8 @@ void cppBlock::drawContent() {
 
 void cppBlock::drawMenu() {
     // TODO: tu jescze ma sie zmienic wewnetrzna funkcja ze wzgledu an implementacje
-    if (ImGui::InputInt("Number of inputs", &numInputs)) {
-        inputValues.resize(numInputs);
+    if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
+        inputValues.resize(maxNumInputs);
     }
     ImGui::SameLine();
     if (ImGui::InputInt("Number of outputs", &numOutputs)) {

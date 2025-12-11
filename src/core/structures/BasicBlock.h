@@ -18,10 +18,13 @@
  */
 class Block {
 protected:
-    int numInputs;
-    int numOutputs;
+    int maxNumInputs;
+    int maxNumOutputs;
+    // TODO: pod różne porty, ale narazie dodajemy do każdego następnego
+    int numOutputs = 0;
+    int numInputs = 0;
     bool has_menu;
-    // TODO: potem wrócić to do protected
+
     std::vector<double> inputValues;
     std::vector<double> outputValues;
 public:
@@ -30,8 +33,6 @@ public:
     ImVec2 position = ImVec2(100, 100);
     ImVec2 size = ImVec2(120, 120);
     bool open = true;
-    std::vector<int> connections;
-    int numConnected = 0;
 
     Block(int _id, int _numInputs, int _numOutputs, bool _has_menu = false);
     virtual ~Block() = default;
@@ -43,14 +44,20 @@ public:
     void drawIcon();
 
     // metoda dla kopiowania bloczków przez CTRL+D
+    [[nodiscard]]
     virtual std::unique_ptr<Block> clone() const = 0;
 
     // metoda do przetwarzania danych wejściowych i generowania danych wyjściowych
     virtual void process() = 0;
 
     // gettery i settery
-    // const std::string& getName() const;
     void setInput(int port, double value);
+    void setCurrentNumOutputs(int num);
+    void setCurrentNumInputs(int num);
+    [[nodiscard]]
+    int getCurrentNumInputs() const;
+    [[nodiscard]]
+    int getCurrentNumOutputs() const;
     [[nodiscard]]
     double getOutput(int port) const;
     [[nodiscard]]
@@ -72,13 +79,11 @@ public:
     template<class Archive>
     void serialize(Archive& ar) {
         ar(CEREAL_NVP(id),
-           CEREAL_NVP(numInputs),
+           CEREAL_NVP(maxNumInputs),
            CEREAL_NVP(numOutputs),
            CEREAL_NVP(has_menu),
            CEREAL_NVP(inputValues),
            CEREAL_NVP(outputValues),
-           CEREAL_NVP(connections),
-           CEREAL_NVP(numConnected),
            CEREAL_NVP(open));
 
         std::vector<float> pos = {position.x, position.y};
@@ -109,6 +114,7 @@ public:
     // dla serializacji
     BlockCloneable() : Block(-1, 0, 0, false) {}
 
+    [[nodiscard]]
     std::unique_ptr<Block> clone() const override {
         return std::make_unique<Derived>(static_cast<const Derived&>(*this));
     }

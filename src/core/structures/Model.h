@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <algorithm>
 #include "../../data/math/solvers/SolverManager.h"
 #include "BasicBlock.h"
 #include "Connection.h"
@@ -60,8 +61,6 @@ public:
     }
     void removeBlock(int removeId);
 
-    // dodanie połączenia między blokami do modelu
-    bool connect(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort);
     void disconnectAll();
 
     // sprawdzenie czy model zawiera cykle
@@ -84,18 +83,34 @@ public:
     [[nodiscard]]
     const std::vector<Connection>& getConnections() const;
 
-    // TODO: łączenie w całość
-    void makeConnections();
-    // metoda pomocnicza do usuwania polaczen, ma je robic od nowa; TODO:(to niby gdzie jest xd??)
-
     // inplentacja solvera dla symulacji
     void setSolver(std::shared_ptr<Solver> solver);
     void cleanSolver();
 
     // pod dodanie węzłów do krzywych
-    Connection* findConnection(const std::shared_ptr<Block> &source, const std::shared_ptr<Block> &target);
     [[nodiscard]]
     std::shared_ptr<Block> findBlockById(int id) const;
+
+    // dodaje połączenie z walidacją czy jest ono możliwe
+    bool addConnection(std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort);
+    // usuwa połączenie między konkretnymi portami
+    bool removeConnection(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort);
+    // usuwa wszystkie połączenia związane z blokiem - potrzebne do usuwania bloku
+    void removeAllConnectionsForBlock(const std::shared_ptr<Block>& block);
+    // sprawdza czy połączenie już istnieje
+    [[nodiscard]]
+    bool hasConnection(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort) const;
+    // sprawdza czy port wejściowy jest już używany
+    [[nodiscard]]
+    bool isInputPortUsed(const std::shared_ptr<Block>& block, int port) const;
+    // znajduje połączenie między blokami (dowolne porty)
+    Connection* findAnyConnectionBetween(const std::shared_ptr<Block>& source, const std::shared_ptr<Block>& target);
+    // znajduje konkretne połączenie między portami
+    Connection* findConnection(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort);
+    // zwraca wszystkie połączenia wychodzące z bloku
+    std::vector<Connection*> getOutputConnectionsFor(const std::shared_ptr<Block>& block);
+    // zwraca wszystkie połączenia wchodzące do bloku
+    std::vector<Connection*> getInputConnectionsFor(const std::shared_ptr<Block>& block);
 
     // dla serializacji
     template<class Archive>

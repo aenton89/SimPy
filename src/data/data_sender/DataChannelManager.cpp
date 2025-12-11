@@ -13,7 +13,7 @@
 // initialize static member
 std::unique_ptr<DataChannelManager> DataChannelManager::instance = nullptr;
 
-DataChannelManager::DataChannelManager() : is_connected(false), pipe_name("") {
+DataChannelManager::DataChannelManager() : is_connected(false) {
 #ifdef _WIN32
     hPipe = INVALID_HANDLE_VALUE;
 #else
@@ -41,10 +41,10 @@ bool DataChannelManager::initialize(const std::string& pipeName) {
     // Windows named pipe - sprawdź czy pipeName już zawiera pełną ścieżkę
     std::string winPipeName;
     // już zawiera pełną ścieżkę
-    if (pipeName.find("\\\\.\\pipe\\") == 0)
+    if (pipeName.find(R"(\\.\pipe\)") == 0)
         winPipeName = pipeName;
     else
-        winPipeName = "\\\\.\\pipe\\" + pipeName;
+        winPipeName = R"(\\.\pipe\)" + pipeName;
 
     // na Windows serwer tworzy pipe PRZED próbą połączenia klienta
     hPipe = CreateNamedPipeA(

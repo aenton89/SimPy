@@ -36,7 +36,7 @@ namespace UIStyles {
 		style.Colors[ImGuiCol_PopupBg] = DARK_BACKGROUND;
 	}
 
-	// Apply light style
+	// apply light style
 	inline void applyLightStyle() {
 		ImGui::StyleColorsLight();
 		ImGuiStyle& style = ImGui::GetStyle();

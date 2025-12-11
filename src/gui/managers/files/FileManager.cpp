@@ -59,7 +59,7 @@ bool FileManager::saveToXML(const std::string &filename, GUICore& gui) {
 bool FileManager::loadFromXML(const std::string &filename, GUICore& gui) {
 	std::string backupFilename = filename + ".bak";
 
-	auto tryLoad = [this, &gui](const std::string& fname) -> bool {
+	auto tryLoad = [&gui](const std::string& fname) -> bool {
 		try {
 			std::ifstream file(fname, std::ios::binary);
 			if (!file.is_open())
@@ -132,9 +132,8 @@ void FileManager::saveFileDialog() {
 		std::string filepath = destination;
 
 		// dodaj rozszerzenie .xml jeśli nie ma
-		if (filepath.find(".xml") == std::string::npos) {
+		if (filepath.find(".xml") == std::string::npos)
 			filepath += ".xml";
-		}
 
 		std::cout << "Save to: " << filepath << "\n";
 

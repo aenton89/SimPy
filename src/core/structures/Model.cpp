@@ -16,12 +16,8 @@ bool Model::hasCycleDFS(int v) {
 
     for (size_t i = 0; i < blocks.size(); i++) {
         if (adjacencyMatrix[v][i]) {
-            if (!visited[i] && hasCycleDFS(i)) {
+            if ((!visited[i] && hasCycleDFS(i)) || inStack[i])
                 return true;
-            } else if (inStack[i]) {
-                // znaleziono cykl
-                return true;
-            }
         }
     }
 
@@ -38,35 +34,17 @@ void Model::updateAdjacencyMatrix() {
         int srcIdx = getBlockIndex(conn.sourceBlock);
         int tgtIdx = getBlockIndex(conn.targetBlock);
 
-        if (srcIdx >= 0 && tgtIdx >= 0) {
+        if (srcIdx >= 0 && tgtIdx >= 0)
             adjacencyMatrix[srcIdx][tgtIdx] = true;
-        }
     }
 }
 
 int Model::getBlockIndex(const std::shared_ptr<Block> &block) const {
     for (size_t i = 0; i < blocks.size(); i++) {
-        if (blocks[i] == block) {
+        if (blocks[i] == block)
             return static_cast<int>(i);
-        }
     }
     return -1;
-}
-
-bool Model::connect(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort) {
-    if (!source || !target)
-        return false;
-    if (sourcePort < 0 || sourcePort >= source->getNumOutputs())
-        return false;
-    if (targetPort < 0 || targetPort >= target->getNumInputs())
-        return false;
-
-    connections.emplace_back(source, sourcePort, target, targetPort);
-
-    // aktualizacja macierzy i sprawdzenie cykli jeśli są problematyczne
-    updateAdjacencyMatrix();
-
-    return true;
 }
 
 /* TODO:
@@ -77,28 +55,6 @@ bool Model::connect(const std::shared_ptr<Block>& source, int sourcePort, const 
  * i tutaj, w miejścu poniżej oznaczonym jako TODO
  * (bo tam są podane sourcePort i targetPort)
  */
-void Model::makeConnections() {
-    disconnectAll(); // bardzo ważne – usuwamy stare połączenia
-
-    for (auto& boxPtr : blocks) {
-        boxPtr->numConnected = 0; // reset licznika!
-        for (auto connId : boxPtr->connections) {
-            auto it = std::ranges::find_if(blocks,
-                                           [connId](const std::shared_ptr<Block>& b) {
-                                               return b->id == connId;
-                                           });
-
-            if (it != blocks.end()) {
-                const auto& connectedBlock = *it;
-                connect(connectedBlock, 0, boxPtr, boxPtr->numConnected);
-                boxPtr->numConnected++;
-                // std::cout << "Connected block " << boxPtr->id << " to block " << connectedBlock->id << std::endl;
-            } else {
-                std::cerr << "Warning: Block with ID " << connId << " not found.\n";
-            }
-        }
-    }
-}
 
 void Model::disconnectAll() {
     connections.clear();
@@ -119,9 +75,7 @@ bool Model::hasCycles() {
 }
 
 void Model::simulate() const {
-   // std::cout<<"simulate() called"<<std::endl;
     if (!connections.empty()) {
-        //std::cout<<"connections.size() > 0"<<std::endl;
         // jeśli mamy cykle, W TEORII potrzebna jest specjalna obsługa (np. iteracyjne rozwiązanie) -> ALE narazie ignorujemy problem
         // bo i tak w naszym przypadku cykle są na sprzężeniach zwrotnych, a w nich ustaliliśmy, że wstawiamy 0.0
         // bool hasCyclesInModel = hasCycles();
@@ -134,7 +88,6 @@ void Model::simulate() const {
 
         // przetwarzanie bloków
         for (auto& block : blocks) {
-            // std::cout<<"Processing block ID: " << block->getId() << std::endl;
             block->process();
         }
 
@@ -198,14 +151,6 @@ void Model::cleanSolver() {
     solver.reset();
 }
 
-Connection* Model::findConnection(const std::shared_ptr<Block> &source, const std::shared_ptr<Block> &target) {
-    for (auto& conn : connections) {
-        if (conn.sourceBlock == source && conn.targetBlock == target)
-            return &conn;
-    }
-    return nullptr;
-}
-
 std::shared_ptr<Block> Model::findBlockById(int id) const {
     for (auto& block : blocks) {
         if (block->id == id)
@@ -214,3 +159,155 @@ std::shared_ptr<Block> Model::findBlockById(int id) const {
     return nullptr;
 }
 
+bool Model::addConnection(std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort) {
+    // podstawowa walidacja
+    if (!source || !target) {
+        std::cerr << "Null blocks in connection\n";
+        return false;
+    }
+    if (source == target) {
+        std::cerr << "Cannot connect block to itself\n";
+        return false;
+    }
+    if (sourcePort < 0 || sourcePort >= source->getNumOutputs()) {
+        std::cerr << "Invalid source port: " << sourcePort << "\n";
+        return false;
+    }
+    if (targetPort < 0 || targetPort >= target->getNumInputs()) {
+        std::cerr << "Invalid target port: " << targetPort << "\n";
+        return false;
+    }
+
+    // czy to połączenie już istnieje
+    if (hasConnection(source, sourcePort, target, targetPort)) {
+        std::cerr << "Connection already exists\n";
+        return false;
+    }
+
+    // czy port wejściowy nie jest już zajęty
+    if (isInputPortUsed(target, targetPort)) {
+        std::cerr << "Target port " << targetPort << " already connected\n";
+        return false;
+    }
+
+    // dodanie połączenia + aktualizacja liczników portów
+    connections.emplace_back(source, sourcePort, target, targetPort);
+    source->setCurrentNumOutputs(source->getCurrentNumOutputs() + 1);
+    target->setCurrentNumInputs(target->getCurrentNumInputs() + 1);
+
+    // TODO: sprawdzanie cykli - idk co z tym wszystkim, chyba program działa, trzeba kiedyś sprawdzić edge case'y
+    // updateAdjacencyMatrix();
+    // if (hasCycles())
+    //     std::cerr << "Warning: Connection creates a cycle\n";
+
+    return true;
+}
+
+bool Model::removeConnection(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort) {
+    auto it = std::ranges::find_if(connections, [&](const Connection& c) {
+            return c.matches(source, sourcePort, target, targetPort);
+        });
+
+    if (it != connections.end()) {
+        // TODO: idk czy tego nie usunąć jak zmienimy model portów na możliwość wybrania, który port
+        source->setCurrentNumOutputs(source->getCurrentNumOutputs() - 1);
+        target->setCurrentNumInputs(target->getCurrentNumInputs() - 1);
+        connections.erase(it);
+        // TODO: sprawdzanie cykli
+        // updateAdjacencyMatrix();
+        return true;
+    }
+
+    return false;
+}
+
+void Model::removeAllConnectionsForBlock(const std::shared_ptr<Block>& block) {
+    // zlicz ile połączeń usuniemy dla każdego bloku
+    std::unordered_map<std::shared_ptr<Block>, int> outputsToRemove;
+    std::unordered_map<std::shared_ptr<Block>, int> inputsToRemove;
+
+    for (const auto& conn : connections) {
+        if (conn.sourceBlock == block || conn.targetBlock == block) {
+            // jeśli usuwany blok jest source'm
+            if (conn.sourceBlock == block) {
+                outputsToRemove[conn.sourceBlock]++;
+                inputsToRemove[conn.targetBlock]++;
+            }
+            // jeśli usuwany blok jest target'em
+            else if (conn.targetBlock == block) {
+                outputsToRemove[conn.sourceBlock]++;
+                inputsToRemove[conn.targetBlock]++;
+            }
+        }
+    }
+
+    // zaktualizuj liczniki przed usunięciem
+    for (const auto& [blk, count] : outputsToRemove) {
+        int newCount = blk->getCurrentNumOutputs() - count;
+        // nie dopuść do wartości ujemnych
+        blk->setCurrentNumOutputs(std::max(0, newCount));
+    }
+
+    for (const auto& [blk, count] : inputsToRemove) {
+        int newCount = blk->getCurrentNumInputs() - count;
+        // nie dopuść do wartości ujemnych
+        blk->setCurrentNumInputs(std::max(0, newCount));
+    }
+
+    // TODO: wystarczy jak poniżej, jeśli zmienimy model portów na możliwość wybrania, który port:
+    // usuń połączenia
+    std::erase_if(connections, [&](const Connection& c) {
+        return c.sourceBlock == block || c.targetBlock == block;
+    });
+
+    // TODO: sprawdzanie cykli
+    // updateAdjacencyMatrix();
+}
+
+bool Model::hasConnection(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort) const {
+    return std::ranges::any_of(connections, [&](const Connection& c) {
+            return c.matches(source, sourcePort, target, targetPort);
+        });
+}
+
+bool Model::isInputPortUsed(const std::shared_ptr<Block>& block, int port) const {
+    return std::ranges::any_of(connections, [&](const Connection& c) {
+            return c.targetBlock == block && c.targetPort == port;
+        });
+}
+
+Connection* Model::findAnyConnectionBetween(const std::shared_ptr<Block>& source, const std::shared_ptr<Block>& target) {
+    auto it = std::ranges::find_if(connections, [&](const Connection& c) {
+            return c.sourceBlock == source && c.targetBlock == target;
+        });
+
+    return (it != connections.end()) ? &(*it) : nullptr;
+}
+
+Connection* Model::findConnection(const std::shared_ptr<Block>& source, int sourcePort, const std::shared_ptr<Block>& target, int targetPort) {
+    auto it = std::ranges::find_if(connections, [&](const Connection& c) {
+            return c.matches(source, sourcePort, target, targetPort);
+        });
+
+    return (it != connections.end()) ? &(*it) : nullptr;
+}
+
+std::vector<Connection*> Model::getOutputConnectionsFor(const std::shared_ptr<Block>& block) {
+    std::vector<Connection*> result;
+    for (auto& conn : connections) {
+        if (conn.sourceBlock == block)
+            result.push_back(&conn);
+    }
+
+    return result;
+}
+
+std::vector<Connection*> Model::getInputConnectionsFor(const std::shared_ptr<Block>& block) {
+    std::vector<Connection*> result;
+    for (auto& conn : connections) {
+        if (conn.targetBlock == block)
+            result.push_back(&conn);
+    }
+
+    return result;
+}

@@ -100,7 +100,7 @@ void GUICore::update() {
     // rysowanie bloczków
     for (auto& block : model.getBlocks()) {
         if (block->open)
-            blocksManager.drawBlock(*block);
+            blocksManager.drawBlock(block);
     }
 
     // rysowanie połączeń między bloczkami
@@ -112,17 +112,14 @@ void GUICore::update() {
     // zbieramy ID blocków do usunięcia
     std::vector<int> to_remove;
     for (auto& box : model.getBlocks()) {
-        if (!box->open) {
+        if (!box->open)
             to_remove.push_back(box->id);
-        }
     }
 
     // usuwamy połączenia do/z tych boxów
-    for (auto& box : model.getBlocks()) {
-        auto& conns = box->connections;
-        std::erase_if(conns, [&](int id) {
-                          return std::ranges::find(to_remove, id) != to_remove.end();
-                      });
+    for (int id : to_remove) {
+        if (auto blockToRemove = model.findBlockById(id))
+            model.removeAllConnectionsForBlock(blockToRemove);
     }
 
     // usuwamy same boxy

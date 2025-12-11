@@ -48,8 +48,11 @@ namespace MatOp {
 
         void setData(const std::vector<double> &data);
         double* getData();
+        [[nodiscard]]
         const double* getData() const;
+        [[nodiscard]]
         unsigned int getRows() const;
+        [[nodiscard]]
         unsigned int getCols() const;
 
         // do debugowania

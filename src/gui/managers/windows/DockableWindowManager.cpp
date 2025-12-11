@@ -316,15 +316,12 @@ void DockableWindowManager::drawStartButton() {
                 std::thread([this]() {
                     // cleanup w bloczkach jeśli jest potrzeb
                     guiCore->model.cleanupBefore();
-                    guiCore->model.makeConnections();
-                    // TODO: tu na ogół nie ma być na stałe pętli do 1000
-                    // patryk chyba chciał to jakoś ustawiać, idk w sumie nie pamiętam
+                    // guiCore->model.makeConnections();
                     for (int i = 0; i < (Model::simTime/ Model::timeStep) + 1; i++) {
                         guiCore->model.simulate();
                     }
                     guiCore->model.cleanupAfter();
                     guiCore->model.cleanSolver();
-                    // guiCore->model.getBlocks().clear();
                     guiCore->simulationRunning = false;
                 }).detach();
             }
