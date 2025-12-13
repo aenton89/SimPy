@@ -237,12 +237,21 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> box) {
     if (!isDraggingWindow || draggedWindowId != box->id) {
         // TODO: dodać w GUI opcje wyboru source portu połączenia
         if (isClicked && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-            if (box->getNumOutputs() > 0 && guiCore->model.getOutputConnectionsFor(box).size() < box->getNumOutputs())
-                guiCore->connectionManager.startConnectionDraft(box->id, guiCore->model.getOutputConnectionsFor(box).size());
+            if (box->getNumOutputs() > 0) {
+                // takie coś też było po drodze - ale pozwalało na pare output'ów z bloczka, który ma jedne dane wyjściowe
+                // dodatkowo sprawdzenie warunku:
+                // && guiCore->model.getOutputConnectionsFor(box).size() < box->getNumOutputs()
+                // i to wewenątrz if'a:
+                // guiCore->connectionManager.startConnectionDraft(box->id, guiCore->model.getOutputConnectionsFor(box).size());
+                int outputPort = 0;
+                guiCore->connectionManager.startConnectionDraft(box->id, outputPort);
+            }
         }
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-            if (box->getNumOutputs() > 0 && guiCore->model.getOutputConnectionsFor(box).size() < box->getNumOutputs())
-                guiCore->connectionManager.startConnectionDraft(box->id, guiCore->model.getOutputConnectionsFor(box).size());
+            if (box->getNumOutputs() > 0) {
+                int outputPort = 0;
+                guiCore->connectionManager.startConnectionDraft(box->id, outputPort);
+            }
         }
     }
 

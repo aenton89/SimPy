@@ -215,10 +215,23 @@ void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos) {
 
                 // sprawdź hitbox
                 if (mousePos.x >= blockMin.x && mousePos.x <= blockMax.x && mousePos.y >= blockMin.y && mousePos.y <= blockMax.y) {
-                    // próbuj dodać połączenie - addConnection() wykonuje walidacje
                     // TODO: Dodać UI do wyboru konkretnego portu
-                    int targetPort = targetBlock->getCurrentNumInputs();
+                    // narazie - znajdź pierwszy wolny port
+                    int targetPort = -1;
+                    for (int i = 0; i < targetBlock->getNumInputs(); i++) {
+                        if (!guiCore->model.isInputPortUsed(targetBlock, i)) {
+                            targetPort = i;
+                            break;
+                        }
+                    }
 
+                    // jeśli nie znaleziono wolnego portu, pomiń
+                    if (targetPort == -1) {
+                        std::cerr << "No free input ports available\n";
+                        break;
+                    }
+
+                    // próbuj dodać połączenie - addConnection() wykonuje walidacje
                     guiCore->model.addConnection(
                         sourceBlock, currentDraft.sourcePort,
                         targetBlock, targetPort
