@@ -56,6 +56,10 @@ void BlocksManager::duplicateSelectedBlocks(const ImGuiIO &io) {
 void BlocksManager::deleteSelectedBlocks(const ImGuiIO &io) {
     if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
         if (!selectedBlocks.empty()) {
+            // usuwa pozostałe połączenia
+            guiCore->connectionManager.removeConnectionsForBlocks(selectedBlocks);
+
+            // usuwa same bloki
             auto& blocks = guiCore->model.getBlocks();
             std::erase_if(blocks,[&](auto& b) {return selectedBlocks.contains(b->id);});
 
@@ -75,7 +79,7 @@ void BlocksManager::selectAllBlocks(const ImGuiIO& io) {
     }
 }
 
-void BlocksManager::drawBlock(const std::shared_ptr<Block> box) {
+void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
     std::string title = "Box #" + std::to_string(box->id);
 
     // oblicz transformowaną pozycję

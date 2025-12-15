@@ -71,12 +71,29 @@ private:
 	std::vector<DockableWindow> dockedWindows;
 	// odległość od krawędzi do snap'owania
 	float dockSnapDistance = 50.0f;
+	// do śledzenia wyskości menu przy dockowaniu prawo/lewo
+	float lastMenuHeight = 0.0f;
+	bool menuHeightCalculated = false;
+
+	// TODO: animacja dockowania
+	bool menuAnimating = false;
+	bool startAnimating = false;
+	ImVec2 menuAnimationStart = ImVec2(0, 0);
+	ImVec2 menuAnimationTarget = ImVec2(0, 0);
+	ImVec2 startAnimationStart = ImVec2(0, 0);
+	ImVec2 startAnimationTarget = ImVec2(0, 0);
+	float menuAnimationProgress = 0.0f;
+	float startAnimationProgress = 0.0f;
+	float animationSpeed = 8.0f;
 
 	[[nodiscard]]
 	DockPosition checkDockPosition(ImVec2 windowPos, ImVec2 windowSize) const;
 	[[nodiscard]]
 	ImVec2 calculateDockedPosition(DockPosition position, DockableWindowType windowType) const;
-	static ImVec2 calculateDockedSize(DockPosition position, DockableWindowType windowType);
+	[[nodiscard]]
+	ImVec2 calculateDockedSize(DockPosition position, DockableWindowType windowType) const;
+	[[nodiscard]]
+	static ImVec2 lerpVec2(const ImVec2& a, const ImVec2& b, float t);
 
 public:
 	void drawStartButton();
@@ -89,7 +106,17 @@ public:
 		ar(CEREAL_NVP(menuWindow),
 		   CEREAL_NVP(startWindow),
 		   CEREAL_NVP(dockedWindows),
-		   CEREAL_NVP(dockSnapDistance));
+		   CEREAL_NVP(dockSnapDistance),
+		   CEREAL_NVP(lastMenuHeight),
+		   CEREAL_NVP(menuHeightCalculated));
+
+		// reset animation state
+		if constexpr (Archive::is_loading::value) {
+			menuAnimating = false;
+			startAnimating = false;
+			menuAnimationProgress = 0.0f;
+			startAnimationProgress = 0.0f;
+		}
 	}
 };
 

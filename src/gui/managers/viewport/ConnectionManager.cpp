@@ -96,7 +96,7 @@ void ConnectionManager::drawConnection(Connection& conn, ImDrawList* drawList) {
     handleNodeAddition(conn, curveHovered, mousePosWorld);
 }
 
-void ConnectionManager::drawConnectionCurve(const std::vector<ImVec2>& points, bool hovered, ImDrawList* drawList) {
+void ConnectionManager::drawConnectionCurve(const std::vector<ImVec2>& points, bool hovered, ImDrawList* drawList) const {
     if (points.size() < 2)
         return;
 
@@ -171,7 +171,7 @@ void ConnectionManager::cancelConnectionDraft() {
     currentDraft.reset();
 }
 
-void ConnectionManager::drawDraftConnection(ImDrawList* drawList) {
+void ConnectionManager::drawDraftConnection(ImDrawList* drawList) const {
     auto sourceBlock = guiCore->model.findBlockById(currentDraft.sourceBlockId);
 
     if (!sourceBlock)
@@ -195,9 +195,7 @@ void ConnectionManager::drawDraftConnection(ImDrawList* drawList) {
 void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos) {
     // puszczono LPM - próba połączenia
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-        auto sourceBlock = guiCore->model.findBlockById(currentDraft.sourceBlockId);
-
-        if (sourceBlock) {
+        if (auto sourceBlock = guiCore->model.findBlockById(currentDraft.sourceBlockId)) {
             // czy kursor jest nad jakimś blokiem
             for (auto& targetBlock : guiCore->model.getBlocks()) {
                 if (targetBlock->id == currentDraft.sourceBlockId)
@@ -246,12 +244,25 @@ void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos) {
     }
 }
 
-void ConnectionManager::handleConnectionDeletion(Connection& conn, bool curveHovered) {
+void ConnectionManager::handleConnectionDeletion(const Connection& conn, bool curveHovered) const {
     if (curveHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
         guiCore->model.removeConnection(
             conn.sourceBlock, conn.sourcePort,
             conn.targetBlock, conn.targetPort
         );
+    }
+}
+
+void ConnectionManager::removeConnectionsForBlocks(const std::set<int>& blockIds) const {
+    auto& connections = guiCore->model.getConnections();
+
+    for (auto it = connections.begin(); it != connections.end();) {
+        if ((it->sourceBlock && blockIds.contains(it->sourceBlock->id)) || (it->targetBlock && blockIds.contains(it->targetBlock->id))) {
+            guiCore->model.removeConnection(it->sourceBlock, it->sourcePort, it->targetBlock, it->targetPort);
+            it = connections.begin();
+        } else {
+            ++it;
+        }
     }
 }
 

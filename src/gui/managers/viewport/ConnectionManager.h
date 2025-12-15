@@ -87,14 +87,14 @@ private:
 
     // rysowanie
     void drawConnection(Connection& conn, ImDrawList* drawList);
-    void drawConnectionCurve(const std::vector<ImVec2>& points, bool hovered, ImDrawList* drawList);
+    void drawConnectionCurve(const std::vector<ImVec2>& points, bool hovered, ImDrawList* drawList) const;
     void drawControlNodes(Connection& conn, const ImVec2& mousePos, ImDrawList* drawList);
-    void drawDraftConnection(ImDrawList* drawList);
+    void drawDraftConnection(ImDrawList* drawList) const;
 
     // obsługa interakcji
     void handleNodeDragging(const ImVec2& mousePosWorld);
     void handleConnectionCreation(const ImVec2& mousePos);
-    void handleConnectionDeletion(Connection& conn, bool curveHovered);
+    void handleConnectionDeletion(const Connection& conn, bool curveHovered) const;
     void handleNodeAddition(Connection& conn, bool curveHovered, const ImVec2& mousePosWorld);
 
 public:
@@ -107,6 +107,9 @@ public:
     void startConnectionDraft(int blockId, int portIndex);
     // TODO: czy ta metoda jest w ogóle potrzebna? 0
     void cancelConnectionDraft();
+
+    // pod usuwanie wielu bloczków przez DELETE
+    void removeConnectionsForBlocks(const std::set<int>& blockIds) const;
 
     [[nodiscard]]
     bool isDraftingConnection() const;

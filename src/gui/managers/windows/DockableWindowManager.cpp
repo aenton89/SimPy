@@ -9,6 +9,15 @@
 
 
 
+ImVec2 DockableWindowManager::lerpVec2(const ImVec2& a, const ImVec2& b, float t) {
+    // ease-out cubic dla płynniejszej animacji
+    t = 1.0f - std::pow(1.0f - t, 3.0f);
+    return {
+        a.x + (b.x - a.x) * t,
+        a.y + (b.y - a.y) * t
+    };
+}
+
 DockPosition DockableWindowManager::checkDockPosition(ImVec2 windowPos, ImVec2 windowSize) const {
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 displaySize = io.DisplaySize;
@@ -37,54 +46,101 @@ ImVec2 DockableWindowManager::calculateDockedPosition(DockPosition position, Doc
         case DockPosition::Left:
             // jeśli RUN WINDOW i MENU WINDOW jest już zadockowane po lewej, umieść poniżej
             if (windowType == DockableWindowType::Start && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
-                return {0, DEFAULT_DOCKED_MENU_SIZE.y + 1 + ImGui::GetFrameHeight()};
+                return {0, lastMenuHeight + 1 + ImGui::GetFrameHeight()};
             return {0, ImGui::GetFrameHeight()};
 
         case DockPosition::Right:
             if (windowType == DockableWindowType::Start && menuWindow.isDocked && menuWindow.position == DockPosition::Right)
-                return {displaySize.x - DEFAULT_DOCKED_START_SIZE.x, DEFAULT_DOCKED_MENU_SIZE.y + 1 + ImGui::GetFrameHeight()};
+                return {displaySize.x - DEFAULT_DOCKED_START_SIZE.x, lastMenuHeight + 1 + ImGui::GetFrameHeight()};
             return {displaySize.x - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.x : DEFAULT_DOCKED_MENU_SIZE.x), ImGui::GetFrameHeight()};
 
         case DockPosition::Top:
             // rozsuń okna w poziomie
             if (windowType == DockableWindowType::Start && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
-                return {DEFAULT_DOCKED_MENU_SIZE.x + 1, 20};
+                return {DEFAULT_DOCKED_MENU_SIZE.x + 1, ImGui::GetFrameHeight()};
             return {0, ImGui::GetFrameHeight()};
 
         case DockPosition::Bottom:
             if (windowType == DockableWindowType::Start && menuWindow.isDocked && menuWindow.position == DockPosition::Bottom)
                 return {DEFAULT_DOCKED_MENU_SIZE.x + 1, displaySize.y - DEFAULT_DOCKED_START_SIZE.y};
-            return {0, displaySize.y - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.y : DEFAULT_DOCKED_MENU_SIZE.y)};
+            return {0, displaySize.y - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.y : lastMenuHeight)};
 
         default:
             return {100, 100};
     }
 }
 
-ImVec2 DockableWindowManager::calculateDockedSize(DockPosition position, DockableWindowType windowType) {
-    if (windowType == DockableWindowType::Start)
-        return DEFAULT_DOCKED_START_SIZE;
-    return DEFAULT_DOCKED_MENU_SIZE;
+ImVec2 DockableWindowManager::calculateDockedSize(DockPosition position, DockableWindowType windowType) const {
+    ImGuiIO& io = ImGui::GetIO();
+    ImVec2 displaySize = io.DisplaySize;
+
+    if (windowType == DockableWindowType::Menu) {
+        // oblicz dostępną wysokość
+        float availableHeight = displaySize.y - ImGui::GetFrameHeight();
+
+        // jeśli start jest też zdockowany do tej samej krawędzi to zostaw miejsce
+        if (startWindow.isDocked && ((position == DockPosition::Left && startWindow.position == DockPosition::Left) || (position == DockPosition::Right && startWindow.position == DockPosition::Right)))
+            // rezerwuj miejsce na start + odstęp
+            availableHeight -= (DEFAULT_DOCKED_START_SIZE.y + 5);
+
+        // szerokość i maksymalna wysokość
+        return {DEFAULT_DOCKED_MENU_SIZE.x, max(150.0f, availableHeight)};
+    }
+
+    return DEFAULT_DOCKED_START_SIZE;
 }
 
 void DockableWindowManager::drawMenu() {
-    ImVec2 menuPos, menuSize;
+    ImVec2 menuPos;
     ImGuiWindowFlags menuFlags = ImGuiWindowFlags_AlwaysAutoResize;
 
     if (menuWindow.isDocked) {
-        menuSize = calculateDockedSize(menuWindow.position, DockableWindowType::Menu);
-        menuPos = calculateDockedPosition(menuWindow.position, DockableWindowType::Menu);
+        ImVec2 menuSize = calculateDockedSize(menuWindow.position, DockableWindowType::Menu);
+        ImVec2 targetPos = calculateDockedPosition(menuWindow.position, DockableWindowType::Menu);
+
+        // animacja dockowania
+        if (menuAnimating) {
+            ImGuiIO& io = ImGui::GetIO();
+            menuAnimationProgress += io.DeltaTime * animationSpeed;
+
+            if (menuAnimationProgress >= 1.0f) {
+                menuAnimationProgress = 1.0f;
+                menuAnimating = false;
+            }
+
+            menuPos = lerpVec2(menuAnimationStart, menuAnimationTarget, menuAnimationProgress);
+        } else {
+            menuPos = targetPos;
+        }
+
         menuFlags |= ImGuiWindowFlags_NoMove;
+
+        // constraints zamiast stałego rozmiaru
+        ImGui::SetNextWindowSizeConstraints(
+            ImVec2(menuSize.x, 150.0f),
+            ImVec2(menuSize.x, menuSize.y)
+        );
+
+        ImGui::SetNextWindowPos(menuPos, ImGuiCond_Always);
     } else {
         menuPos = menuWindow.undockedPos;
+        ImGui::SetNextWindowSizeConstraints(ImVec2(160, 150), ImVec2(FLT_MAX, FLT_MAX));
+
+        ImGui::SetNextWindowPos(menuPos, ImGuiCond_FirstUseEver);
     }
 
-    ImGui::SetNextWindowPos(menuPos, menuWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.6f);
-    ImGui::SetNextWindowSize(menuSize, menuWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(160, 150), ImVec2(FLT_MAX, FLT_MAX));
+
+    if (!menuWindow.isDocked)
+        ImGui::SetNextWindowSize(ImVec2(DEFAULT_DOCKED_MENU_SIZE.x, 0), ImGuiCond_FirstUseEver);
 
     if (ImGui::Begin("Menu", nullptr, menuFlags)) {
+        // zapisz wysokość okna (dla pozycjonowania Start)
+        if (menuWindow.isDocked) {
+            lastMenuHeight = ImGui::GetWindowHeight();
+            menuHeightCalculated = true;
+        }
+
         // przyciski dodawania bloków
 
         // modul math
@@ -223,6 +279,12 @@ void DockableWindowManager::drawMenu() {
             if (wasDragging && !isDragging) {
                 DockPosition newDockPos = checkDockPosition(currentPos, currentSize);
                 if (newDockPos != DockPosition::None) {
+                    // rozpocznij animację
+                    menuAnimationStart = currentPos;
+                    menuAnimationTarget = calculateDockedPosition(newDockPos, DockableWindowType::Menu);
+                    menuAnimationProgress = 0.0f;
+                    menuAnimating = true;
+
                     menuWindow.isDocked = true;
                     menuWindow.position = newDockPos;
                 }
@@ -235,22 +297,40 @@ void DockableWindowManager::drawMenu() {
 }
 
 void DockableWindowManager::drawStartButton() {
-    ImVec2 startPos, startSize;
-    ImGuiWindowFlags startFlags = ImGuiWindowFlags_AlwaysAutoResize;
+    ImVec2 startPos;
+    ImGuiWindowFlags startFlags = 0;
+
+    // ma zawsze staly rozmiar
+    ImGui::SetNextWindowSize(calculateDockedSize(startWindow.position, DockableWindowType::Start), ImGuiCond_Always);
 
     if (startWindow.isDocked) {
-        startSize = calculateDockedSize(startWindow.position, DockableWindowType::Start);
-        startPos = calculateDockedPosition(startWindow.position, DockableWindowType::Start);
-        startFlags |= ImGuiWindowFlags_NoMove;
+        ImVec2 targetPos = calculateDockedPosition(startWindow.position, DockableWindowType::Start);
+
+        // animacja dockowania
+        if (startAnimating) {
+            ImGuiIO& io = ImGui::GetIO();
+            startAnimationProgress += io.DeltaTime * animationSpeed;
+
+            if (startAnimationProgress >= 1.0f) {
+                startAnimationProgress = 1.0f;
+                startAnimating = false;
+            }
+
+            startPos = lerpVec2(startAnimationStart, startAnimationTarget, startAnimationProgress);
+        } else {
+            startPos = targetPos;
+        }
+
+        startFlags |= ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
+        ImGui::SetNextWindowPos(startPos, ImGuiCond_Always);
     } else {
         startPos = startWindow.undockedPos;
+        ImGui::SetNextWindowSizeConstraints(ImVec2(160, 150), ImVec2(FLT_MAX, FLT_MAX));
+
+        ImGui::SetNextWindowPos(startPos, ImGuiCond_FirstUseEver);
     }
 
-    ImGui::SetNextWindowPos(startPos, startWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.6f);
-    ImGui::SetNextWindowSize(startSize, startWindow.isDocked ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(160, 150), ImVec2(FLT_MAX, FLT_MAX));
-
 
     if (ImGui::Begin("Start / Stop", nullptr, startFlags)) {
         // szerokość w pikselach
@@ -338,7 +418,6 @@ void DockableWindowManager::drawStartButton() {
                 ImGuiIO& io = ImGui::GetIO();
                 ImVec2 displaySize = io.DisplaySize;
                 startWindow.undockedPos = ImVec2(displaySize.x * 0.5f, displaySize.y * 0.4f);
-                // domyślny rozmiar
             }
         }
 
@@ -355,6 +434,12 @@ void DockableWindowManager::drawStartButton() {
             if (wasDraggingStart && !isDragging) {
                 DockPosition newDockPos = checkDockPosition(currentPos, currentSize);
                 if (newDockPos != DockPosition::None) {
+                    // rozpocznij animację
+                    startAnimationStart = currentPos;
+                    startAnimationTarget = calculateDockedPosition(newDockPos, DockableWindowType::Start);
+                    startAnimationProgress = 0.0f;
+                    startAnimating = true;
+
                     startWindow.isDocked = true;
                     startWindow.position = newDockPos;
                 }

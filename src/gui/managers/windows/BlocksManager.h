@@ -30,7 +30,7 @@ public:
 	int draggedWindowId = -1;
 
 	// drawing blocks
-	void drawBlock(std::shared_ptr<Block> box);
+	void drawBlock(const std::shared_ptr<Block> &box);
 	// moving, selection
 	void clearSelectedBlocks(const ImGuiIO& io);
 	void duplicateSelectedBlocks(const ImGuiIO& io);
