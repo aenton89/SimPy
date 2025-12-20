@@ -196,8 +196,8 @@ void DockableWindowManager::drawMenu() {
         if (ImGui::CollapsingHeader("DSP")) {
             if (ImGui::Button("Add FFT Box"))
                 guiCore->model.addBlock<FFTBlock>();
-            if (ImGui::Button("Add STFT Box (work in progres)"))
-                guiCore->model.addBlock<STFT_block>();
+            // if (ImGui::Button("Add STFT Box (work in progres)"))
+            //     guiCore->model.addBlock<STFT_block>();
             if (ImGui::Button("Add filter Box"))
                 guiCore->model.addBlock<filterImplementationBlock>();
             if (ImGui::Button("Add MovAvg Box"))

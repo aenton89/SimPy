@@ -211,11 +211,13 @@ public:
 // FFT
 class FFTBlock : public BlockCloneable<FFTBlock> {
 private:
+    std::vector<cd> timeBuffer;
+    std::vector<cd> fftBuffer;
+
+    size_t counter = 0;
+    bool fftReady = false;
     long windowSize = 128;
-    std::vector<cd> input_buffor;
-    std::vector<cd> output_buffor;
     int type_of_work = 0;
-    int counter = 0;
 public:
     FFTBlock() : BlockCloneable <FFTBlock>(-1, 1, 1, true) {};
     explicit FFTBlock(int _id);
@@ -223,48 +225,55 @@ public:
     void drawContent() override;
     void drawMenu() override;
     void resetBefore() override;
-};
-
-// Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
-class STFT_block : public BlockCloneable<STFT_block> {
-private:
-    long windowSize = 128;
-    int current_window_mode = 0;
-    long overlap = 64;
-    double fs = 1/Model::timeStep;
-    long nextPow2 = 128;
-    int current_return_type = 0;
-
-    // vector do przechowywania okna
-    std::vector<double> window_vector;
-    // vector do przechowyania batcha
-    std::vector<std::complex<double>> batch_vector;
-
-
-public:
-    // konstruktor dla cereal
-    STFT_block() : BlockCloneable<STFT_block>(-1, 2, 1, false) {}
-    explicit STFT_block(int _id_);
-    void process() override;
-    void drawContent() override;
-    void drawMenu() override;
-    void resetBefore() override;
-
-    static std::vector<double> generateWindowVector(int N, int idx);
 
     template<class Archive>
     void serialize(Archive& ar) {
         ar(cereal::base_class<Block>(this),
            CEREAL_NVP(windowSize),
-           CEREAL_NVP(current_window_mode),
-           CEREAL_NVP(overlap),
-           CEREAL_NVP(fs),
-           CEREAL_NVP(nextPow2),
-           CEREAL_NVP(current_return_type),
-           CEREAL_NVP(window_vector),
-           CEREAL_NVP(batch_vector));
+           CEREAL_NVP(type_of_work));
     }
 };
+
+// Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
+// class STFT_block : public BlockCloneable<STFT_block> {
+// private:
+//     long windowSize = 128;
+//     int current_window_mode = 0;
+//     long overlap = 64;
+//     double fs = 1/Model::timeStep;
+//     long nextPow2 = 128;
+//     int current_return_type = 0;
+//
+//     // vector do przechowywania okna
+//     std::vector<double> window_vector;
+//     // vector do przechowyania batcha
+//     std::vector<std::complex<double>> batch_vector;
+//
+//
+// public:
+//     // konstruktor dla cereal
+//     STFT_block() : BlockCloneable<STFT_block>(-1, 2, 1, false) {}
+//     explicit STFT_block(int _id_);
+//     void process() override;
+//     void drawContent() override;
+//     void drawMenu() override;
+//     void resetBefore() override;
+//
+//     static std::vector<double> generateWindowVector(int N, int idx);
+//
+//     template<class Archive>
+//     void serialize(Archive& ar) {
+//         ar(cereal::base_class<Block>(this),
+//            CEREAL_NVP(windowSize),
+//            CEREAL_NVP(current_window_mode),
+//            CEREAL_NVP(overlap),
+//            CEREAL_NVP(fs),
+//            CEREAL_NVP(nextPow2),
+//            CEREAL_NVP(current_return_type),
+//            CEREAL_NVP(window_vector),
+//            CEREAL_NVP(batch_vector));
+//     }
+// };
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // projektowanie filtrow
@@ -643,14 +652,14 @@ public:
 class PlotHeatmapBlock : public BlockCloneable<PlotHeatmapBlock> {
 private:
     std::vector<double> data;
-    // liczba wierszy w kolumnie fft
-    size_t num_row = 1;
+    size_t num_row = 128;
 public:
     // konstruktor dla cereal
-    PlotHeatmapBlock() : BlockCloneable<PlotHeatmapBlock>(-1, 2, 1, false) {}
+    PlotHeatmapBlock() : BlockCloneable<PlotHeatmapBlock>(-1, 1, 0, false) {}
     explicit PlotHeatmapBlock(int _id);
     void process() override;
     void drawContent() override;
+    void drawMenu() override;
     void resetBefore() override;
 
     template<class Archive>

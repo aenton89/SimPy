@@ -695,55 +695,58 @@ void PlotXYBlock::drawMenu() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // plot heatmap
-PlotHeatmapBlock::PlotHeatmapBlock(int _id) : BlockCloneable(_id, 65, 0, false){
+PlotHeatmapBlock::PlotHeatmapBlock(int _id) : BlockCloneable(_id, 1, 0, true){
     size = ImVec2(350, 200);
 }
 
 void PlotHeatmapBlock::process() {
-    if (!std::isnan(inputValues[0])) {
-        std::cout << "------------------HeatMap---------------: " << inputValues[0] << " " << inputValues.size() << std::endl;
-        for (auto val: inputValues) {
-            std::cout << val << " ";
-        }
-        num_row = std::max(num_row, inputValues.size());
-        data.insert(data.end(), inputValues.begin(), inputValues.end());
-    }
+    data.push_back(inputValues[0]);
 }
 
 void PlotHeatmapBlock::drawContent() {
+    Block::drawContent();
+
     if (ImPlot::BeginPlot("##PlotHeatmap", size)) {
 
-        int rows = num_row;
-        // zakładamy, że data.size() jest wielokrotnością rows
-        int cols = data.size() / rows;
+        int nFreq = num_row;
+        int nTime = data.size() / nFreq;
 
-        if (cols > 0 && rows > 0) {
+        if (nFreq > 0 && nTime > 0) {
+
+            std::vector<float> heatmap_data(data.size());
+
+            for (int t = 0; t < nTime; t++) {
+                for (int f = 0; f < nFreq; f++) {
+                    heatmap_data[t * nFreq + f] = data[f * nTime + t];
+
+                    // heatmap_data[t * nFreq + f] = 20.0f * std::log10(std::max(data[f * nTime + t], 1e-6f));
+                }
+            }
+
             ImPlot::PlotHeatmap(
                 "Spectrogram",
-                data.data(),
-                rows, cols,
-                0, 0,                   // skala min/max (kolory)
-                "%.1f",                         // format etykiet
-                ImPlotPoint(0, 0),          // minimalny punkt (x_min, y_min)
-                ImPlotPoint(cols-1, rows-1) // maksymalny punkt (x_max, y_max)
+                heatmap_data.data(),
+                nFreq, nTime,
+                0, 0,
+                "%.1f",
+                ImPlotPoint(0, 0),
+                ImPlotPoint(nFreq - 1, nTime - 1)
             );
         }
 
         ImPlot::EndPlot();
     }
-
-    Block::drawContent();
-
-    // int i = 0;
-    // for (auto &arr : data) {
-    //     std::cout << arr << " ";;
-    //     i ++ ;
-    //     if (i % num_row == 0)
-    //         std::cout << std::endl;
-    // }
 }
 
+
+
+void PlotHeatmapBlock::drawMenu() {
+    ImGui::InputScalar("Number of Rows", ImGuiDataType_S64, &num_row);
+}
+
+
 void PlotHeatmapBlock::resetBefore() {
+    inputValues[0] = 0;
     data.clear();
 }
 
@@ -1065,7 +1068,8 @@ void PID_regulator::resetBefore() {
 
 FFTBlock::FFTBlock(int id_): BlockCloneable<FFTBlock>(id_, 1, 1, true) {
     size = ImVec2(200, 120);
-    output_buffor.resize(windowSize);
+    fftBuffer.resize(windowSize);
+    std::fill(fftBuffer.begin(), fftBuffer.end(), 0.0);
 }
 
 void FFTBlock::drawContent() {
@@ -1087,46 +1091,77 @@ void FFTBlock::drawMenu() {
         ImGui::EndCombo();
     }
 
-    output_buffor.resize(windowSize);
+    fftBuffer.resize(windowSize);
+    std::fill(fftBuffer.begin(), fftBuffer.end(), 0.0);
 }
 
-void FFTBlock::process() {
-    if (input_buffor.size() < windowSize) {
-        input_buffor.push_back(cd(inputValues[0], 0.0));
-    } else {
-        dsp::fft(input_buffor, false);
+void FFTBlock::process()
+{
+    // Dodajemy nową próbkę do bufora czasowego
+    timeBuffer.push_back(cd(inputValues[0], 0.0));
 
-        std::fill(output_buffor.begin(), output_buffor.end(), cd(0.0, 0.0));
-
-        if (type_of_work == 1) {
-            // ===== COMPLEX =====
-            for (int i = 0; i < windowSize; ++i) {
-                output_buffor[i] = input_buffor[i] / double(windowSize);
+    // Faza wypychania FFT
+    if (fftReady)
+    {
+        if (counter < windowSize)
+        {
+            if (type_of_work == 0)
+            {
+                // tryb 0: tylko część rzeczywista FFT, reszta zerami
+                if (counter < windowSize / 2) // pierwsza połowa widma rzeczywista
+                    outputValues[0] = std::abs(fftBuffer[counter]);
+                else
+                    outputValues[0] = 0.0;
             }
-        } else {
-            // ===== REAL =====
-            int half = windowSize / 2;
-
-            output_buffor[0] = input_buffor[0] / double(windowSize);
-
-            for (int i = 1; i < half; ++i) {
-                output_buffor[i] =
-                    (input_buffor[i] * 2.0) / double(windowSize);
+            else
+            {
+                // tryb 1: standardowe wypychanie całego widma
+                outputValues[0] = std::abs(fftBuffer[counter]);
             }
-
-            if (windowSize % 2 == 0) {
-                output_buffor[half] =
-                    input_buffor[half] / double(windowSize);
-            }
+            counter++;
         }
-
-        input_buffor.clear();
-        counter = 0;
+        else
+        {
+            // koniec okna FFT
+            fftReady = false;
+            outputValues[0] = 0.0;
+        }
+        return;
     }
 
-    outputValues[0] = std::abs(output_buffor[counter]);
-    counter++;
+    // Sprawdzenie, czy bufor osiągnął pełne okno
+    if (timeBuffer.size() >= windowSize)
+    {
+        // Kopiujemy próbki do bufora FFT
+        fftBuffer = std::vector<cd>(timeBuffer.begin(), timeBuffer.begin() + windowSize);
+
+        // Liczymy FFT
+        dsp::fft(fftBuffer, false);
+
+        // Reset licznika do wypychania wyników
+        counter = 0;
+        fftReady = true;
+
+        // Wypchnięcie pierwszej próbki od razu
+        if (type_of_work == 0)
+        {
+            if (counter < windowSize / 2)
+                outputValues[0] = std::abs(fftBuffer[counter]);
+            else
+                outputValues[0] = 0.0;
+        }
+        else
+        {
+            outputValues[0] = std::abs(fftBuffer[counter]);
+        }
+        counter++;
+        return;
+    }
+
+    // Bufor jeszcze nie pełny → zero
+    outputValues[0] = 0.0;
 }
+
 
 
 
@@ -1134,141 +1169,137 @@ void FFTBlock::resetBefore() {
     counter = 0;
     inputValues[0] = 0.0;
     outputValues[0] = 0.0;
-    input_buffor.clear();
-    output_buffor.clear();
-    output_buffor.resize(windowSize);
+    timeBuffer.clear();
+    fftBuffer.clear();
+    fftBuffer.resize(windowSize);
 }
-
-
-
-
 
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // STFT - imo pujdzie do wyjebania bo pomysl jest glopi
 
-STFT_block::STFT_block(int id_) : BlockCloneable(id_, 1, 65, true) {
-    size = ImVec2(200, 120);
-    window_vector = STFT_block::generateWindowVector(windowSize, current_window_mode);
-
-}
-
-void STFT_block::drawContent() {
-    ImGui::Text("STFT");
-    Block::drawContent();
-
-}
-
-std::vector<double> STFT_block::generateWindowVector(int N, int idx) {
-    std::vector<double> windowVector(N);
-
-    for (int i=0; i < N; i++) {
-        switch (idx) {
-        case 0: // Hann
-            windowVector[i] = 0.5 * (1 - cos(2 * std::numbers::pi * i / (N - 1)));
-            break;
-        case 1: // Hamming
-            windowVector[i] = 0.54 - 0.46 * cos(2 * std::numbers::pi * i / (N - 1));
-            break;
-        case 2:
-            windowVector[i] = 0.42 - 0.5 * cos(2 * std::numbers::pi  * i / (N - 1)) + 0.08 * cos(4 * std::numbers::pi * i / (N - 1));
-            break;
-        case 3: // Okno prostokatne
-            windowVector[i] = 1;
-            break;
-        }
-    }
-    return windowVector;
-}
-
-void STFT_block::drawMenu() {
-    // wybor rodziaju okna
-    const static char* window_type[] = {"Hann", "Hamming", "Blackman", "Rectangular"};
-    if (ImGui::BeginCombo("Window type", window_type[current_window_mode], false)) {
-        for (int i=0; i < IM_ARRAYSIZE(window_type); i++) {
-            bool is_selected = (current_window_mode == i);
-            if (ImGui::Selectable(window_type[i], is_selected)) {
-                current_window_mode = i;
-            }
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndCombo();
-    }
-
-    // wybor tego co ma blok zwracac
-    const static char* return_type[] = {"Real", "Complex", "Magnitude"};
-    if (ImGui::BeginCombo("Return type", return_type[current_return_type], false)) {
-        for (int i=0; i < IM_ARRAYSIZE(return_type); i++) {
-            bool is_selected = (current_return_type == i);
-            if (ImGui::Selectable(return_type[i], is_selected))
-                current_return_type = i;
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndCombo();
-    }
-
-    ImGui::InputScalar("Window Size: ", ImGuiDataType_S64, &windowSize);
-    ImGui::InputScalar("Overlap: ", ImGuiDataType_S64, &overlap);
-    ImGui::InputDouble("fs: ", &fs);
-
-    if (windowSize <= 0)
-        windowSize = 128;
-    if (windowSize < overlap)
-        overlap = windowSize / 2;
-
-    window_vector = STFT_block::generateWindowVector(windowSize, current_window_mode);
-    // nextPow2 = std::pow(2, std::ceil(std::log2(windowSize))); // Do Cooley-Tukey
-}
-
-
-void STFT_block::process() {
-    // trzeba tu zrobic myk. Dla okna bedacego potego 2 uzywamy algortymu Cooley-Tukey a dla innych troche wolneiusjzego Bluestein
-    batch_vector.emplace_back(inputValues[0], 0.0);
-    if (batch_vector.size() == windowSize) {
-        for (int i=0; i < windowSize; i++) {
-            batch_vector[i] = batch_vector[i]*window_vector[i];
-        }
-
-        std::vector<std::complex<double>> X = dsp::bluestein(batch_vector);
-        X.erase(X.begin() + X.size() / 2 + 1, X.end());
-        std::vector<double> output(X.size());
-
-        // trzba dodac konwersji na poddstwie typu danych ajkie zwracamy
-        if (current_return_type == 0) {
-            for (size_t i = 0; i < X.size(); i++) {
-                output[i] = X[i].real();
-            }
-        }
-        else if (current_return_type == 1) {
-            for (size_t i = 0; i < X.size(); i++) {
-                output[i] = X[i].imag();
-            }
-        }
-        else if (current_return_type == 2){
-            for (size_t i = 0; i < X.size(); i++)
-                output[i] = std::abs(X[i]);
-        }
-
-        // ja bym tutaj dodal jakis triger ktory mowi ze nastepny blok ma przyjac pkt. Np true albo false
-        outputValues = output;
-        // std::cout << "------------------STFT---------------: " << outputValues[0] << " " << outputValues.size() << std::endl;
-        batch_vector.erase(batch_vector.begin(), batch_vector.begin() + windowSize - overlap);
-    }
-    else {
-        //std::cout << "------------------STFT_Nan---------------" << batch_vector.size() << std::endl;
-        // usposledzone podejscie do zmiany, gdy sie zrobi triger i temaplate ze mozna zmianac typ wysylanych danych
-        outputValues = {NAN};
-    }
-}
-
-void STFT_block::resetBefore() {
-    outputValues = std::vector<double>(NAN);
-    batch_vector.clear();
-}
-
+// STFT_block::STFT_block(int id_) : BlockCloneable(id_, 1, 65, true) {
+//     size = ImVec2(200, 120);
+//     window_vector = STFT_block::generateWindowVector(windowSize, current_window_mode);
+//
+// }
+//
+// void STFT_block::drawContent() {
+//     ImGui::Text("STFT");
+//     Block::drawContent();
+//
+// }
+//
+// std::vector<double> STFT_block::generateWindowVector(int N, int idx) {
+//     std::vector<double> windowVector(N);
+//
+//     for (int i=0; i < N; i++) {
+//         switch (idx) {
+//         case 0: // Hann
+//             windowVector[i] = 0.5 * (1 - cos(2 * std::numbers::pi * i / (N - 1)));
+//             break;
+//         case 1: // Hamming
+//             windowVector[i] = 0.54 - 0.46 * cos(2 * std::numbers::pi * i / (N - 1));
+//             break;
+//         case 2:
+//             windowVector[i] = 0.42 - 0.5 * cos(2 * std::numbers::pi  * i / (N - 1)) + 0.08 * cos(4 * std::numbers::pi * i / (N - 1));
+//             break;
+//         case 3: // Okno prostokatne
+//             windowVector[i] = 1;
+//             break;
+//         }
+//     }
+//     return windowVector;
+// }
+//
+// void STFT_block::drawMenu() {
+//     // wybor rodziaju okna
+//     const static char* window_type[] = {"Hann", "Hamming", "Blackman", "Rectangular"};
+//     if (ImGui::BeginCombo("Window type", window_type[current_window_mode], false)) {
+//         for (int i=0; i < IM_ARRAYSIZE(window_type); i++) {
+//             bool is_selected = (current_window_mode == i);
+//             if (ImGui::Selectable(window_type[i], is_selected)) {
+//                 current_window_mode = i;
+//             }
+//             if (is_selected)
+//                 ImGui::SetItemDefaultFocus();
+//         }
+//         ImGui::EndCombo();
+//     }
+//
+//     // wybor tego co ma blok zwracac
+//     const static char* return_type[] = {"Real", "Complex", "Magnitude"};
+//     if (ImGui::BeginCombo("Return type", return_type[current_return_type], false)) {
+//         for (int i=0; i < IM_ARRAYSIZE(return_type); i++) {
+//             bool is_selected = (current_return_type == i);
+//             if (ImGui::Selectable(return_type[i], is_selected))
+//                 current_return_type = i;
+//             if (is_selected)
+//                 ImGui::SetItemDefaultFocus();
+//         }
+//         ImGui::EndCombo();
+//     }
+//
+//     ImGui::InputScalar("Window Size: ", ImGuiDataType_S64, &windowSize);
+//     ImGui::InputScalar("Overlap: ", ImGuiDataType_S64, &overlap);
+//     ImGui::InputDouble("fs: ", &fs);
+//
+//     if (windowSize <= 0)
+//         windowSize = 128;
+//     if (windowSize < overlap)
+//         overlap = windowSize / 2;
+//
+//     window_vector = STFT_block::generateWindowVector(windowSize, current_window_mode);
+//     // nextPow2 = std::pow(2, std::ceil(std::log2(windowSize))); // Do Cooley-Tukey
+// }
+//
+//
+// void STFT_block::process() {
+//     // trzeba tu zrobic myk. Dla okna bedacego potego 2 uzywamy algortymu Cooley-Tukey a dla innych troche wolneiusjzego Bluestein
+//     batch_vector.emplace_back(inputValues[0], 0.0);
+//     if (batch_vector.size() == windowSize) {
+//         for (int i=0; i < windowSize; i++) {
+//             batch_vector[i] = batch_vector[i]*window_vector[i];
+//         }
+//
+//         std::vector<std::complex<double>> X = dsp::bluestein(batch_vector);
+//         X.erase(X.begin() + X.size() / 2 + 1, X.end());
+//         std::vector<double> output(X.size());
+//
+//         // trzba dodac konwersji na poddstwie typu danych ajkie zwracamy
+//         if (current_return_type == 0) {
+//             for (size_t i = 0; i < X.size(); i++) {
+//                 output[i] = X[i].real();
+//             }
+//         }
+//         else if (current_return_type == 1) {
+//             for (size_t i = 0; i < X.size(); i++) {
+//                 output[i] = X[i].imag();
+//             }
+//         }
+//         else if (current_return_type == 2){
+//             for (size_t i = 0; i < X.size(); i++)
+//                 output[i] = std::abs(X[i]);
+//         }
+//
+//         // ja bym tutaj dodal jakis triger ktory mowi ze nastepny blok ma przyjac pkt. Np true albo false
+//         outputValues = output;
+//         // std::cout << "------------------STFT---------------: " << outputValues[0] << " " << outputValues.size() << std::endl;
+//         batch_vector.erase(batch_vector.begin(), batch_vector.begin() + windowSize - overlap);
+//     }
+//     else {
+//         //std::cout << "------------------STFT_Nan---------------" << batch_vector.size() << std::endl;
+//         // usposledzone podejscie do zmiany, gdy sie zrobi triger i temaplate ze mozna zmianac typ wysylanych danych
+//         outputValues = {NAN};
+//     }
+// }
+//
+// void STFT_block::resetBefore() {
+//     outputValues = std::vector<double>(NAN);
+//     batch_vector.clear();
+// }
+//
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------
@@ -2059,7 +2090,8 @@ REGISTER_BLOCK_TYPE(IntegratorBlock);
 REGISTER_BLOCK_TYPE(DifferentiatorBlock);
 REGISTER_BLOCK_TYPE(TransferFuncionContinous);
 REGISTER_BLOCK_TYPE(PID_regulator);
-REGISTER_BLOCK_TYPE(STFT_block);
+// REGISTER_BLOCK_TYPE(STFT_block);
+REGISTER_BLOCK_TYPE(FFTBlock);
 REGISTER_BLOCK_TYPE(filterImplementationBlock);
 REGISTER_BLOCK_TYPE(medianFilter1DBlock);
 REGISTER_BLOCK_TYPE(meanFilter1DBlock);
