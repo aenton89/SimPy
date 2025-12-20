@@ -209,6 +209,22 @@ public:
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // FFT
+class FFTBlock : public BlockCloneable<FFTBlock> {
+private:
+    long windowSize = 128;
+    std::vector<cd> input_buffor;
+    std::vector<cd> output_buffor;
+    int type_of_work = 0;
+    int counter = 0;
+public:
+    FFTBlock() : BlockCloneable <FFTBlock>(-1, 1, 1, true) {};
+    explicit FFTBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+};
+
 // Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
 class STFT_block : public BlockCloneable<STFT_block> {
 private:

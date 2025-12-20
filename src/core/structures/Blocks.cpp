@@ -1062,14 +1062,102 @@ void PID_regulator::resetBefore() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 // FFT
+
+FFTBlock::FFTBlock(int id_): BlockCloneable<FFTBlock>(id_, 1, 1, true) {
+    size = ImVec2(200, 120);
+    output_buffor.resize(windowSize);
+}
+
+void FFTBlock::drawContent() {
+    ImGui::Text("FFT");
+    Block::drawContent();
+}
+
+void FFTBlock::drawMenu() {
+    const static char* FFT_type[] = {"Real", "Complex"};
+    ImGui::InputScalar("Window Size: ", ImGuiDataType_S64, &windowSize);
+    if (ImGui::BeginCombo("Working type", FFT_type[type_of_work], false)) {
+        for (int i = 0; i < IM_ARRAYSIZE(FFT_type); i++) {
+            bool is_selected = (type_of_work == i);
+            if (ImGui::Selectable(FFT_type[i], is_selected))
+                type_of_work = i;
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    output_buffor.resize(windowSize);
+}
+
+void FFTBlock::process() {
+    if (input_buffor.size() < windowSize) {
+        input_buffor.push_back(cd(inputValues[0], 0.0));
+    } else {
+        dsp::fft(input_buffor, false);
+
+        std::fill(output_buffor.begin(), output_buffor.end(), cd(0.0, 0.0));
+
+        if (type_of_work == 1) {
+            // ===== COMPLEX =====
+            for (int i = 0; i < windowSize; ++i) {
+                output_buffor[i] = input_buffor[i] / double(windowSize);
+            }
+        } else {
+            // ===== REAL =====
+            int half = windowSize / 2;
+
+            output_buffor[0] = input_buffor[0] / double(windowSize);
+
+            for (int i = 1; i < half; ++i) {
+                output_buffor[i] =
+                    (input_buffor[i] * 2.0) / double(windowSize);
+            }
+
+            if (windowSize % 2 == 0) {
+                output_buffor[half] =
+                    input_buffor[half] / double(windowSize);
+            }
+        }
+
+        input_buffor.clear();
+        counter = 0;
+    }
+
+    outputValues[0] = std::abs(output_buffor[counter]);
+    counter++;
+}
+
+
+
+void FFTBlock::resetBefore() {
+    counter = 0;
+    inputValues[0] = 0.0;
+    outputValues[0] = 0.0;
+    input_buffor.clear();
+    output_buffor.clear();
+    output_buffor.resize(windowSize);
+}
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------
+// STFT - imo pujdzie do wyjebania bo pomysl jest glopi
+
 STFT_block::STFT_block(int id_) : BlockCloneable(id_, 1, 65, true) {
     size = ImVec2(200, 120);
     window_vector = STFT_block::generateWindowVector(windowSize, current_window_mode);
+
 }
 
 void STFT_block::drawContent() {
-    ImGui::Text("FFT");
+    ImGui::Text("STFT");
     Block::drawContent();
+
 }
 
 std::vector<double> STFT_block::generateWindowVector(int N, int idx) {

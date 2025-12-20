@@ -6,6 +6,9 @@
 #include "../../../core/structures/Model.h"
 #include "../../../core/structures/Blocks.h"
 #include "../../../data/math/solvers/SolverMethod.h"
+#include <algorithm>
+
+
 
 
 
@@ -84,7 +87,7 @@ ImVec2 DockableWindowManager::calculateDockedSize(DockPosition position, Dockabl
             availableHeight -= (DEFAULT_DOCKED_START_SIZE.y + 5);
 
         // szerokość i maksymalna wysokość
-        return {DEFAULT_DOCKED_MENU_SIZE.x, max(150.0f, availableHeight)};
+        return {DEFAULT_DOCKED_MENU_SIZE.x, std::max(150.0f, availableHeight)};
     }
 
     return DEFAULT_DOCKED_START_SIZE;
@@ -191,6 +194,8 @@ void DockableWindowManager::drawMenu() {
 
         // modul spketum czestoliwosciowego
         if (ImGui::CollapsingHeader("DSP")) {
+            if (ImGui::Button("Add FFT Box"))
+                guiCore->model.addBlock<FFTBlock>();
             if (ImGui::Button("Add STFT Box (work in progres)"))
                 guiCore->model.addBlock<STFT_block>();
             if (ImGui::Button("Add filter Box"))
