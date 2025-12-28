@@ -106,6 +106,33 @@ void dsp::printStateSpace(const MatOp::StateSpace& ss) {
     std::cout << "\n";
 }
 
+// okna sygnalowe
+std::vector<double> dsp::generateHann(int winSize) {
+    std::vector<double> window(winSize);
+    for (int n = 0; n < winSize; ++n) {
+        window[n] = 0.5 * (1 - std::cos(2 * M_PI * n / (winSize - 1)));
+    }
+    return window;
+}
+
+std::vector<double> dsp::generateHamming(int winSize) {
+    std::vector<double> window(winSize);
+    for (int n = 0; n < winSize; ++n) {
+        window[n] = 0.54 - 0.46 * std::cos(2 * M_PI * n / (winSize - 1));
+    }
+    return window;
+}
+
+std::vector<double> dsp::generateBlackman(int winSize) {
+    std::vector<double> window(winSize);
+    for (int n = 0; n < winSize; ++n) {
+        window[n] = 0.42 - 0.5 * std::cos(2 * M_PI * n / (winSize - 1))
+                        + 0.08 * std::cos(4 * M_PI * n / (winSize - 1));
+    }
+    return window;
+}
+
+
 // transmitancja operaotorowa
 MatOp::StateSpace dsp::tf2ss(std::vector<double> numerator, std::vector<double> denominator) {
 

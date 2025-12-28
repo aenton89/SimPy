@@ -426,11 +426,11 @@ float SignalFromFileBlock::readNextValue() {
 
 void SignalFromFileBlock::process() {
     if (current_read_mode == 0) { // read all
-        std::cout <<"debug" << i << std::endl;
+       // std::cout <<"debug" << i << std::endl;
         if (i < values.size()) {
             for (auto val: values)
             {
-                std::cout <<"debug" << val << std::endl;
+             //   std::cout <<"debug" << val << std::endl;
             }
             outputValues[0] = values[i];
             i++;
@@ -444,6 +444,7 @@ void SignalFromFileBlock::process() {
 
 void SignalFromFileBlock::resetAfter() {
     values.clear();
+    values = readValuesFromFile(filePath, is_scal, lower_band, upper_band);
     i=0;
 }
 
@@ -451,6 +452,69 @@ void PWMInputBlock::resetBefore() {
     currentTime = 0;
 
 }
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// inplemntacja okna
+// Konstruktor
+WindowApplayerBlock::WindowApplayerBlock(int id_) : BlockCloneable(id_, 1, 1, true) {
+    size = ImVec2(150, 80);
+    winSize = 128; // domyślna wielkość okna
+    type_of_window = 0; // domyślnie Hann
+    window_val = dsp::generateHann(winSize);
+    counter = 0;
+}
+
+void WindowApplayerBlock::process() {
+    if (counter < winSize) {
+        outputValues[0] = inputValues[0]*window_val[counter];
+        counter++;
+    } else
+        counter = 0;
+
+}
+
+void WindowApplayerBlock::drawMenu() {
+    if (ImGui::InputInt("Window size: ", &winSize)) {
+        if (winSize < 1) winSize = 1;
+        switch (type_of_window) {
+            case 0: window_val = dsp::generateHann(winSize); break;
+            case 1: window_val = dsp::generateHamming(winSize); break;
+            case 2: window_val = dsp::generateBlackman(winSize); break;
+        }
+        counter = 0;
+    }
+
+    const static char* winType[] = {"Hann", "Hamming", "Blackman"};
+    if (ImGui::BeginCombo("Window type", winType[type_of_window])) {
+        for (int i = 0; i < IM_ARRAYSIZE(winType); i++) {
+            bool is_selected = (type_of_window == i);
+            if (ImGui::Selectable(winType[i], is_selected)) {
+                type_of_window = i;
+                switch (type_of_window) {
+                    case 0: window_val = dsp::generateHann(winSize); break;
+                    case 1: window_val = dsp::generateHamming(winSize); break;
+                    case 2: window_val = dsp::generateBlackman(winSize); break;
+                }
+                counter = 0;
+            }
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+}
+
+void WindowApplayerBlock::drawContent() {
+    ImGui::Text("Window applier");
+    Block::drawContent();
+}
+
+void WindowApplayerBlock::resetBefore() {
+    counter = 0;
+    if (!inputValues.empty()) inputValues[0] = 0.0f;
+    if (!outputValues.empty()) outputValues[0] = 0.0f;
+}
+
 
 
 

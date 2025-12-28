@@ -103,6 +103,13 @@ namespace dsp{
         }
     };
 
+    // okna sygnalu
+    std::vector<double> generateHann(int winSize);
+    std::vector<double> generateHamming(int winSize);
+    std::vector<double> generateBlackman(int winSzie);
+
+
+
 
 
     void printStateSpace(const MatOp::StateSpace& ss);

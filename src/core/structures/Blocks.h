@@ -234,6 +234,22 @@ public:
     }
 };
 
+class WindowApplayerBlock : public BlockCloneable<WindowApplayerBlock> {
+private:
+    std::vector<double> window_val;
+    int winSize = 128;
+    int type_of_window = 0;
+    int counter = 0;
+
+public:
+    WindowApplayerBlock() : BlockCloneable<WindowApplayerBlock>(-1, 1, 1, true) {};
+    explicit WindowApplayerBlock(int id_);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+};
+
 // Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
 // class STFT_block : public BlockCloneable<STFT_block> {
 // private:

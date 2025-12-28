@@ -204,6 +204,8 @@ void DockableWindowManager::drawMenu() {
                 guiCore->model.addBlock<meanFilter1DBlock>();
             if (ImGui::Button("Add MedianFilter Box"))
                 guiCore->model.addBlock<medianFilter1DBlock>();
+            if (ImGui::Button("Add Window Box"))
+                guiCore->model.addBlock<WindowApplayerBlock>();
         }
 
         // modul print/ploty
