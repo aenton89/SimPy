@@ -14,6 +14,7 @@
 #include "managers/viewport/ViewportManager.h"
 #include "managers/windows/BlocksManager.h"
 #include "managers/viewport/ConnectionManager.h"
+#include "../tabs/TabModule.h"
 // #include <imgui.h>
 // #include <memory>
 // #include <string>
@@ -24,7 +25,7 @@
  * main logic core for UI is here
  * combines all modules together
  */
-class GUICore {
+class GUICore : public TabModule {
 public:
     GUICore();
 

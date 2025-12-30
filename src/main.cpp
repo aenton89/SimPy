@@ -3,7 +3,7 @@
 //
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
-#include "gui/GUICore.h"
+#include "blueprints/gui/GUICore.h"
 
 
 

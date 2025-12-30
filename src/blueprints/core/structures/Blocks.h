@@ -234,6 +234,8 @@ public:
     }
 };
 
+// ----------------------------------------------------------------------------------------------------------------------------------------
+// window applayer ??? nie applier? idk co tu ma być
 class WindowApplayerBlock : public BlockCloneable<WindowApplayerBlock> {
 private:
     std::vector<double> window_val;
@@ -250,8 +252,9 @@ public:
     void resetBefore() override;
 };
 
+// ----------------------------------------------------------------------------------------------------------------------------------------
 // Work in progres. Trzeba dokonczysc dopir jak da sie tempole na to zeby mnzona bylo przesylac array i triger czy przyjowac dane
-// class STFT_block : public BlockCloneable<STFT_block> {
+// class STFTBlock : public BlockCloneable<STFTBlock> {
 // private:
 //     long windowSize = 128;
 //     int current_window_mode = 0;
@@ -268,8 +271,8 @@ public:
 //
 // public:
 //     // konstruktor dla cereal
-//     STFT_block() : BlockCloneable<STFT_block>(-1, 2, 1, false) {}
-//     explicit STFT_block(int _id_);
+//     STFTBlock() : BlockCloneable<STFTBlock>(-1, 2, 1, false) {}
+//     explicit STFTBlock(int _id_);
 //     void process() override;
 //     void drawContent() override;
 //     void drawMenu() override;

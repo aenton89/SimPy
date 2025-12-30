@@ -19,30 +19,33 @@ add_executable(SimPy
         src/imgui_backends/imgui_impl_glfw.cpp
         src/imgui_backends/imgui_impl_opengl3.cpp
         # bloczki i inne dane
-        src/core/structures/BasicBlock.cpp
-        src/core/structures/Blocks.cpp
-        src/core/structures/Model.cpp
-        src/core/structures/Connection.cpp
+        src/blueprints/core/structures/BasicBlock.cpp
+        src/blueprints/core/structures/Blocks.cpp
+        src/blueprints/core/structures/Model.cpp
+        src/blueprints/core/structures/Connection.cpp
         # przesył danych
-        src/data/data_sender/DataChannelManager.cpp
-        src/data/data_sender/ESPCommunication.cpp
+        src/blueprints/data/data_sender/DataChannelManager.cpp
+        src/blueprints/data/data_sender/ESPCommunication.cpp
         # matematyka
-        src/data/math/matrix_operation/MatrixOperations.cpp
-        src/data/math/solvers/SolverMethod.cpp
-        src/data/math/solvers/Solver.cpp
-        src/data/math/solvers/SolverManager.cpp
-        src/data/math/digital_signal_processing/DSP.cpp
-        src/data/math/math_help_fun/MathHelperFunctions.cpp
+        src/blueprints/data/math/matrix_operation/MatrixOperations.cpp
+        src/blueprints/data/math/solvers/SolverMethod.cpp
+        src/blueprints/data/math/solvers/Solver.cpp
+        src/blueprints/data/math/solvers/SolverManager.cpp
+        src/blueprints/data/math/digital_signal_processing/DSP.cpp
+        src/blueprints/data/math/math_help_fun/MathHelperFunctions.cpp
         # gui
-        src/gui/GUICore.cpp
-        src/gui/managers/windows/DockableWindowManager.cpp
-        src/gui/managers/files/FileManager.cpp
-        src/gui/managers/viewport/ViewportManager.cpp
-        src/gui/managers/windows/BlocksManager.cpp
-        src/gui/managers/viewport/ConnectionManager.cpp
-        src/gui/managers/BasicManager.cpp
+        src/blueprints/gui/GUICore.cpp
+        src/blueprints/gui/managers/windows/DockableWindowManager.cpp
+        src/blueprints/gui/managers/files/FileManager.cpp
+        src/blueprints/gui/managers/viewport/ViewportManager.cpp
+        src/blueprints/gui/managers/windows/BlocksManager.cpp
+        src/blueprints/gui/managers/viewport/ConnectionManager.cpp
+        src/blueprints/gui/managers/BasicManager.cpp
         # rdzenio-podobne funkcje
-        src/core/project/ProjectMetadata.cpp
+        src/blueprints/core/project/ProjectMetadata.cpp
+        # karty jak w chrome
+        src/tabs/TabManager.cpp
+        src/tabs/TabModule.cpp
 )
 
 target_compile_definitions(SimPy PRIVATE
@@ -67,8 +70,8 @@ target_link_libraries(SimPy PRIVATE
 target_include_directories(SimPy PRIVATE
         ${imgui_INCLUDE_DIRS}
         src/imgui_backends
-        src/gui
-        src/data
+        src/blueprints/gui
+        src/blueprints/data
 )
 
 target_compile_definitions(SimPy PRIVATE ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
@@ -82,20 +85,20 @@ add_executable(tests
         tests/test.cpp
 
         # bloczki i inne dane
-        src/core/structures/BasicBlock.cpp
-        src/core/structures/Blocks.cpp
-        src/core/structures/Model.cpp
-        src/core/structures/Connection.cpp
+        src/blueprints/core/structures/BasicBlock.cpp
+        src/blueprints/core/structures/Blocks.cpp
+        src/blueprints/core/structures/Model.cpp
+        src/blueprints/core/structures/Connection.cpp
         # matematyka
-        src/data/math/matrix_operation/MatrixOperations.cpp
-        src/data/math/solvers/SolverMethod.cpp
-        src/data/math/solvers/Solver.cpp
-        src/data/math/solvers/SolverManager.cpp
-        src/data/math/digital_signal_processing/DSP.cpp
-        src/data/math/math_help_fun/MathHelperFunctions.cpp
+        src/blueprints/data/math/matrix_operation/MatrixOperations.cpp
+        src/blueprints/data/math/solvers/SolverMethod.cpp
+        src/blueprints/data/math/solvers/Solver.cpp
+        src/blueprints/data/math/solvers/SolverManager.cpp
+        src/blueprints/data/math/digital_signal_processing/DSP.cpp
+        src/blueprints/data/math/math_help_fun/MathHelperFunctions.cpp
         # przesył danych
-        src/data/data_sender/DataChannelManager.cpp
-        src/data/data_sender/ESPCommunication.cpp
+        src/blueprints/data/data_sender/DataChannelManager.cpp
+        src/blueprints/data/data_sender/ESPCommunication.cpp
 )
 
 target_include_directories(tests PRIVATE src)

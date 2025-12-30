@@ -18,10 +18,15 @@ void dsp::fft(std::vector<cd> &a, bool invert) {
     int n = a.size();
     for (int i = 1, j = 0; i < n; i++) {
         int bit = n >> 1;
-        for (; j & bit; bit >>= 1) j ^= bit;
+        for (; j & bit; bit >>= 1)
+            j ^= bit;
+
         j ^= bit;
-        if (i < j) std::swap(a[i], a[j]);
+
+        if (i < j)
+            std::swap(a[i], a[j]);
     }
+
     for (int len = 2; len <= n; len <<= 1) {
         double ang = 2 * std::numbers::pi / len * (invert ? -1 : 1);
         cd wlen(std::cos(ang), std::sin(ang));
@@ -35,19 +40,25 @@ void dsp::fft(std::vector<cd> &a, bool invert) {
             }
         }
     }
-    if (invert) for (cd &x : a) x /= n;
+
+    if (invert) {
+        for (cd &x : a)
+            x /= n;
+    }
 }
 
 // konwolucja przez FFT
 std::vector<cd> dsp::convolve(std::vector<cd> const& a, std::vector<cd> const& b) {
     std::vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());
     int n = 1;
-    while (n < static_cast<int>(a.size() + b.size())) n <<= 1;
+    while (n < static_cast<int>(a.size() + b.size()))
+        n <<= 1;
     fa.resize(n); fb.resize(n);
 
     dsp::fft(fa, false);
     dsp::fft(fb, false);
-    for (int i = 0; i < n; i++) fa[i] *= fb[i];
+    for (int i = 0; i < n; i++)
+        fa[i] *= fb[i];
     dsp::fft(fa, true);
     return fa;
 }
@@ -79,30 +90,35 @@ void dsp::printStateSpace(const MatOp::StateSpace& ss) {
 
     std::cout << "A:\n";
     for (const auto& row : ss.A) {
-        for (double v : row) std::cout << v << " ";
+        for (double v : row)
+            std::cout << v << " ";
         std::cout << "\n";
     }
 
     std::cout << "B:\n";
     for (const auto& row : ss.B) {
-        for (double v : row) std::cout << v << " ";
+        for (double v : row)
+            std::cout << v << " ";
         std::cout << "\n";
     }
 
     std::cout << "C:\n";
     for (const auto& row : ss.C) {
-        for (double v : row) std::cout << v << " ";
+        for (double v : row)
+            std::cout << v << " ";
         std::cout << "\n";
     }
 
     std::cout << "D:\n";
     for (const auto& row : ss.D) {
-        for (double v : row) std::cout << v << " ";
+        for (double v : row)
+            std::cout << v << " ";
         std::cout << "\n";
     }
 
     std::cout << "x (stan początkowy): ";
-    for (double v : ss.x) std::cout << v << " ";
+    for (double v : ss.x)
+        std::cout << v << " ";
     std::cout << "\n";
 }
 
@@ -110,7 +126,7 @@ void dsp::printStateSpace(const MatOp::StateSpace& ss) {
 std::vector<double> dsp::generateHann(int winSize) {
     std::vector<double> window(winSize);
     for (int n = 0; n < winSize; ++n) {
-        window[n] = 0.5 * (1 - std::cos(2 * M_PI * n / (winSize - 1)));
+        window[n] = 0.5 * (1 - std::cos(2 * std::numbers::pi * n / (winSize - 1)));
     }
     return window;
 }
@@ -118,7 +134,7 @@ std::vector<double> dsp::generateHann(int winSize) {
 std::vector<double> dsp::generateHamming(int winSize) {
     std::vector<double> window(winSize);
     for (int n = 0; n < winSize; ++n) {
-        window[n] = 0.54 - 0.46 * std::cos(2 * M_PI * n / (winSize - 1));
+        window[n] = 0.54 - 0.46 * std::cos(2 * std::numbers::pi * n / (winSize - 1));
     }
     return window;
 }
@@ -126,8 +142,7 @@ std::vector<double> dsp::generateHamming(int winSize) {
 std::vector<double> dsp::generateBlackman(int winSize) {
     std::vector<double> window(winSize);
     for (int n = 0; n < winSize; ++n) {
-        window[n] = 0.42 - 0.5 * std::cos(2 * M_PI * n / (winSize - 1))
-                        + 0.08 * std::cos(4 * M_PI * n / (winSize - 1));
+        window[n] = 0.42 - 0.5 * std::cos(2 * std::numbers::pi * n / (winSize - 1)) + 0.08 * std::cos(4 * std::numbers::pi * n / (winSize - 1));
     }
     return window;
 }
@@ -136,9 +151,8 @@ std::vector<double> dsp::generateBlackman(int winSize) {
 // transmitancja operaotorowa
 MatOp::StateSpace dsp::tf2ss(std::vector<double> numerator, std::vector<double> denominator) {
 
-    // if (denominator.empty()) {
+    // if (denominator.empty())
     //     throw std::invalid_argument("Mianownik nie może być pusty.");
-    // }
 
     if (numerator.size() > denominator.size()) {
         numerator = {1, 0};
@@ -218,14 +232,18 @@ dsp::Bode dsp::bode_characteristic(const tf& Tf) {
     // Szukamy minimalnej i maksymalnej wartości modułu biegunów i zer
     for (const auto& p: Tf.poles) {
         double mag = std::abs(p);
-        if (mag < wmin) wmin = mag;
-        if (mag > wmax) wmax = mag;
+        if (mag < wmin)
+            wmin = mag;
+        if (mag > wmax)
+            wmax = mag;
     }
 
     for (const auto& z: Tf.zeros) {
         double mag = std::abs(z);
-        if (mag < wmin) wmin = mag;
-        if (mag > wmax) wmax = mag;
+        if (mag < wmin)
+            wmin = mag;
+        if (mag > wmax)
+            wmax = mag;
     }
 
     // zabezpieczenie w przypadku wmin = 0
@@ -245,17 +263,19 @@ dsp::Bode dsp::bode_characteristic(const tf& Tf) {
         cd s(0, w);
 
         cd num(1.0, 0);
-        for (auto z: Tf.zeros) num *= (s - z);
+        for (auto z: Tf.zeros)
+            num *= (s - z);
 
         cd den(1.0, 0);
-        for (auto p: Tf.poles) den *= (s - p);
+        for (auto p: Tf.poles)
+            den *= (s - p);
 
         cd H = Tf.gain * num / den;
 
         double magnitude_dB = 20.0 * std::log10(std::abs(H));
         double phase_deg = std::arg(H) * 180.0 / std::numbers::pi;
 
-        //std::cout << magnitude_dB << " " << phase_deg << " " << w << std::endl;
+        // std::cout << magnitude_dB << " " << phase_deg << " " << w << std::endl;
 
         bode.magnitude.push_back(magnitude_dB);
         bode.phase.push_back(phase_deg);
@@ -283,9 +303,8 @@ dsp::tf dsp::FilterDesigner::butterworth_proto() const {
     for (int i = 0; i < order; i++) {
         double theta = std::numbers::pi * (2.0 * i + 1.0 + order) / (2.0 * order);
         cd pole = std::exp(cd(0.0, theta));
-        if (pole.real() < 0.0) {
+        if (pole.real() < 0.0)
             poles.push_back(pole);
-        }
     }
 
     // brak zer w prototypie
@@ -312,8 +331,10 @@ dsp::tf dsp::FilterDesigner::chebyshev_i_proto() const {
             -std::sinh(beta / N) * std::sin(theta),
              std::cosh(beta / N) * std::cos(theta)
         );
-        // if (pole.real() < 0.0) // tylko lewa półpłaszczyzna
-            poles.push_back(pole);
+
+        // tylko lewa półpłaszczyzna
+        // if (pole.real() < 0.0)
+        poles.push_back(pole);
     }
 
     Tf.zeros = {};
@@ -369,13 +390,11 @@ dsp::tf dsp::FilterDesigner::besel_proto() const {
 
     int N = order;
 
-    if (N == 0) {
+    if (N == 0)
         poles.emplace_back(0.0, 0.0);
-    }
 
-    if (N == 1) {
+    if (N == 1)
         poles.emplace_back(-1.0, 0.0);
-    }
 
     if (N > 1) {
         // wyliczamy współczynniki wielomianu Bessela rekurencyjnie
@@ -391,7 +410,7 @@ dsp::tf dsp::FilterDesigner::besel_proto() const {
         poles = math::polyRoots_DK(an); // obliczamy bieguny
         for (auto &p : poles) {
             if (std::isnan(p.real()) || std::isnan(p.imag())) {
-                std::cerr << "Błąd: pierwiastek nie jest liczbą!" << std::endl;
+                std::cerr << "ERR: pierwiastek nie jest liczbą!" << std::endl;
             }
         }
     }
@@ -408,10 +427,12 @@ double eval_H(const dsp::tf& Tf, double omega) {
     cd s(0, omega);
 
     cd num(1.0, 0);
-    for (auto z: Tf.zeros) num *= (s - z);
+    for (auto z: Tf.zeros)
+        num *= (s - z);
 
     cd den(1.0, 0);
-    for (auto p: Tf.poles) den *= (s - p);
+    for (auto p: Tf.poles)
+        den *= (s - p);
 
     cd H = Tf.gain * num / den;
 

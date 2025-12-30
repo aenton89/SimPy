@@ -108,10 +108,6 @@ namespace dsp{
     std::vector<double> generateHamming(int winSize);
     std::vector<double> generateBlackman(int winSzie);
 
-
-
-
-
     void printStateSpace(const MatOp::StateSpace& ss);
 
     // filtr butherwortha

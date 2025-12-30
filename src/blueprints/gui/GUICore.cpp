@@ -18,7 +18,7 @@ CEREAL_FORCE_DYNAMIC_INIT(blocks)
 
 
 
-GUICore::GUICore() {
+GUICore::GUICore() : TabModule("Blueprints"){
     dockingManager.setGUICore(this);
     fileManager.setGUICore(this);
     viewportManager.setGUICore(this);
