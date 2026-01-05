@@ -109,6 +109,29 @@ void MultiplyBlock::resetBefore() {
     std::ranges::fill(outputValues, 0);
 }
 
+// ----------------------------------------------------------------------------------------------------------------------------------------------
+// dzielenie
+
+DivisionBlock::DivisionBlock(int _id) : BlockCloneable(_id, 2, 1, false) {
+    size = ImVec2(150, 80);
+}
+
+void DivisionBlock::drawContent() {
+    ImGui::Text("DivisionBlock");
+}
+
+void DivisionBlock::drawMenu() {
+
+}
+
+void DivisionBlock::process(){
+    outputValues[0] = (inputValues[1] != 0) ? inputValues[0] / inputValues[1] : 0.0;
+}
+
+void DivisionBlock::resetBefore() {
+    outputValues[0] = 0;
+    inputValues[0] = 0;
+}
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -1365,6 +1388,63 @@ void FFTBlock::resetBefore() {
 // }
 //
 
+// --------------------------------------------------------------------------------------------------------------------------------------
+// to fixpoint
+ToFixpoint::ToFixpoint(int id_) : BlockCloneable<ToFixpoint>(id_, 1, 1, true) {
+    size = ImVec2(200, 120);
+}
+
+double ToFixpoint::convert_value(double val) {
+    int32_t fix_point = std::round(val * std::pow(2, fractional_width));
+
+    return static_cast<double>(fix_point);
+}
+
+void ToFixpoint::drawContent() {
+    ImGui::Text("ToFixpoint");
+    drawContent();
+}
+
+void ToFixpoint::drawMenu() {
+    ImGui::InputInt("Frac wight: ", &fractional_width);
+}
+
+void ToFixpoint::process() {
+    outputValues[0] = convert_value(inputValues[0]);
+}
+
+void ToFixpoint::resetBefore() {
+    inputValues[0] = 0.0;
+    outputValues[0] = 0.0;
+}
+
+FromFixpoint::FromFixpoint(int id_) : BlockCloneable<FromFixpoint>(id_, 1, 1, true) {
+    size = ImVec2(200, 120);
+}
+
+void FromFixpoint::drawContent() {
+    ImGui::Text("FromFixpoint");
+    Block::drawContent();
+}
+
+void FromFixpoint::drawMenu() {
+    ImGui::InputInt("Frec wight: ", &fractional_width);
+    Block::drawContent();
+}
+
+double FromFixpoint::convert_value(double val) {
+    int32_t fix_point = static_cast<int32_t>(val); // weź liczbę fixed-point jako int
+    return static_cast<double>(fix_point) / (1 << fractional_width);
+}
+
+void FromFixpoint::process() {
+    outputValues[0] = convert_value(inputValues[0]);
+}
+
+void FromFixpoint::resetBefore() {
+    inputValues[0] = 0.0;
+    outputValues[0] = 0.0;
+}
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // Projektowanie filtrow

@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fcntl.h>
 
+#include <sys/stat.h>
+
 
 
 // initialize static member
