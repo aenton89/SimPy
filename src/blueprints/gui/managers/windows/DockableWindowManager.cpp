@@ -149,6 +149,8 @@ void DockableWindowManager::drawMenu() {
                 guiCore->model.addBlock<SumBlock>();
             if (ImGui::Button("Add Multiply Box"))
                 guiCore->model.addBlock<MultiplyBlock>();
+            if (ImGui::Button("Add Division Box"))
+                guiCore->model.addBlock<DivisionBlock>();
             if (ImGui::Button("Add Integrator Box"))
                 guiCore->model.addBlock<IntegratorBlock>();
             if (ImGui::Button("Add Diff Box"))
@@ -203,6 +205,10 @@ void DockableWindowManager::drawMenu() {
                 guiCore->model.addBlock<medianFilter1DBlock>();
             if (ImGui::Button("Add Window Box"))
                 guiCore->model.addBlock<WindowApplayerBlock>();
+            if (ImGui::Button("To Fixpoint box"))
+                guiCore->model.addBlock<ToFixpoint>();
+            if (ImGui::Button("From Fixpoint box"))
+                guiCore->model.addBlock<FromFixpoint>();
         }
 
         // modul print/ploty
