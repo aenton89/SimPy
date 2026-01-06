@@ -9,8 +9,8 @@
 #include <thread>
 #include <filesystem>
 #include <chrono>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+// #define STB_IMAGE_IMPLEMENTATION
+// #include "stb_image.h"
 #include "../core/structures/BasicBlock.h"
 // #include <implot.h>
 
@@ -24,50 +24,9 @@ GUICore::GUICore() : TabModule("Blueprints"){
     viewportManager.setGUICore(this);
     blocksManager.setGUICore(this);
     connectionManager.setGUICore(this);
-}
 
-// initialization of evertything regarding ImGui
-void GUICore::init(GLFWwindow* win, const char* version) {
-    window = win;
-    glsl_version = version;
-
-    // jakaś defaultowa ikonka, potem zmienie
-    GLFWimage images[1];
-    std::string iconPath = std::string(ASSETS_DIR) + "/app_icons/icon_v3.png";
-    images[0].pixels = stbi_load(iconPath.c_str(), &images[0].width, &images[0].height, nullptr, 4);
-    glfwSetWindowIcon(window, 1, images);
-    stbi_image_free(images[0].pixels);
-    if (!images[0].pixels) {
-        std::cerr << "ERROR: couldn't load icon.png!" << std::endl;
-    }
-
+    // TODO: narazie wstawiam init() do konstruktora
     Model::timeStep = 0.01;
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-
-    ImPlot::CreateContext();
-
-    // setup platform/ renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
-
-    // optional: setup style and custom colors
-    ImGui::StyleColorsClassic();
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImVec4 gray = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
-
-    style.Colors[ImGuiCol_WindowBg] = gray;
-    style.Colors[ImGuiCol_ChildBg] = gray;
-    style.Colors[ImGuiCol_PopupBg]= gray;
-}
-
-void GUICore::newFrame() {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
 }
 
 void GUICore::update() {
@@ -131,18 +90,6 @@ void GUICore::update() {
     viewportManager.drawGrid();
 }
 
-void GUICore::render() {
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void GUICore::shutdown() {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    ImPlot::DestroyContext();
-}
-
 void GUICore::drawMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -183,6 +130,9 @@ void GUICore::drawMenuBar() {
 
             ImGui::EndMenu();
         }
+
+        // TODO: narazie takie coś, żeby oddzielić od zawartości TabManager'a
+        ImGui::Separator();
 
         ImGui::EndMainMenuBar();
     }

@@ -4,6 +4,7 @@
 #include "FileManager.h"
 #include <GLFW/glfw3.h>
 #include "../../GUICore.h"
+#include "../tabs/TabManager.h"
 
 
 
@@ -182,13 +183,13 @@ void FileManager::exitFile() {
 
 		if (result == pfd::button::yes) {
 			saveFile();
-			glfwSetWindowShouldClose(guiCore->window, GLFW_TRUE);
+			glfwSetWindowShouldClose(guiCore->tabManager->window, GLFW_TRUE);
 		} else if (result == pfd::button::no) {
-			glfwSetWindowShouldClose(guiCore->window, GLFW_TRUE);
+			glfwSetWindowShouldClose(guiCore->tabManager->window, GLFW_TRUE);
 		}
 		// cancel - nie rób nic
 	} else {
-		glfwSetWindowShouldClose(guiCore->window, GLFW_TRUE);
+		glfwSetWindowShouldClose(guiCore->tabManager->window, GLFW_TRUE);
 	}
 }
 

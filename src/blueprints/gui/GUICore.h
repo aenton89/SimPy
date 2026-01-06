@@ -29,12 +29,7 @@ class GUICore : public TabModule {
 public:
     GUICore();
 
-    void init(GLFWwindow* window, const char* glsl_version);
-    void newFrame();
-    virtual void update();
-    void render();
-    void shutdown();
-
+    void update() override;
     // awkward ale chyba tu zostanie xddd
     void drawMenuBar();
 
@@ -47,8 +42,6 @@ public:
     // preferencje ui
     UIPreferences uiPreferences;
 
-    GLFWwindow* window = nullptr;
-    const char* glsl_version = nullptr;
     // odpowiada za simulate i zapewnienie, że nie odpali sie drugi raz w trakcie trwającej symulacji
     std::atomic<bool> simulationRunning = false;
 

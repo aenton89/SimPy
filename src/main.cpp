@@ -3,7 +3,7 @@
 //
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
-#include "blueprints/gui/GUICore.h"
+#include "tabs/TabManager.h"
 
 
 
@@ -42,21 +42,21 @@ int main() {
 
     // ---------------------------------------------------------------------------------------
 
-    GUICore guiInterface;
+    TabManager tabManager;
 
-    guiInterface.init(window, glsl_version);
+    tabManager.init(window, glsl_version);
     while(!glfwWindowShouldClose(window)){
         glfwPollEvents();
 
         // czyszczenie, bo inaczej zostają artefakty
         glClear(GL_COLOR_BUFFER_BIT);
 
-        guiInterface.newFrame();
-        guiInterface.update();
-        guiInterface.render();
+        tabManager.newFrame();
+        tabManager.update();
+        tabManager.render();
 
         // basically says draw what's on the screen xd
         glfwSwapBuffers(window);
     }
-    guiInterface.shutdown();
+    tabManager.shutdown();
 }

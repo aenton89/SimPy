@@ -72,6 +72,23 @@ public:
 };
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
+// bloczek od dzielenia
+class DivisionBlock : public BlockCloneable<DivisionBlock> {
+public:
+    DivisionBlock() : BlockCloneable<DivisionBlock>(-1, 2, 1, false) {}
+    explicit DivisionBlock(int _id);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(cereal::base_class<Block>(this));
+    }
+};
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek całkujący
 class IntegratorBlock : public BlockCloneable<IntegratorBlock> {
 private:
@@ -293,6 +310,56 @@ public:
 //            CEREAL_NVP(batch_vector));
 //     }
 // };
+
+
+// --------------------------------------------------------------------------------------------------------------------------------------
+// blok konwersji na liczby stałoprzecinkowe
+class ToFixpoint : public BlockCloneable<ToFixpoint> {
+private:
+    // szerokość części ułamkowej
+    int fractional_width = 12;
+
+    double convert_value(double val);
+
+public:
+    ToFixpoint() : BlockCloneable<ToFixpoint>(-1, 1, 1, true) {}
+    explicit ToFixpoint(int id_);
+
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(cereal::base_class<Block>(this),
+           CEREAL_NVP(fractional_width));
+    }
+};
+
+// --------------------------------------------------------------------------------------------------------------------------------------
+// blok konwersji z liczb stałoprzecinkowych
+class FromFixpoint : public BlockCloneable<FromFixpoint> {
+private:
+    int fractional_width = 12;
+
+    double convert_value(double val);
+
+public:
+    FromFixpoint() : BlockCloneable<FromFixpoint>(-1, 1, 1, true) {}
+    explicit FromFixpoint(int id_);
+
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetBefore() override;
+
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(cereal::base_class<Block>(this),
+           CEREAL_NVP(fractional_width));
+    }
+};
 
 // --------------------------------------------------------------------------------------------------------------------------------------
 // projektowanie filtrow

@@ -3,14 +3,11 @@
 //
 #include "TabModule.h"
 
+#include "TabManager.h"
 
 
 TabModule::TabModule(const std::string& tabTitle) : title(tabTitle) {}
 
-const std::string &TabModule::getTitle() const {
-	return title;
-}
-
-void TabModule::setTitle(const std::string& newTitle) {
-	title = newTitle;
+void TabModule::setTabManager(TabManager *manager) {
+	tabManager = manager;
 }
