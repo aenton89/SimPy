@@ -26,6 +26,8 @@ GUICore::GUICore() : TabModule("Blueprints"){
 }
 
 void GUICore::update() {
+    TabModule::update();
+
     ImGuiIO& io = ImGui::GetIO();
 
     // logika zaznaczania/odznaczania boxów
@@ -45,9 +47,6 @@ void GUICore::update() {
     // rysowanie okien, które się dockują
     dockingManager.drawMenu();
     dockingManager.drawStartButton();
-
-    // rysowanie paska na górze
-    drawMenuBar();
 
     // tryb jasny/ciemny bleh
     viewportManager.lightMode();
@@ -86,50 +85,37 @@ void GUICore::update() {
     viewportManager.drawGrid();
 }
 
-void GUICore::drawMenuBar() {
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("New", "Ctrl+N"))
-                fileManager.newFile();
-            if (ImGui::MenuItem("Open", "Ctrl+O"))
-                fileManager.openFileDialog();
-            if (ImGui::MenuItem("Save", "Ctrl+S", false, !fileManager.currentFilePath.empty() || fileManager.hasUnsavedChanges))
-                fileManager.saveFile();
-            if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
-                fileManager.saveFileDialog();
-            if (ImGui::MenuItem("Exit", "Ctrl+W"))
-                fileManager.exitFile();
-            ImGui::EndMenu();
-        }
+void GUICore::menuBarFile() {
+    if (ImGui::MenuItem("New", "Ctrl+N"))
+        fileManager.newFile();
+    if (ImGui::MenuItem("Open", "Ctrl+O"))
+        fileManager.openFileDialog();
+    if (ImGui::MenuItem("Save", "Ctrl+S", false, !fileManager.currentFilePath.empty() || fileManager.hasUnsavedChanges))
+        fileManager.saveFile();
+    if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+        fileManager.saveFileDialog();
+    if (ImGui::MenuItem("Exit", "Ctrl+W"))
+        fileManager.exitFile();
+}
 
-        if (ImGui::BeginMenu("Edit")) {
-            if (ImGui::MenuItem("Undo", "Ctrl+Z")) { /* akcja */ }
-            if (ImGui::MenuItem("Redo", "Ctrl+Y")) { /* akcja */ }
-            ImGui::EndMenu();
-        }
+void GUICore::menuBarEdit() {
+    if (ImGui::MenuItem("Undo", "Ctrl+Z")) { /* akcja */ }
+    if (ImGui::MenuItem("Redo", "Ctrl+Y")) { /* akcja */ }
+}
 
-        if (ImGui::BeginMenu("Settings")) {
-            ImGui::MenuItem("Light mode", "Ctrl+L", &uiPreferences.lightMode);
-            ImGui::MenuItem("Show grid", "Ctrl+G", &uiPreferences.gridEnabled);
+void GUICore::menuBarSettings() {
+    ImGui::MenuItem("Light mode", "Ctrl+L", &uiPreferences.lightMode);
+    ImGui::MenuItem("Show grid", "Ctrl+G", &uiPreferences.gridEnabled);
 
-            if (ImGui::BeginMenu("Grid Settings")) {
-                ImGui::SliderFloat("Grid Spacing", &uiPreferences.gridSpacing, 10.0f, 200.0f);
-                ImGui::SliderFloat("Line Thickness", &uiPreferences.gridThickness, 0.5f, 5.0f);
+    if (ImGui::BeginMenu("Grid Settings")) {
+        ImGui::SliderFloat("Grid Spacing", &uiPreferences.gridSpacing, 10.0f, 200.0f);
+        ImGui::SliderFloat("Line Thickness", &uiPreferences.gridThickness, 0.5f, 5.0f);
 
-                // color picker for grid
-                ImVec4 grid_color = ImGui::ColorConvertU32ToFloat4(uiPreferences.gridColor);
-                if (ImGui::ColorEdit4("Grid Color", reinterpret_cast<float *>(&grid_color), ImGuiColorEditFlags_AlphaPreview))
-                    uiPreferences.gridColor = ImGui::ColorConvertFloat4ToU32(grid_color);
+        // color picker for grid
+        ImVec4 grid_color = ImGui::ColorConvertU32ToFloat4(uiPreferences.gridColor);
+        if (ImGui::ColorEdit4("Grid Color", reinterpret_cast<float *>(&grid_color), ImGuiColorEditFlags_AlphaPreview))
+            uiPreferences.gridColor = ImGui::ColorConvertFloat4ToU32(grid_color);
 
-                ImGui::EndMenu();
-            }
-
-            ImGui::EndMenu();
-        }
-
-        // TODO: narazie takie coś, żeby oddzielić od zawartości TabManager'a
-        ImGui::Separator();
-
-        ImGui::EndMainMenuBar();
+        ImGui::EndMenu();
     }
 }

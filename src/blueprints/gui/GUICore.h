@@ -30,7 +30,9 @@ public:
 
     void update() override;
     // awkward ale chyba tu zostanie xddd
-    void drawMenuBar();
+    void menuBarFile() override;
+    void menuBarEdit() override;
+    void menuBarSettings() override;
 
     // nowe manager'y
     DockableWindowManager dockingManager;

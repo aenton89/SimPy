@@ -24,7 +24,12 @@ public:
 	virtual ~TabModule() = default;
 
 	// TODO: przenieść część init() [albo do konstruktora?] i całe update()
-	virtual void update() = 0;
+	virtual void update();
+	void drawMenuBar();
+	virtual void menuBarFile() {};
+	virtual void menuBarEdit() {};
+	virtual void menuBarSettings() {};
+	virtual void menuBarOther() {};
 
 	void setTabManager(TabManager* gui);
 

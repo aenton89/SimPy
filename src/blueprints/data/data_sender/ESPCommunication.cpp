@@ -6,6 +6,7 @@
 #ifdef __linux__
     #include <dirent.h>
 #elif defined(_WIN32)
+    #define NOMINMAX
     #include <windows.h>
 #endif
 

@@ -1,6 +1,7 @@
 //
 // Created by tajbe on 25.10.2025.
 //
+#define NOMINMAX
 #include "DockableWindowManager.h"
 #include "../../GUICore.h"
 #include "../../../core/structures/Model.h"
@@ -84,7 +85,7 @@ ImVec2 DockableWindowManager::calculateDockedSize(DockPosition position, Dockabl
             availableHeight -= (DEFAULT_DOCKED_START_SIZE.y + 5);
 
         // szerokość i maksymalna wysokość
-        return {DEFAULT_DOCKED_MENU_SIZE.x, max(150.0f, availableHeight)};
+        return {DEFAULT_DOCKED_MENU_SIZE.x, std::max(150.0f, availableHeight)};
     }
 
     return DEFAULT_DOCKED_START_SIZE;
