@@ -14,7 +14,6 @@ void SolverManager::initSolver(double dt, const std::shared_ptr<ISolverMethod>& 
     solver() = std::make_shared<Solver>(dt, method);
 }
 
-
 void SolverManager::clearSolver() {
     solver().reset();
 }

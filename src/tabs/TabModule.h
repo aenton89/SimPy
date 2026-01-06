@@ -2,8 +2,6 @@
 // Created by tajbe on 30.12.2025.
 //
 #pragma once
-
-// TODO: jeszcze nie zsumowane do pch
 // #include <string>
 
 class TabManager;

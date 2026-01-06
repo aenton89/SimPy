@@ -3,7 +3,6 @@
 //
 #pragma once
 
-#include <imgui_impl_glfw.h>
 #include <portable-file-dialogs.h>
 #include <cereal/types/atomic.hpp>
 #include "../core/structures/Model.h"

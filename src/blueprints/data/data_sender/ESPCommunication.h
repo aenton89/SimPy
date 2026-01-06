@@ -12,4 +12,3 @@
 namespace ESP_com {
     std::vector<std::string> listSerialPorts();
 }
-

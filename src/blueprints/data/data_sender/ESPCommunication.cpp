@@ -19,9 +19,7 @@ std::vector<std::string> ESP_com::listSerialPorts() {
     struct dirent *entry;
     while ((entry = readdir(dir)) != nullptr) {
         std::string name(entry->d_name);
-        if (name.find("ttyUSB") != std::string::npos ||
-            name.find("ttyACM") != std::string::npos)
-        {
+        if (name.find("ttyUSB") != std::string::npos || name.find("ttyACM") != std::string::npos) {
             serialPorts.push_back("/dev/" + name);
         }
     }

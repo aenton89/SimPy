@@ -134,6 +134,8 @@ void DivisionBlock::resetBefore() {
     inputValues[0] = 0;
 }
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // całkowania
 IntegratorBlock::IntegratorBlock(int _id) : BlockCloneable(_id, 1, 1, true), initial_state(0.0) {

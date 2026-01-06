@@ -5,12 +5,8 @@
 #include <imgui_impl_opengl3.h>
 #include "GLFW/glfw3.h"
 #include <functional>
-#include <iostream>
 #include <thread>
-#include <filesystem>
 #include <chrono>
-// #define STB_IMAGE_IMPLEMENTATION
-// #include "stb_image.h"
 #include "../core/structures/BasicBlock.h"
 // #include <implot.h>
 
