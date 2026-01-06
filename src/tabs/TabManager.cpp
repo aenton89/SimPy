@@ -85,7 +85,7 @@ void TabManager::closeTab(int index) {
 		// jeśli zamknięto aktywną zakładkę, ustaw nową aktywną
 		if (index == currentTab) {
 			if (!tabs.empty()) {
-				currentTab = min(index, static_cast<int>(tabs.size()) - 1);
+				currentTab = std::min(index, static_cast<int>(tabs.size()) - 1);
 				if (currentTab >= 0)
 					tabs[currentTab]->isActive = true;
 
