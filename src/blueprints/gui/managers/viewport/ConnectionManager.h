@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../BasicManager.h"
+#include "../../../../ui/UIStyles.h"
 #include "../../../core/structures/Connection.h"
 // #include <imgui.h>
 
@@ -64,12 +65,6 @@ private:
         float nodeRadius = 6.0f;
         float curveDetectionRadius = 10.0f;
         float bezierControlOffset = 50.0f;
-
-        ImU32 normalColor = IM_COL32(255, 255, 0, 255);
-        ImU32 hoveredColor = IM_COL32(255, 100, 100, 255);
-        ImU32 draftColor = IM_COL32(255, 255, 0, 100);
-        ImU32 nodeNormalColor = IM_COL32(200, 200, 200, 200);
-        ImU32 nodeHoveredColor = IM_COL32(255, 150, 0, 255);
     } drawSettings;
 
     // helpery do konwersji współrzędnych

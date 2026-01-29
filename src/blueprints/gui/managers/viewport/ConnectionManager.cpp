@@ -101,7 +101,7 @@ void ConnectionManager::drawConnectionCurve(const std::vector<ImVec2>& points, b
         return;
 
     float thickness = (hovered ? drawSettings.hoveredThickness : drawSettings.normalThickness) * guiCore->viewportManager.zoomAmount;
-    ImU32 color = hovered ? drawSettings.hoveredColor : drawSettings.normalColor;
+    ImU32 color = hovered ? UIStyles::CONNECTION_HOVER_COLOR : UIStyles::CONNECTION_COLOR;
     float offset = drawSettings.bezierControlOffset * guiCore->viewportManager.zoomAmount;
 
     // rysuj segmenty krzywej Bezier'a
@@ -124,14 +124,14 @@ void ConnectionManager::drawControlNodes(Connection& conn, const ImVec2& mousePo
 
         // sprawdzanie hover'a
         float distSq = (nodeScreenPos.x - mousePos.x) * (nodeScreenPos.x - mousePos.x) +
-                      (nodeScreenPos.y - mousePos.y) * (nodeScreenPos.y - mousePos.y);
+                        (nodeScreenPos.y - mousePos.y) * (nodeScreenPos.y - mousePos.y);
         bool hovered = distSq < (radius * 3.0f) * (radius * 3.0f);
 
-        ImU32 color = hovered ? drawSettings.nodeHoveredColor : drawSettings.nodeNormalColor;
+        ImU32 color = hovered ? UIStyles::CONTROL_NODE_HOVER : UIStyles::CONTROL_NODE_NORMAL;
 
         // rysuj węzeł
         drawList->AddCircleFilled(nodeScreenPos, radius, color);
-        drawList->AddCircle(nodeScreenPos, radius, IM_COL32(50, 50, 50, 255), 12, 2.0f);
+        drawList->AddCircle(nodeScreenPos, radius, UIStyles::CONTROL_NODE_BORDER, 12, 2.0f);
 
         // obsługa kliknięcia - rozpocznij przeciąganie
         if (hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !draggingNode.isActive()) {
@@ -187,7 +187,7 @@ void ConnectionManager::drawDraftConnection(ImDrawList* drawList) const {
 
     drawList->AddBezierCubic(
         startPos, c1, c2, endPos,
-        drawSettings.draftColor,
+        UIStyles::CONNECTION_DRAGGING_COLOR,
         2.0f * guiCore->viewportManager.zoomAmount
     );
 }

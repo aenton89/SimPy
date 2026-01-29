@@ -12,7 +12,6 @@
 /*
  * stores project metadata (version, creation date, etc.)
  * used for saving/loading files AND to indicate if file has unsaved changees
- * TODO: przenieść do src/core/project/
  * TODO: w ogóle to zaimplementować w użyciu xd
  * TODO: do sprawdzania czy plik był modyfikowany
  */

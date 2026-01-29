@@ -3,7 +3,7 @@
 //
 #include "ViewportManager.h"
 #include "../../GUICore.h"
-#include "../../ui/UIStyles.h"
+#include "../../../../ui/UIStyles.h"
 
 
 
@@ -129,7 +129,7 @@ void ViewportManager::drawGrid() const {
             ImVec2(canvas_pos.x, screen_y),
             ImVec2(canvas_pos.x + canvas_size.x, screen_y),
             faded_color,
-             guiCore->uiPreferences.gridThickness
+            guiCore->uiPreferences.gridThickness
         );
     }
 }

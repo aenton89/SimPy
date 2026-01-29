@@ -2,6 +2,7 @@
 // Created by tajbe on 10.11.2025.
 //
 #pragma once
+#include "../../../ui/UIStyles.h"
 
 // #include <imgui.h>
 // #include <cereal/archives/xml.hpp>
@@ -14,7 +15,7 @@ struct UIPreferences {
 	bool gridEnabled = true;
 	float gridSpacing = 50.0f;
 	float gridThickness = 1.0f;
-	ImU32 gridColor = IM_COL32(0, 0, 0, 100);
+	ImU32 gridColor = UIStyles::GRID_COLOR_DARK;
 
 	template<class Archive>
 	void serialize(Archive& ar) {

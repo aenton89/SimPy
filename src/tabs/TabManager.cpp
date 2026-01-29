@@ -7,7 +7,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "../gui/GUICore.h"
-
+#include "../ui/UIStyles.h"
 
 
 // TODO: narazie po prostu na sztywno dodajemy GUICore jako domyślną zakładkę
@@ -45,13 +45,7 @@ void TabManager::init(GLFWwindow* win, const char* version) {
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	// optional: setup style and custom colors
-	ImGui::StyleColorsClassic();
-	ImGuiStyle& style = ImGui::GetStyle();
-	ImVec4 gray = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
-
-	style.Colors[ImGuiCol_WindowBg] = gray;
-	style.Colors[ImGuiCol_ChildBg] = gray;
-	style.Colors[ImGuiCol_PopupBg]= gray;
+	UIStyles::applyDarkStyle();
 }
 
 void TabManager::updateOpen() {
@@ -123,7 +117,7 @@ void TabManager::update() {
 
 		bool isActive = (i == currentTab);
 		if (isActive)
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button, UIStyles::SELECTION_COLOR);
 
 		if (ImGui::Button(tabs[i]->title.c_str()))
 			changeTab(i);

@@ -107,9 +107,8 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
     bool pushedSelectionStyle = false;
     if (selectedBlocks.contains(box->id)) {
         // onegdaj niebieski, teraz takied śmiszne cuś
-        ImVec4 selColor = ImVec4(0.39f, 0.78f, 0.92f, 0.77f);
-        ImGui::PushStyleColor(ImGuiCol_TitleBg, selColor);
-        ImGui::PushStyleColor(ImGuiCol_TitleBgActive, selColor);
+        ImGui::PushStyleColor(ImGuiCol_TitleBg, UIStyles::SELECTION_COLOR);
+        ImGui::PushStyleColor(ImGuiCol_TitleBgActive, UIStyles::SELECTION_COLOR);
         pushedSelectionStyle = true;
     }
 
@@ -231,9 +230,9 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
 
     // kolor przycisku w zależności od stanu
     if (box->getNumOutputs() > 0) {
-        ImU32 buttonColor = isClicked ? IM_COL32(255, 0, 0, 255) : (isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(200, 200, 0, 255));
+        ImU32 buttonColor = isClicked ? UIStyles::BUTTON_ACTIVE: (isHovered ? UIStyles::BUTTON_HOVER : UIStyles::BUTTON_NORMAL);
         draw_list->AddCircleFilled(center, 8.0f, buttonColor);
-        draw_list->AddText(ImVec2(center.x - 4, center.y - 7), IM_COL32(0, 0, 0, 255), "+");
+        draw_list->AddText(ImVec2(center.x - 4, center.y - 7), UIStyles::BUTTON_PLUS_COLOR, "+");
     }
     // TODO: aż do tąd pętle
 
