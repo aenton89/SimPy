@@ -47,18 +47,22 @@ add_executable(SimPy
         src/tabs/TabManager.cpp
         src/tabs/TabModule.cpp
         src/ide/mainWindow.h
-        src/ide/gui/ui/notebookTab.h
-        src/ide/gui/ui/notebookTab.cpp
-        src/ide/gui/ui/cells/baseCell.h
-        src/ide/gui/ui/cells/codeCell.h
-        src/ide/gui/ui/cells/codeCell.cpp
-        src/ide/gui/ui/cells/mardownCell.h
+        src/ide/gui/code_editor/notebookTab.h
+        src/ide/gui/code_editor/notebookTab.cpp
+        src/ide/gui/code_editor/cells/baseCell.h
+        src/ide/gui/code_editor/cells/codeCell.h
+        src/ide/gui/code_editor/cells/codeCell.cpp
+        src/ide/gui/code_editor/cells/mardownCell.h
         src/ide/mainWindow.cpp
-        src/ide/gui/ui/cells/marddownCell.cpp
-        src/ide/gui/ui/textEditorTab.h
-        src/ide/gui/ui/textEditorTab.cpp
+        src/ide/gui/code_editor/cells/marddownCell.cpp
+        src/ide/gui/code_editor/textEditorTab.h
+        src/ide/gui/code_editor/textEditorTab.cpp
         # zewnerzne biblioteki wymagajace linkowania
         include/TextEditor.cpp
+        src/ide/gui/ui/workSpace.h
+        src/ide/gui/ui/workSpace.cpp
+        src/ide/gui/core/FileSystemService.h
+        src/ide/gui/core/FileSystemService.cpp
 
 )
 
