@@ -3,6 +3,7 @@
 //
 
 #include "../tabs/TabModule.h"
+#include "gui/ui/workSpace.h"
 
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
@@ -16,6 +17,12 @@ public:
     void menuBarFile() override;
     void menuBarEdit() override;
     void menuBarSettings() override;
+
+protected:
+    workSpace* workspace = nullptr;
+    bool showWorkspace = false;
+
+
 
     // preferencje ui
     // UIPreferences uiPreferences; - tu dodac te kolorki
