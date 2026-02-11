@@ -8,6 +8,8 @@
 #include "stb_image.h"
 #include "../gui/GUICore.h"
 #include "../ui/UIStyles.h"
+#include "../ide/mainWindow.h"
+
 
 
 // TODO: narazie po prostu na sztywno dodajemy GUICore jako domyślną zakładkę
@@ -139,9 +141,23 @@ void TabManager::update() {
 		ImGui::PopID();
 	}
 
-	// przycisk dodawania nowej zakładki
-	if (ImGui::Button("+"))
-		openTab();
+	const char* popupName = "AddTabMenu";
+
+	if (ImGui::Button("+")) {
+		ImGui::OpenPopup(popupName);
+	}
+
+	if (ImGui::BeginPopup(popupName)) {
+		if (ImGui::Selectable("Blueprints")) {
+			openTab<GUICore>();
+			ImGui::CloseCurrentPopup();
+		}
+		if (ImGui::Selectable("CodeEditor")) {
+			openTab<MainWindow>();
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
 
 	ImGui::EndMainMenuBar();
 }

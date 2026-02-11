@@ -46,6 +46,20 @@ add_executable(SimPy
         # karty jak w chrome
         src/tabs/TabManager.cpp
         src/tabs/TabModule.cpp
+        src/ide/mainWindow.h
+        src/ide/gui/ui/notebookTab.h
+        src/ide/gui/ui/notebookTab.cpp
+        src/ide/gui/ui/cells/baseCell.h
+        src/ide/gui/ui/cells/codeCell.h
+        src/ide/gui/ui/cells/codeCell.cpp
+        src/ide/gui/ui/cells/mardownCell.h
+        src/ide/mainWindow.cpp
+        src/ide/gui/ui/cells/marddownCell.cpp
+        src/ide/gui/ui/textEditorTab.h
+        src/ide/gui/ui/textEditorTab.cpp
+        # zewnerzne biblioteki wymagajace linkowania
+        include/TextEditor.cpp
+
 )
 
 target_compile_definitions(SimPy PRIVATE

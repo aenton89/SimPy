@@ -48,8 +48,8 @@ public:
 
     // TODO: ej Patryk a po co to jest, bo idk czy gdzieś używasz
     // zminne odpwoedzialne za symualcje (czas symulacji, sampling time, rodzaj solvera itd.)
-    std::string solverName = "RK4";
-    std::string solverPrecison;
+    std::string solverName = "RK4"; // nie wiem jak to robiles ale to jest nawa sovera. Ona jest w teroi uzywana w glownym oknie - Patryk
+    std::string solverPrecison; // to jest step time - Patryk
 
     Model model;
 
