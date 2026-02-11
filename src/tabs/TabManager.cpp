@@ -7,6 +7,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "../gui/GUICore.h"
+#include "../ide/mainWindow.h"
 
 
 
@@ -145,9 +146,23 @@ void TabManager::update() {
 		ImGui::PopID();
 	}
 
-	// przycisk dodawania nowej zakładki
-	if (ImGui::Button("+"))
-		openTab();
+	const char* popupName = "AddTabMenu";
+
+	if (ImGui::Button("+")) {
+		ImGui::OpenPopup(popupName);
+	}
+
+	if (ImGui::BeginPopup(popupName)) {
+		if (ImGui::Selectable("Blueprints")) {
+			openTab<GUICore>();
+			ImGui::CloseCurrentPopup();
+		}
+		if (ImGui::Selectable("CodeEditor")) {
+			openTab<MainWindow>();
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
 
 	ImGui::EndMainMenuBar();
 }

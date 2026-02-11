@@ -7,8 +7,7 @@
 
 class GUICore;
 
-
-
+class MainWindow;
 /*
  * manager zarządzający zakładkami w aplikacji
  * przechowuje moduły, obsługuje przełączanie między nimi i renderowanie paska zakładek
