@@ -4,7 +4,7 @@
 
 #include <fstream>
 #include <iostream>
-#include "../core/FileSystemService.h"
+#include "../core/file_manipulation/FileSystemService.h"
 
 #ifndef WORKSPACEMODULE_H
 #define WORKSPACEMODULE_H
