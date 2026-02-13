@@ -61,8 +61,10 @@ add_executable(SimPy
         include/TextEditor.cpp
         src/ide/gui/ui/workSpace.h
         src/ide/gui/ui/workSpace.cpp
-        src/ide/gui/core/FileSystemService.h
-        src/ide/gui/core/FileSystemService.cpp
+        src/ide/gui/core/file_manipulation/FileSystemService.h
+        src/ide/gui/core/file_manipulation/FileSystemService.cpp
+        src/ide/gui/core/python_kernel/PythonKernel.h
+        src/ide/gui/core/python_kernel/PythonKernel.cpp
 
 )
 
