@@ -1,14 +1,7 @@
-//
-// Created by patryk on 10.02.26.
-//
-
-#include <string>
-#include <glad/glad.h>
-
 #ifndef BASECELL_H
 #define BASECELL_H
 
-#endif //BASECELL_H
+#include <string>
 
 enum class CellType {
     CodeCell,
@@ -18,17 +11,18 @@ enum class CellType {
 class BaseCell {
 public:
     virtual ~BaseCell() = default;
+    
+    // Zwraca true, jeśli użytkownik kliknął "Usuń"
     virtual bool Draw(int id) = 0;
 
-    // do zapsu i do odpalania kodu
-    virtual void setInputText(std::string input) = 0;
+    // Interfejs do zarządzania treścią
+    virtual void setInputText(const std::string& input) = 0;
     virtual std::string getInputText() const = 0;
 
     virtual CellType getType() const = 0;
 
-
-
     bool focused = false;
-
-    std::string input_text;
+    bool focusedPrev = false;
 };
+
+#endif //BASECELL_H

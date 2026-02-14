@@ -13,12 +13,12 @@ bool MardownCell::Draw(int id) {
 
 }
 
-std::string MardownCell::getInput() const {
-
+void MardownCell::setInputText(const std::string& input) {
+    this->markdown_text = input;
 }
 
-void MardownCell::setInput(std::string input) {
-
+std::string MardownCell::getInputText() const {
+    return this->markdown_text;
 }
 
 void MardownCell::execMardown() {

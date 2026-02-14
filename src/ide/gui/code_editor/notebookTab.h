@@ -7,12 +7,14 @@
 #include <string>
 
 #include "BaseTab.h"
-#include "../core/python_kernel/PythonKernel.h"
+#include "../../core/python_kernel/PythonKernel.h"
+#include "cells/codeCell.h"
+#include <memory>
 
-class NotebookTab : public BaseTagType {
+class NotebookTab : public BaseTag {
 public:
-    NotebookTab();
-    ~NotebookTab() = default;
+    NotebookTab(const fs::path& pythonPath);
+    ~NotebookTab();
 
     void Draw() override;
     void Update() override;
@@ -21,8 +23,15 @@ public:
 
     void setKernel(PythonKernel* kernel);
 
+protected:
+    std::vector<std::unique_ptr<BaseCell>> cells;
+
 private:
     PythonKernel *kernel;
+
+    inline static const fs::path kerenl_script = "src/ide/gui/core/python_kernel/kernel.py";
+
+    int focus_index = -1;
 
 };
 
