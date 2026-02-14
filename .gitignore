@@ -3,3 +3,4 @@
 /build/
 /cmake-build-debug/
 CMakeUserPresets.json
+src/ide/gui/core/SimPy_venv
