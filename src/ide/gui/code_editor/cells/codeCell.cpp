@@ -3,7 +3,7 @@
 //
 
 #include "codeCell.h"
-#include "../../core/file_manipulation/FileUtils.h"
+#include "../../../core/file_manipulation/FileUtils.h"
 
 #include <imgui.h>
 #include <regex>
@@ -74,7 +74,16 @@ bool CodeCell::Draw(int id)
     float maxHeight = screenSize.y / 4.0f;
     float height = std::max(numLines * lineHeight, maxHeight);
 
+
     inputEditor.Render("Input Cell", ImVec2(width, height));
+
+    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
+        this->focused = true;
+
+    if (focused)
+        ImGui::TextColored(ImVec4(0, 1, 0, 1), "Ta komórka ma fokus");
+    else
+        ImGui::Text("Brak fokusu");
 
     // ===== BUTTONS =====
     if (ImGui::Button("Exec") && !is_executing)
@@ -208,23 +217,23 @@ void CodeCell::setKernel(PythonKernel* kernelPtr)
     kernel = kernelPtr;
 }
 
-void CodeCell::setCodeInput(const std::string& input)
+void CodeCell::setInputText(const std::string& input)
 {
     inputEditor.SetText(input);
 }
 
-void CodeCell::setCodeOutput(const std::string& output)
+void CodeCell::setOutputText(const std::string& output)
 {
     std::strncpy(output_buffer, output.c_str(), sizeof(output_buffer) - 1);
     output_buffer[sizeof(output_buffer) - 1] = '\0';
 }
 
-std::string CodeCell::getCodeInput() const
+std::string CodeCell::getInputText() const
 {
     return inputEditor.GetText();
 }
 
-std::string CodeCell::getCodeOutput() const
+std::string CodeCell::getOutputText() const
 {
     return output_buffer;
 }

@@ -4,22 +4,26 @@
 
 #ifndef MARDOWNCELL_H
 #define MARDOWNCELL_H
-#include "codeCell.h"
+
+#include "baseCell.h" // Poprawione z codeCell.h
 
 class MardownCell : public BaseCell {
 public:
     MardownCell();
+
+    // Implementacja interfejsu BaseCell
     bool Draw(int id) override;
+    void setInputText(const std::string& input) override;
+    std::string getInputText() const override;
 
-    void setInput(std::string input);
-    std::string getInput() const;
+    CellType getType() const override { return CellType::MarkdownCell; }
 
+    // Twoja własna metoda
     void execMardown();
 
-    CellType getType() const override {return CellType::MarkdownCell;}
-
 private:
-    char text[10*1024];
+    // Używamy std::string zamiast char[], co ułatwia współpracę z setInputText
+    std::string markdown_text;
 };
 
 #endif //MARDOWNCELL_H

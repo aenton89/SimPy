@@ -6,6 +6,8 @@
 
 MainWindow::MainWindow() : TabModule("Ide") {
     this->workspace = new workSpace();
+    this->notebookTab = new NotebookTab("/home/patryk/CLionProjects/SimPy/src/ide/core/SimPy_venv/SimPy_venv/bin/python3");
+
 }
 
 
@@ -110,6 +112,7 @@ void MainWindow::update() {
 
         workspace->Render(wsPos, wsSize);
     }
+    notebookTab->Draw();
 }
 
 

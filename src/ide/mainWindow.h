@@ -3,6 +3,7 @@
 //
 
 #include "../tabs/TabModule.h"
+#include "gui/code_editor/notebookTab.h"
 #include "gui/ui/workSpace.h"
 
 #ifndef MAIN_WINDOW_H
@@ -20,6 +21,8 @@ public:
 
 protected:
     workSpace* workspace = nullptr;
+    NotebookTab* notebookTab = nullptr;
+
     bool showWorkspace = false;
 
 

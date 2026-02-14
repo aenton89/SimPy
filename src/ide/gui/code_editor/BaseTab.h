@@ -9,10 +9,9 @@ namespace fs = std::filesystem;
 #ifndef BASETAB_H
 #define BASETAB_H
 
-class BaseTagType
-{
+class BaseTag{
 public:
-    virtual ~BaseTagType() = default;
+    virtual ~BaseTag() = default;
     virtual void Draw() = 0;
     virtual void Update() = 0;
 

@@ -1,14 +1,11 @@
-//
-// Created by patryk on 10.02.26.
-//
-
 #ifndef CODECELL_H
 #define CODECELL_H
 
 #include "baseCell.h"
-#include "../../core/python_kernel/PythonKernel.h"
+#include "../../../core/python_kernel/PythonKernel.h"
 #include "../../../include/TextEditor.h"
-
+#include <future>
+#include <atomic>
 
 class CodeCell : public BaseCell
 {
@@ -17,30 +14,20 @@ public:
     CodeCell(CodeCell&& other) noexcept;
     CodeCell& operator=(CodeCell&& other) noexcept;
 
-    // ===== GŁÓWNY INTERFEJS =====
+    // Interfejs BaseCell
     bool Draw(int id) override;
     CellType getType() const override { return CellType::CodeCell; }
+    void setInputText(const std::string& input) override;
+    std::string getInputText() const override;
 
-    // ===== API DLA NOTEBOOKA =====
+    // API specyficzne dla CodeCell
     void setKernel(PythonKernel* kernel);
-
-    void setCodeInput(const std::string& input);
-    void setCodeOutput(const std::string& output);
-
-    std::string getCodeInput() const;
-    std::string getCodeOutput() const;
+    void setOutputText(const std::string& output);
+    std::string getOutputText() const;
     std::string getBase64() const;
 
 private:
-    // =============================
-    // ======= UI STATE ============
-    // =============================
     TextEditor inputEditor;
-    bool focused = false;
-
-    // =============================
-    // ===== EXECUTION STATE =======
-    // =============================
     PythonKernel* kernel = nullptr;
 
     std::future<std::string> exec_future;
@@ -51,22 +38,15 @@ private:
     void startExecution();
     void pollExecutionResult();
 
-
-    // =============================
-    // ===== OUTPUT / PLOT =========
-    // =============================
     void processPlot(const std::string& rawPlot);
     void updateTextureFromBase64(const std::string& base64Data);
     void clearTexture();
 
-    GLuint texture = 0;
+    unsigned int texture = 0; // GLuint
     int texture_width = 0;
     int texture_height = 0;
     std::string base64;
 
-    // =============================
-    // ===== INTERNAL STORAGE ======
-    // =============================
     char output_buffer[4 * 4096]{};
 };
 
