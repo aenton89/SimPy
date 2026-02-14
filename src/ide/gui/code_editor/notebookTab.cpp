@@ -33,7 +33,14 @@ void NotebookTab::Draw() {
         int insert_pos = std::clamp(focus_index + 1, 0, (int)cells.size());
         this->cells.insert(this->cells.begin() + insert_pos, std::make_unique<CodeCell>(*this->kernel));
 
-        // Po dodaniu nowa komórka staje się nowym punktem odniesienia
+        focus_index = insert_pos;
+    }
+
+    if (ImGui::Button("Add MarkDown Cell")) {
+        // Wstawiamy pod komórkę z fokusem
+        int insert_pos = std::clamp(focus_index + 1, 0, (int)cells.size());
+        this->cells.insert(this->cells.begin() + insert_pos, std::make_unique<MardownCell>());
+
         focus_index = insert_pos;
     }
 
@@ -43,10 +50,8 @@ void NotebookTab::Draw() {
         ImGui::PushID(i);
         bool requestDelete = cells[i]->Draw(i);
 
-        // 2. Logika śledzenia fokusu (Twój stary mechanizm)
         if (!cells[i]->focusedPrev && cells[i]->focused) {
             focus_index = i;
-            // Resetujemy flagi w innych komórkach, by tylko jedna była "prowadząca"
             for (int j = 0; j < (int)cells.size(); ++j) {
                 if (j != i) cells[j]->focused = false;
             }

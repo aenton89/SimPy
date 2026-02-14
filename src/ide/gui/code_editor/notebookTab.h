@@ -9,6 +9,7 @@
 #include "BaseTab.h"
 #include "../../core/python_kernel/PythonKernel.h"
 #include "cells/codeCell.h"
+#include "cells/mardownCell.h"
 #include <memory>
 
 class NotebookTab : public BaseTag {
