@@ -12,6 +12,7 @@ find_package(implot REQUIRED)
 find_package(cereal REQUIRED)
 find_package(stb REQUIRED)
 find_package(portable-file-dialogs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 # =================== MAIN PROGRAM ===================
 add_executable(SimPy
@@ -65,6 +66,9 @@ add_executable(SimPy
         src/ide/gui/core/file_manipulation/FileSystemService.cpp
         src/ide/gui/core/python_kernel/PythonKernel.h
         src/ide/gui/core/python_kernel/PythonKernel.cpp
+        src/ide/gui/code_editor/BaseTab.h
+        src/ide/gui/core/file_manipulation/FileUtils.h
+        src/ide/gui/core/file_manipulation/FileUtils.cpp
 
 )
 
@@ -84,6 +88,7 @@ target_link_libraries(SimPy PRIVATE
         implot::implot
         cereal::cereal
         stb::stb
+        nlohmann_json::nlohmann_json
         portable-file-dialogs::portable-file-dialogs
 )
 

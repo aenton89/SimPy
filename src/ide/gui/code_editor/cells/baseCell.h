@@ -10,8 +10,7 @@
 
 #endif //BASECELL_H
 
-enum class CellType
-{
+enum class CellType {
     CodeCell,
     MarkdownCell
 };
@@ -25,7 +24,7 @@ public:
     virtual void setInputText(std::string input) = 0;
     virtual std::string getInputText() const = 0;
 
-    virtual CellType getType() = 0;
+    virtual CellType getType() const = 0;
 
 
 
