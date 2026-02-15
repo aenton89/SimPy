@@ -12,6 +12,7 @@
 #include <cereal/types/complex.hpp>
 #include "BasicBlock.h"
 #include "Model.h"
+#include <deque>
 #include "../../data/data_sender/DataChannelManager.h"
 #include "../../data/math/matrix_operation/MatrixOperations.h"
 #include "../../data/math/digital_signal_processing/DSP.h"
@@ -453,6 +454,29 @@ public:
         ar(cereal::base_class<Block>(this),
            CEREAL_NVP(window_vector),
            CEREAL_NVP(window_size));
+    }
+};
+// ----------------------------------------------------------------------------------------------------------------------------------------
+// blok delay - opzneinie transportowe.
+class delayBlock : public BlockCloneable<delayBlock> {
+private:
+    double delay = 1; // ms
+    std::deque<double> buffor;
+
+    int num_samples_delay = delay * 10e-3/Model::timeStep;
+
+public:
+    delayBlock() : BlockCloneable<delayBlock>(-1, 1, 1, true) {};
+    explicit delayBlock(int id_);
+    void process() override;
+    void drawContent() override;
+    void drawMenu() override;
+    void resetAfter() override;
+
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(cereal::base_class<Block>(this),
+           CEREAL_NVP(delay));
     }
 };
 

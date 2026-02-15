@@ -1712,6 +1712,42 @@ void medianFilter1DBlock::resetBefore() {
     window_vector.clear();
 }
 
+// -------------------------------------------------------------------------------------------------------------------------------------------
+// blok delay
+delayBlock::delayBlock(int id_) : BlockCloneable(id_, 1, 1, true) {
+    size = ImVec2(200, 120);
+}
+
+void delayBlock::drawContent() {
+    ImGui::Text("Dealy Block");
+    Block::drawContent();
+}
+
+void delayBlock::drawMenu() {
+    ImGui::InputDouble("delay time [ms]", &delay);
+    num_samples_delay = delay * 10e-3/Model::timeStep;
+}
+
+void delayBlock::process() {
+    buffor.push_front(inputValues[0]);
+
+    if (buffor.size() > num_samples_delay) {
+        buffor.pop_back();               // zawsze ograniczamy rozmiar
+    }
+
+    if (buffor.size() < num_samples_delay) {
+        outputValues[0] = 0.0;           // delay jeszcze nie osiągnął pełnej długości
+    } else {
+        outputValues[0] = buffor.back(); // odczytujemy opóźnioną próbkę
+    }
+}
+
+void delayBlock::resetAfter() {
+    buffor.clear();
+    inputValues[0] = 0.0;
+    outputValues[0] = 0.0;
+}
+
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------
@@ -2246,6 +2282,7 @@ REGISTER_BLOCK_TYPE(FFTBlock);
 REGISTER_BLOCK_TYPE(filterImplementationBlock);
 REGISTER_BLOCK_TYPE(medianFilter1DBlock);
 REGISTER_BLOCK_TYPE(meanFilter1DBlock);
+REGISTER_BLOCK_TYPE(delayBlock);
 REGISTER_BLOCK_TYPE(squaredBlock);
 REGISTER_BLOCK_TYPE(sqrtBlock);
 REGISTER_BLOCK_TYPE(StepBlock);
