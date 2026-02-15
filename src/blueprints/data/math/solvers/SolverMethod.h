@@ -29,6 +29,15 @@ public:
     void serialize(Archive&) {}
 };
 
+// RK8
+class RK8Method : public ISolverMethod {
+public:
+    std::vector<double> step(MatOp::StateSpace& ss, const std::vector<double>& u, double dt) override;
+
+    template <class Archive>
+    void serialize(Archive&) {}
+};
+
 // RK2
 class RK2Method : public ISolverMethod {
 public:
