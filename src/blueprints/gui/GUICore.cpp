@@ -105,6 +105,16 @@ void GUICore::menuBarEdit() {
 
 void GUICore::menuBarSettings() {
     ImGui::MenuItem("Light mode", "Ctrl+L", &uiPreferences.lightMode);
+
+    if (ImGui::BeginMenu("Connection Path Type")) {
+        if (ImGui::Selectable("Orthogonal Path", connectionManager.useOrthogonalLines))
+            connectionManager.useOrthogonalLines = true;
+        if (ImGui::Selectable("Curve Path", !connectionManager.useOrthogonalLines))
+            connectionManager.useOrthogonalLines = false;
+
+        ImGui::EndMenu();
+    }
+
     ImGui::MenuItem("Show grid", "Ctrl+G", &uiPreferences.gridEnabled);
 
     if (ImGui::BeginMenu("Grid Settings")) {

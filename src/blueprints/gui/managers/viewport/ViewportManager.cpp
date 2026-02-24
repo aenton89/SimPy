@@ -15,21 +15,15 @@ void ViewportManager::zoomAndPanning() {
 		float zoom_speed = 0.1f;
 		float old_zoom = zoomAmount;
 
-		zoomAmount += io.MouseWheel * zoom_speed;
+		// ogranicz max scroll/frame
+		float wheel = std::clamp(io.MouseWheel, -3.0f, 3.0f);
+		zoomAmount += wheel * zoom_speed;
 		zoomAmount = std::clamp(zoomAmount, 0.1f, 10.0f);
 
 		if (zoomAmount != old_zoom) {
 			ImVec2 mouse_pos = io.MousePos;
-			ImVec2 mouse_world_before = ImVec2(
-				(mouse_pos.x - viewOffset.x) / old_zoom,
-				(mouse_pos.y - viewOffset.y) / old_zoom
-			);
-			ImVec2 mouse_world_after = ImVec2(
-				(mouse_pos.x - viewOffset.x) / zoomAmount,
-				(mouse_pos.y - viewOffset.y) / zoomAmount
-			);
-			viewOffset.x += (mouse_world_after.x - mouse_world_before.x) * zoomAmount;
-			viewOffset.y += (mouse_world_after.y - mouse_world_before.y) * zoomAmount;
+			viewOffset.x = mouse_pos.x - ((mouse_pos.x - viewOffset.x) / old_zoom) * zoomAmount;
+			viewOffset.y = mouse_pos.y - ((mouse_pos.y - viewOffset.y) / old_zoom) * zoomAmount;
 		}
 	}
 
@@ -52,9 +46,12 @@ void ViewportManager::zoomAndPanning() {
 	}
 
 	// jeśli przeciągamy okno, zatrzymaj przeciąganie canvas'u
-	if (guiCore->blocksManager.isDraggingWindow && canvasDragging) {
+	if (guiCore->blocksManager.isDraggingWindow && canvasDragging)
 		canvasDragging = false;
-	}
+
+	// żeby uniknąć artefaktów renderowania
+	viewOffset.x = std::round(viewOffset.x);
+	viewOffset.y = std::round(viewOffset.y);
 }
 
 void ViewportManager::drawGrid() const {

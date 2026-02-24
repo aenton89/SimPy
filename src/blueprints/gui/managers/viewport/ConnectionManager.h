@@ -63,7 +63,7 @@ private:
         float normalThickness = 3.0f;
         float hoveredThickness = 5.0f;
         float nodeRadius = 6.0f;
-        float curveDetectionRadius = 10.0f;
+        float pathDetectionRadius = 10.0f;
         float bezierControlOffset = 50.0f;
     } drawSettings;
 
@@ -78,21 +78,26 @@ private:
     [[nodiscard]]
     ImVec2 getBlockInputPos(const Block& block) const;
     [[nodiscard]]
-    bool isPointNearCurve(const ImVec2& point, const std::vector<ImVec2>& curvePoints, float threshold) const;
+    bool isPointNearCurvePath(const ImVec2& point, const std::vector<ImVec2>& pathPoints, float threshold) const;
+    [[nodiscard]]
+    bool isPointNearOrthogonalPath(const ImVec2& point, const std::vector<ImVec2>& pathPoints, float threshold) const;
 
     // rysowanie
     void drawConnection(Connection& conn, ImDrawList* drawList);
-    void drawConnectionCurve(const std::vector<ImVec2>& points, bool hovered, ImDrawList* drawList) const;
+    void drawConnectionPath(const std::vector<ImVec2>& points, bool hovered, ImDrawList* drawList) const;
     void drawControlNodes(Connection& conn, const ImVec2& mousePos, ImDrawList* drawList);
     void drawDraftConnection(ImDrawList* drawList) const;
 
     // obsługa interakcji
     void handleNodeDragging(const ImVec2& mousePosWorld);
     void handleConnectionCreation(const ImVec2& mousePos);
-    void handleConnectionDeletion(const Connection& conn, bool curveHovered) const;
-    void handleNodeAddition(Connection& conn, bool curveHovered, const ImVec2& mousePosWorld);
+    void handleConnectionDeletion(const Connection& conn, bool pathHovered) const;
+
+    static void handleNodeAddition(Connection& conn, bool pathHovered, const ImVec2& mousePosWorld);
 
 public:
+    bool useOrthogonalLines = false;
+
     ConnectionManager() = default;
 
     // główna metoda zawiera i rysowanie i obsługę połączeń
@@ -100,7 +105,7 @@ public:
 
     // API do rozpoczęcia tworzenia połączenia (wywoływane w BlocksManager)
     void startConnectionDraft(int blockId, int portIndex);
-    // TODO: czy ta metoda jest w ogóle potrzebna? 0
+    // TODO: czy ta metoda jest w ogóle potrzebna?
     void cancelConnectionDraft();
 
     // pod usuwanie wielu bloczków przez DELETE
@@ -113,6 +118,7 @@ public:
     template<class Archive>
     void serialize(Archive& ar) {
         ar(cereal::base_class<BasicManager>(this));
+        ar(CEREAL_NVP(useOrthogonalLines));
 
         if constexpr (Archive::is_loading::value) {
             // reset stanu runtime
