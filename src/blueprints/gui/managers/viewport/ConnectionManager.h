@@ -113,6 +113,8 @@ public:
 
     [[nodiscard]]
     bool isDraftingConnection() const;
+    [[nodiscard]]
+    bool isDraggingNode() const;
 
     // do serializacji
     template<class Archive>

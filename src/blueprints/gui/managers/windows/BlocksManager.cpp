@@ -293,3 +293,85 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
 
     ImGui::End();
 }
+
+// box select - rysowanie prostokąta, który zaznacza bloczki i wykrycie, które bloczki są w nim
+void BlocksManager::updateBoxSelect(const ImGuiIO& io) {
+    // nie ruszamy box selecta gdy przeciągamy okno bloczka
+    if (isDraggingWindow)
+        return;
+
+    ImVec2 mousePos = io.MousePos;
+
+    // START - LPM wciśnięty na pustym miejscu (nie na bloczku)
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !guiCore->connectionManager.isDraggingNode()) {
+        // sprawdź czy klik był poza każdym bloczkiem
+        bool clickedOnBlock = false;
+
+        for (auto& b : guiCore->model.getBlocks()) {
+            ImVec2 screen_pos = ImVec2(
+                b->position.x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x,
+                b->position.y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y);
+            ImVec2 screen_size = ImVec2(
+                b->size.x * guiCore->viewportManager.zoomAmount,
+                b->size.y * guiCore->viewportManager.zoomAmount);
+
+            if (mousePos.x >= screen_pos.x && mousePos.x <= screen_pos.x + screen_size.x && mousePos.y >= screen_pos.y && mousePos.y <= screen_pos.y + screen_size.y) {
+                clickedOnBlock = true;
+                break;
+            }
+        }
+        if (!clickedOnBlock) {
+            isBoxSelecting = true;
+            boxSelectStart = mousePos;
+            boxSelectEnd = mousePos;
+        }
+    }
+
+    // AKTUALIZACJA: podczas trzymania LPM - przesuwa koniec prostokąta
+    if (isBoxSelecting) {
+        // jeśli w trakcie box selecta zaczynamy przeciągać połączenie lub węzeł, anuluj box selecta
+        if (guiCore->connectionManager.isDraggingNode() || guiCore->connectionManager.isDraftingConnection()) {
+            isBoxSelecting = false;
+            return;
+        }
+
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+            boxSelectEnd = mousePos;
+
+            // rysuj prostokąt zaznaczenia na foreground draw liście
+            ImDrawList* fg = ImGui::GetForegroundDrawList();
+            ImVec2 rMin = ImVec2(std::min(boxSelectStart.x, boxSelectEnd.x), std::min(boxSelectStart.y, boxSelectEnd.y));
+            ImVec2 rMax = ImVec2(std::max(boxSelectStart.x, boxSelectEnd.x), std::max(boxSelectStart.y, boxSelectEnd.y));
+            fg->AddRectFilled(rMin, rMax, IM_COL32(100, 160, 255, 40));
+            fg->AddRect(rMin, rMax, IM_COL32(100, 160, 255, 200), 0.0f, 0, 1.5f);
+        }
+        // KONIEC: po puszczeniu LPM - zaznacza bloczki w prostokącie
+        else {
+            ImVec2 rMin = ImVec2(std::min(boxSelectStart.x, boxSelectEnd.x), std::min(boxSelectStart.y, boxSelectEnd.y));
+            ImVec2 rMax = ImVec2(std::max(boxSelectStart.x, boxSelectEnd.x), std::max(boxSelectStart.y, boxSelectEnd.y));
+
+            // zaznaczaj tylko jeśli prostokąt jest większy niż 4 piksele - unikanie przypadkowego kliknięcia
+            if (rMax.x - rMin.x > 5.0f || rMax.y - rMin.y > 5.0f) {
+                // bez SHIFT czyścimy poprzednie zaznaczenie, z SHIFT dodajemy do niego
+                if (!io.KeyShift)
+                    selectedBlocks.clear();
+
+                for (auto& b : guiCore->model.getBlocks()) {
+                    ImVec2 screen_pos = ImVec2(
+                        b->position.x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x,
+                        b->position.y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y);
+                    ImVec2 screen_size = ImVec2(
+                        b->size.x * guiCore->viewportManager.zoomAmount,
+                        b->size.y * guiCore->viewportManager.zoomAmount);
+
+                    // bloczek zaznaczony jeśli jego prostokąt przecina obszar box selecta
+                    ImVec2 bMax = ImVec2(screen_pos.x + screen_size.x, screen_pos.y + screen_size.y);
+                    if (screen_pos.x < rMax.x && bMax.x > rMin.x && screen_pos.y < rMax.y && bMax.y > rMin.y)
+                        selectedBlocks.insert(b->id);
+                }
+            }
+
+            isBoxSelecting = false;
+        }
+    }
+}

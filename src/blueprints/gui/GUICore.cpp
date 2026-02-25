@@ -35,6 +35,8 @@ void GUICore::update() {
     blocksManager.duplicateSelectedBlocks(io);
     blocksManager.deleteSelectedBlocks(io);
     blocksManager.selectAllBlocks(io);
+    // TODO: nie wiem czy tego nie przesunąć na po rysowaniu bloczków
+    blocksManager.updateBoxSelect(io);
 
     // skróty klawiszowe
     viewportManager.turnLightModeOnShortcut(io);

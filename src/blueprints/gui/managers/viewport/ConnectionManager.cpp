@@ -479,3 +479,7 @@ bool ConnectionManager::isPointNearOrthogonalPath(const ImVec2& point, const std
 bool ConnectionManager::isDraftingConnection() const {
     return currentDraft.isActive();
 }
+
+bool ConnectionManager::isDraggingNode() const {
+    return draggingNode.isActive();
+}

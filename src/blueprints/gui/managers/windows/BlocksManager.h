@@ -28,6 +28,10 @@ public:
 	// dragging vs zooming -> problem który fix'ujemy
 	bool isDraggingWindow = false;
 	int draggedWindowId = -1;
+	// box select (rubber band)
+	bool isBoxSelecting = false;
+	ImVec2 boxSelectStart = {0, 0};
+	ImVec2 boxSelectEnd = {0, 0};
 
 	// drawing blocks
 	void drawBlock(const std::shared_ptr<Block> &box);
@@ -36,6 +40,8 @@ public:
 	void duplicateSelectedBlocks(const ImGuiIO& io);
 	void deleteSelectedBlocks(const ImGuiIO& io);
 	void selectAllBlocks(const ImGuiIO& io);
+	// box select
+	void updateBoxSelect(const ImGuiIO& io);
 
 	template<class Archive>
 	void serialize(Archive& ar) {
