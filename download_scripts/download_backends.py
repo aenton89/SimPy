@@ -1,6 +1,8 @@
 import os
 import urllib.request
 
+
+
 # wersja ImGui zgodna z conanfile.py
 IMGUI_VERSION = "v1.90.5"
 
@@ -17,7 +19,8 @@ FILES = [
 ]
 
 # ścieżka do folderu backendów
-BACKEND_DIR = os.path.join("src", "imgui_backends")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BACKEND_DIR = os.path.join(SCRIPT_DIR, "..", "include", "imgui_backends")
 
 # tworzymy katalog, jeśli nie istnieje
 os.makedirs(BACKEND_DIR, exist_ok=True)

@@ -45,9 +45,9 @@ conan profile detect --force
 ```
 
 ## 2. install dependencies
-### 2.1. download imgui backends (my python script)
+### 2.1. download imgui backends + additional files for IDE (my python script)
 ```
-python3 download_backends.py
+python download_includes.py
 ```
 ### 2.2. install rest of dependencies by conan
 ```

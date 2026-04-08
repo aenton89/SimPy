@@ -2,7 +2,7 @@
 
 #include "baseCell.h"
 #include "../../../core/python_kernel/PythonKernel.h"
-#include "../../../include/TextEditor.h"
+#include "../../../include/ide_dependencies/TextEditor.h"
 #include <future>
 #include <atomic>
 

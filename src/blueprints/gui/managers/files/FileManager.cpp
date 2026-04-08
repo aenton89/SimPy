@@ -4,7 +4,7 @@
 #include "FileManager.h"
 #include <GLFW/glfw3.h>
 #include "../../GUICore.h"
-#include "../tabs/TabManager.h"
+#include "../../tabs/TabManager.h"
 
 
 

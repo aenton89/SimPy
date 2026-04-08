@@ -13,7 +13,7 @@
 #include "managers/viewport/ViewportManager.h"
 #include "managers/windows/BlocksManager.h"
 #include "managers/viewport/ConnectionManager.h"
-#include "../tabs/TabModule.h"
+#include "../../tabs/TabModule.h"
 // #include <imgui.h>
 // #include <memory>
 // #include <string>

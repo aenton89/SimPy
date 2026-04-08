@@ -29,8 +29,8 @@ find_package(nlohmann_json REQUIRED)
 # =================== MAIN PROGRAM ===================
 add_executable(SimPy
         src/main.cpp
-        src/imgui_backends/imgui_impl_glfw.cpp
-        src/imgui_backends/imgui_impl_opengl3.cpp
+        include/imgui_backends/imgui_impl_glfw.cpp
+        include/imgui_backends/imgui_impl_opengl3.cpp
 
         ## karty jak w chrome
         src/tabs/TabManager.cpp
@@ -87,8 +87,9 @@ add_executable(SimPy
         src/ide/core/file_manipulation/FileUtils.cpp
         src/ide/gui/managers/TileManager.h
         src/ide/gui/managers/TileManager.cpp
+
         # zewnerzne biblioteki wymagajace linkowania
-        include/TextEditor.cpp
+        include/ide_dependencies/TextEditor.cpp
 )
 
 target_compile_definitions(SimPy PRIVATE
@@ -113,7 +114,7 @@ target_link_libraries(SimPy PRIVATE
 
 target_include_directories(SimPy PRIVATE
         ${imgui_INCLUDE_DIRS}
-        src/imgui_backends
+        include/imgui_backends
         src/blueprints/gui
         src/blueprints/data
 )
