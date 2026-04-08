@@ -25,5 +25,8 @@ class CompressorRecipe(ConanFile):
         self.options["imgui/*"].with_glfw = True
         self.options["imgui/*"].with_opengl3 = True
 
+        if self.settings.compiler.cppstd:
+            self.settings.compiler.cppstd = "20"
+
     def build_requirements(self):
         self.tool_requires("cmake/3.31.6")

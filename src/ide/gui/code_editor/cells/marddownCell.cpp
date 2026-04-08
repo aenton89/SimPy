@@ -5,7 +5,11 @@
 #include "mardownCell.h"
 #include <../../include/imgui_markdown.h>
 
+
+
 ImGui::MarkdownConfig mdConfig;
+
+
 
 MardownCell::MardownCell() {
     markdown_text = "";
@@ -26,12 +30,12 @@ bool MardownCell::Draw(int id) {
         strncpy(buffer, markdown_text.c_str(), sizeof(buffer));
         buffer[sizeof(buffer) - 1] = '\0';
 
-        if (ImGui::InputTextMultiline("##md_edit", buffer, sizeof(buffer),
-                                       ImVec2(width, screenSize.y / 6))) {
+        if (ImGui::InputTextMultiline("##md_edit", buffer, sizeof(buffer), ImVec2(width, screenSize.y / 6))) {
             // Jeśli użytkownik coś wpisał, aktualizujemy std::string
             markdown_text = buffer;
-                                       }
+        }
         this->focused = ImGui::IsItemActive();
+
     } else {
         extern ImGui::MarkdownConfig mdConfig;
         ImGui::Markdown(markdown_text.c_str(), markdown_text.length(), mdConfig);
@@ -56,6 +60,10 @@ void MardownCell::setInputText(const std::string& input) {
 
 std::string MardownCell::getInputText() const {
     return this->markdown_text;
+}
+
+void MardownCell::execMardown() {
+
 }
 
 

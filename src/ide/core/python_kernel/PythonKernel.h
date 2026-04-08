@@ -1,11 +1,8 @@
 //
 // Created by patryk on 13.02.26.
 //
-
-#ifndef PYTHONKERNEL_H
-#define PYTHONKERNEL_H
-
 #pragma once
+
 #include <string>
 #include <vector>
 #include <thread>
@@ -15,13 +12,20 @@
 #include <functional>
 #include <future>
 #include <atomic>
-#include <unistd.h>
 #include <filesystem>
 #include <fstream>
-#include <unistd.h>
-#include <sys/wait.h>
+
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <unistd.h>
+    #include <sys/wait.h>
+    #include <csignal>
+#endif
 
 namespace fs = std::filesystem;
+
+
 
 class PythonKernel {
 public:
@@ -32,41 +36,33 @@ public:
     void stop();
     void reset(fs::path workingDirectory);
 
-    // Wykonanie kodu (blokująco – używane wewnątrz kolejki)
     std::string executeCode(const std::string &code);
     std::string getPlot();
     std::string fetchNamespace();
     void flushPipeUntilEndMarker();
 
-    // Uruchamianie kolejki zadań
     void startThread();
     void stopThread();
 
-    // Dodawanie zadania do kolejki (zwrot future)
     template<typename F>
     auto enqueue(F&& func) -> std::future<decltype(func())> {
         using R = decltype(func());
         auto task = std::make_shared<std::packaged_task<R()>>(std::forward<F>(func));
         auto fut = task->get_future();
+
         {
             std::lock_guard<std::mutex> lock(mtx);
             tasks.push([task]() { (*task)(); });
         }
+
         cv.notify_one();
         return fut;
     }
 
 private:
-    int pipe_in[2];
-    int pipe_out[2];
-    pid_t pid;
-
-    std::string readOutput();
-
     fs::path pythonPath;
-    fs::path kernelScript = "/home/patryk/CLionProjects/SimPy/src/ide/core/python_kernel/kernel.py";
+    fs::path kernelScript = "kernel.py";
 
-    // wątek + kolejka
     std::thread worker;
     std::atomic<bool> running{false};
     std::queue<std::function<void()>> tasks;
@@ -74,6 +70,27 @@ private:
     std::condition_variable cv;
 
     void threadLoop();
-};
+    std::string readOutput();
 
-#endif //PYTHONKERNEL_H
+    // platform-specific handles
+#ifdef _WIN32
+    HANDLE hProcess = INVALID_HANDLE_VALUE;
+    // parent reads stdout/stderr of child
+    HANDLE hPipeInRd = INVALID_HANDLE_VALUE;
+    // child writes stdout/stderr
+    HANDLE hPipeInWr = INVALID_HANDLE_VALUE;
+    // child reads stdin
+    HANDLE hPipeOutRd = INVALID_HANDLE_VALUE;
+    // parent writes stdin of child
+    HANDLE hPipeOutWr = INVALID_HANDLE_VALUE;
+
+    bool writeToChild(const std::string &data);
+    std::string readFromChild();
+#else
+    // child stdout → parent reads [0]
+    int pipe_in[2] = {-1, -1};
+    // parent writes [1] → child stdin
+    int pipe_out[2] = {-1, -1};
+    pid_t pid = -1;
+#endif
+};

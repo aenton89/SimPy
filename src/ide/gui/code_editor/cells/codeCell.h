@@ -1,5 +1,4 @@
-#ifndef CODECELL_H
-#define CODECELL_H
+#pragma once
 
 #include "baseCell.h"
 #include "../../../core/python_kernel/PythonKernel.h"
@@ -7,8 +6,9 @@
 #include <future>
 #include <atomic>
 
-class CodeCell : public BaseCell
-{
+
+
+class CodeCell : public BaseCell {
 public:
     explicit CodeCell(PythonKernel& kernel);
     CodeCell(CodeCell&& other) noexcept;
@@ -42,12 +42,11 @@ private:
     void updateTextureFromBase64(const std::string& base64Data);
     void clearTexture();
 
-    unsigned int texture = 0; // GLuint
+    // GLuint
+    unsigned int texture = 0;
     int texture_width = 0;
     int texture_height = 0;
     std::string base64;
 
     char output_buffer[4 * 4096]{};
 };
-
-#endif //CODECELL_H

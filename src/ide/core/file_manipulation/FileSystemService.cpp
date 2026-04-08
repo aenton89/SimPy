@@ -5,6 +5,7 @@
 #include "FileSystemService.h"
 
 
+
 bool FileSystemService::CreateFile(const fs::path& parent, const std::string& name) {
     try {
         fs::path fullPath =  parent / name;
@@ -55,14 +56,14 @@ bool FileSystemService::Delete(const fs::path& path, bool force) {
         fs::remove(path);
         return true;
     } else if (fs::is_directory(path)) {
-        bool is_empty = fs::is_empty(path);
-        if (is_empty) {
+        if (fs::is_empty(path)) {
             fs::remove(path);
             return true;
         } else if (!force) {
             fs::remove_all(path);
             return true;
         }
+
         return false;
     }
 }

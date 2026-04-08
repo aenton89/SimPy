@@ -1,13 +1,13 @@
 //
 // Created by patryk on 10.02.26.
 //
+#pragma once
 
 #include "../tabs/TabModule.h"
-#include "gui/code_editor/notebookTab.h"
+#include "gui/code_editor/notebookTile.h"
 #include "gui/ui/workSpace.h"
 
-#ifndef MAIN_WINDOW_H
-#define MAIN_WINDOW_H
+
 
 class MainWindow : public TabModule {
 public:
@@ -21,16 +21,12 @@ public:
 
 protected:
     workSpace* workspace = nullptr;
-    NotebookTab* notebookTab = nullptr;
+    NotebookTile* notebookTab = nullptr;
 
     bool showWorkspace = false;
 
-
-
     // preferencje ui
     // UIPreferences uiPreferences; - tu dodac te kolorki
-
-
 public:
     /* NIE jest serializowane:
     - wskaźniki systemowe: window, glsl_version - to musi być zainicjalizowane przez system
@@ -39,5 +35,3 @@ public:
     - dragging_from: reset przy ładowaniu
      */
 };
-
-#endif //MAIN_WINDOW_H

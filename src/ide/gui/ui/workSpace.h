@@ -1,16 +1,15 @@
 //
 // Created by patryk on 11.02.26.
 //
+#pragma once
 
 #include <fstream>
 #include <iostream>
 #include "../../core/file_manipulation/FileSystemService.h"
 
-#ifndef WORKSPACEMODULE_H
-#define WORKSPACEMODULE_H
 
-class workSpace
-{
+
+class workSpace {
 public:
     workSpace();
     ~workSpace();
@@ -35,5 +34,3 @@ protected:
 private:
     FileSystemService fsService;
 };
-
-#endif //WORKSPACEMODULE_H

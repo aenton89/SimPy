@@ -1,51 +1,57 @@
 //
 // Created by patryk on 11.02.26.
 //
-
 #include "workSpace.h"
 #include <iostream>
 #include <fstream>
+
+
 
 workSpace::workSpace() {
     this->project_path = fs::current_path();
 }
 
-workSpace::~workSpace() { }
+workSpace::~workSpace() {}
 
-void workSpace::Render(ImVec2 pos, ImVec2 size)
-{
+void workSpace::Render(ImVec2 pos, ImVec2 size) {
     ImGui::SetNextWindowPos(pos);
     ImGui::SetNextWindowSize(size);
 
-    ImGui::Begin("Workspace", nullptr,
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin("Workspace", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
 
     ImGui::Text("Work Space");
 
     static std::string path;
 
-    if (!project_path.empty() && ImGui::TreeNode(this->project_path.filename().string().c_str()))
-    {
+    if (!project_path.empty() && ImGui::TreeNode(this->project_path.filename().string().c_str())) {
         ShowDirectoryTree(this->project_path, path);
-
         ImGui::TreePop();
     }
 
     ImGui::End();
 }
 
-void workSpace::Update() { }
+void workSpace::Update() {}
 
-ImVec2 workSpace::GetWindowSize() { return ImGui::GetWindowSize(); }
-ImVec2 workSpace::GetWindowPosition() { return ImGui::GetWindowPos(); }
+ImVec2 workSpace::GetWindowSize() {
+    return ImGui::GetWindowSize();
+}
+ImVec2 workSpace::GetWindowPosition() {
+    return ImGui::GetWindowPos();
+}
 
-void workSpace::set_ProjectPath(const fs::path& path) { this->project_path = path; }
-fs::path workSpace::get_path2open() { return this->open_path; }
+void workSpace::set_ProjectPath(const fs::path& path) {
+    this->project_path = path;
+}
 
-///////////////////////////////////////////////////// Metody związane z operacjami na drzewku projektu /////////////////////////////////////////////
+fs::path workSpace::get_path2open() {
+    return this->open_path;
+}
 
-void workSpace::OpenContextMenu(const fs::directory_entry& entry)
-{
+
+
+// metody związane z operacjami na drzewku projektu
+void workSpace::OpenContextMenu(const fs::directory_entry& entry) {
     if (!ImGui::BeginPopupContextItem())
         return;
 
@@ -55,24 +61,23 @@ void workSpace::OpenContextMenu(const fs::directory_entry& entry)
     if (ImGui::MenuItem("Open"))
         this->open_path = entry.path();
 
-    if (ImGui::MenuItem("Copy abs path"))
-        ImGui::SetClipboardText(entry.path().c_str());
+    if (ImGui::MenuItem("Copy abs path")) {
+        std::string path = entry.path().string();
+        ImGui::SetClipboardText(path.c_str());
+    }
 
     static char nameBuffer[256] = "";
 
-    if (ImGui::BeginMenu("Create"))
-    {
+    if (ImGui::BeginMenu("Create")) {
         ImGui::InputText("Name", nameBuffer, sizeof(nameBuffer));
 
-        if (ImGui::MenuItem("Create folder") && nameBuffer[0] != '\0')
-        {
+        if (ImGui::MenuItem("Create folder") && nameBuffer[0] != '\0') {
             if (!fsService.CreateFolder(entry.path(), nameBuffer))
                 std::cerr << "Nie udało się stworzyć folderu\n";
             memset(nameBuffer, 0, sizeof(nameBuffer));
         }
 
-        if (ImGui::MenuItem("Create file") && nameBuffer[0] != '\0')
-        {
+        if (ImGui::MenuItem("Create file") && nameBuffer[0] != '\0') {
             if (!fsService.CreateFile(entry.path(), nameBuffer))
                 std::cerr << "Nie udało się stworzyć pliku\n";
             memset(nameBuffer, 0, sizeof(nameBuffer));
@@ -81,8 +86,7 @@ void workSpace::OpenContextMenu(const fs::directory_entry& entry)
         ImGui::EndMenu();
     }
 
-    if (ImGui::MenuItem("Remove"))
-    {
+    if (ImGui::MenuItem("Remove")) {
         if (!fsService.Delete(entry.path()))
             std::cerr << "Nie udało się usunąć pliku/folderu\n";
     }
@@ -93,14 +97,12 @@ void workSpace::OpenContextMenu(const fs::directory_entry& entry)
     ImGui::EndPopup();
 }
 
-void workSpace::HandleDragDropTarget(const fs::path& target)
-{
+void workSpace::HandleDragDropTarget(const fs::path& target) {
     if (!ImGui::BeginDragDropTarget())
         return;
 
-    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FILE_PATH"))
-    {
-        const char* sourcePath = (const char*)payload->Data;
+    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FILE_PATH")) {
+        const char* sourcePath = static_cast<const char *>(payload->Data);
         fs::path source(sourcePath);
         fs::path destination = target / source.filename();
 
@@ -114,13 +116,11 @@ void workSpace::HandleDragDropTarget(const fs::path& target)
     ImGui::EndDragDropTarget();
 }
 
-void workSpace::ShowDirectoryNode(const fs::directory_entry& entry, std::string& selected_path)
-{
+void workSpace::ShowDirectoryNode(const fs::directory_entry& entry, std::string& selected_path) {
     const std::string name = entry.path().filename().string();
     ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
-    if (entry.is_directory())
-    {
+    if (entry.is_directory()) {
         bool opened = ImGui::TreeNodeEx(name.c_str(), nodeFlags);
 
         if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
@@ -128,8 +128,7 @@ void workSpace::ShowDirectoryNode(const fs::directory_entry& entry, std::string&
 
         OpenContextMenu(entry);
 
-        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-        {
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
             std::string folderPath = entry.path().string();
             ImGui::SetDragDropPayload("FILE_PATH", folderPath.c_str(), folderPath.size() + 1);
             ImGui::Text("Przenoszę folder: %s", name.c_str());
@@ -138,29 +137,25 @@ void workSpace::ShowDirectoryNode(const fs::directory_entry& entry, std::string&
 
         HandleDragDropTarget(entry.path());
 
-        if (opened)
-        {
+        if (opened) {
             std::error_code ec;
-            if (fs::exists(entry.path(), ec))
-            {
-                for (const auto& child : fs::directory_iterator(entry.path()))
-                {
-                    if (ec) break;
+            if (fs::exists(entry.path(), ec)) {
+                for (const auto& child : fs::directory_iterator(entry.path())) {
+                    if (ec)
+                        break;
+
                     ShowDirectoryNode(child, selected_path);
                 }
             }
             ImGui::TreePop();
         }
-    }
-    else
-    {
+    } else {
         if (ImGui::Selectable(name.c_str()))
             selected_path = entry.path().string();
 
         OpenContextMenu(entry);
 
-        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-        {
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
             std::string filePath = entry.path().string();
             ImGui::SetDragDropPayload("FILE_PATH", filePath.c_str(), filePath.size() + 1);
             ImGui::Text("Przenoszę plik: %s", name.c_str());
@@ -169,8 +164,7 @@ void workSpace::ShowDirectoryNode(const fs::directory_entry& entry, std::string&
     }
 }
 
-void workSpace::ShowDirectoryTree(const fs::path& path, std::string& selected_path)
-{
+void workSpace::ShowDirectoryTree(const fs::path& path, std::string& selected_path) {
     if (!fs::exists(path) || !fs::is_directory(path)) {
         ImGui::TextColored(ImVec4(1, 0, 0, 1), "Folder doesn't exist: %s", path.string().c_str());
         return;

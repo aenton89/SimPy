@@ -1,7 +1,6 @@
 //
 // Created by tajbe on 25.10.2025.
 //
-#define NOMINMAX
 #include "DockableWindowManager.h"
 #include "../../GUICore.h"
 #include "../../../core/structures/Model.h"

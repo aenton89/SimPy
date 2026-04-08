@@ -13,33 +13,34 @@
 
 #include "FileUtils.h"
 
-///////////////////////////////////////////////////////////////////////////////////////// Operacje na jsonach plus kilka funkji popmocniczych
-std::vector<std::string> FileUtils::split(const std::string& str, char delimiter)
-{
+
+
+// Operacje na jsonach plus kilka funkji popmocniczych
+std::vector<std::string> FileUtils::split(const std::string& str, char delimiter) {
     std::vector<std::string> results;
     std::stringstream ss(str);
     std::string token;
 
-    while (std::getline(ss, token, delimiter))
+    while (std::getline(ss, token, delimiter)) {
         results.push_back(token);
+    }
 
     return results;
 }
 
-std::vector<std::string> FileUtils::parseKernelList(const std::string& jsonStr)
-{
+std::vector<std::string> FileUtils::parseKernelList(const std::string& jsonStr) {
     std::vector<std::string> result;
     auto j = json::parse(jsonStr);
 
     if (j.contains("kernels") && j["kernels"].is_array()) {
-        for (auto& k : j["kernels"])
+        for (auto& k : j["kernels"]) {
             result.push_back(k.get<std::string>());
+        }
     }
     return result;
 }
 
-std::string FileUtils::readJsonFile(const std::string& path)
-{
+std::string FileUtils::readJsonFile(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open())
         throw std::runtime_error("Nie można otworzyć pliku: " + path);
@@ -49,12 +50,10 @@ std::string FileUtils::readJsonFile(const std::string& path)
     return buffer.str();
 }
 
-void FileUtils::writeJsonFile(const std::string& path, const std::string& jsonPath)
-{
+void FileUtils::writeJsonFile(const std::string& path, const std::string& jsonPath) {
     std::ifstream inFile(jsonPath);
-    json j;
-    if (inFile.is_open())
-    {
+    if (inFile.is_open()) {
+        json j;
         inFile >> j;
         inFile.close();
 
@@ -64,19 +63,17 @@ void FileUtils::writeJsonFile(const std::string& path, const std::string& jsonPa
         if (outFile.is_open()) {
             outFile << j.dump(4);
             outFile.close();
+        } else {
+            std::cout << "Can't open json file for writing" << std::endl;
         }
-        else std::cout << "Can't open json file for writing" << std::endl;
     }
     else std::cout << "Can't open json file for reading" << std::endl;
 }
 
 
 
-
-////////////////////////////////////////////////////////////////////// Otwieranie plikow (.py .ipynb itd ////////////////////////////////////////////////////////
-
-std::map<int, OpenFile::CellData> OpenFile::openIpynb(const std::string& path)
-{
+// Otwieranie plikow (.py .ipynb itd.)
+std::map<int, OpenFile::CellData> OpenFile::openIpynb(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) {
         std::cerr << "Nie można otworzyć pliku: " << path << std::endl;
@@ -186,42 +183,37 @@ std::map<int, OpenFile::CellData> OpenFile::openIpynb(const std::string& path)
 
 
 
-std::map<int, OpenFile::CellData> OpenFile::createIpynb_map(
-    const std::vector<std::unique_ptr<BaseCell>>& cells)
-{
+std::map<int, OpenFile::CellData> OpenFile::createIpynb_map(const std::vector<std::unique_ptr<BaseCell>>& cells) {
     std::map<int, OpenFile::CellData> cellMap;
     int i = 0;
-    for (auto& cellPtr : cells)
-    {
-        const auto& cell = *cellPtr;   // referencja do obiektu
+    for (auto& cellPtr : cells) {
+        const auto& cell = *cellPtr;
         CellData cellData;
 
-        if (cell.getType() == CellType::CodeCell)
-        {
+        if (cell.getType() == CellType::CodeCell) {
             auto& codeCell = dynamic_cast<const CodeCell&>(cell);
             cellData.cell_type = "code";
             cellData.source = codeCell.getInputText();
             cellData.outputs = codeCell.getOutputText();
             cellData.base64_img = codeCell.getBase64();
-        }
-        else
-        {
+        } else {
             auto& mdCell = dynamic_cast<const MardownCell&>(cell);
             cellData.cell_type = "markdown";
             cellData.source = mdCell.getInputText();
         }
+
         cellMap[i++] = cellData;
     }
+
     return cellMap;
 }
 
 
-void OpenFile::writeIpynb(const std::string& path, const std::map<int, CellData>& cells)
-{
+void OpenFile::writeIpynb(const std::string& path, const std::map<int, CellData>& cells) {
     json j;
     j["cells"] = json::array();
 
-    for (const auto& [index, cell] : cells) {
+    for (const auto &cell: cells | std::views::values) {
         json cellJson;
         cellJson["cell_type"] = cell.cell_type;
         cellJson["metadata"] = json::object();
@@ -275,6 +267,7 @@ void OpenFile::writeIpynb(const std::string& path, const std::map<int, CellData>
                 {"version", "3.10"}
         }}
     };
+
     j["nbformat"] = 4;
     j["nbformat_minor"] = 5;
 
@@ -284,15 +277,14 @@ void OpenFile::writeIpynb(const std::string& path, const std::map<int, CellData>
         return;
     }
 
-    file << j.dump(4); // zapis z wcięciem 4 spacji
+    // zapis z wcięciem 4 spacji
+    file << j.dump(4);
 }
 
 
-std::string OpenFile::openPyfile(const std::string& path)
-{
+std::string OpenFile::openPyfile(const std::string& path) {
     std::ifstream file(path);
-    if (file)
-    {
+    if (file) {
         std::stringstream ss;
         ss << file.rdbuf();
 
@@ -301,10 +293,13 @@ std::string OpenFile::openPyfile(const std::string& path)
     return "";
 }
 
-//----------------------------------------------------------------- grafy matplotliba ---------------------------------------------
+
+
+// grafy matplotliba
 std::string ImgOpen::base64_decode(const std::string& in) {
     std::string out;
     std::vector<int> T(256, -1);
+
     for (int i = 0; i < 64; i++) {
         T["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[i]] = i;
     }
@@ -315,16 +310,18 @@ std::string ImgOpen::base64_decode(const std::string& in) {
         val = (val << 6) + T[c];
         valb += 6;
         if (valb >= 0) {
-            out.push_back(char((val >> valb) & 0xFF));
+            out.push_back(static_cast<char>((val >> valb) & 0xFF));
             valb -= 8;
         }
     }
+
     return out;
 }
 
 GLuint ImgOpen::LoadTextureFromMemory(const void* data, int size, int& width, int& height) {
     int channels;
-    unsigned char* image = stbi_load_from_memory((const unsigned char*)data, size, &width, &height, &channels, STBI_rgb_alpha);
+    unsigned char* image = stbi_load_from_memory(static_cast<const unsigned char *>(data), size, &width, &height, &channels, STBI_rgb_alpha);
+
     if (!image) {
         std::cerr << "Failed to load image from memory!" << std::endl;
         return 0;
@@ -341,4 +338,3 @@ GLuint ImgOpen::LoadTextureFromMemory(const void* data, int size, int& width, in
     stbi_image_free(image);
     return texture;
 }
-// -------------------------------------------------------------------------------------------------------------------------------------

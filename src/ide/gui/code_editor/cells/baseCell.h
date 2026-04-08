@@ -1,12 +1,15 @@
-#ifndef BASECELL_H
-#define BASECELL_H
+#pragma once
 
 #include <string>
+
+
 
 enum class CellType {
     CodeCell,
     MarkdownCell
 };
+
+
 
 class BaseCell {
 public:
@@ -24,5 +27,3 @@ public:
     bool focused = false;
     bool focusedPrev = false;
 };
-
-#endif //BASECELL_H

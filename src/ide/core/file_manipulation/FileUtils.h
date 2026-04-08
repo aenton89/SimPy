@@ -1,6 +1,7 @@
 //
 // Created by patryk on 14.02.26.
 //
+#pragma once
 
 #include <string>
 #include "../../gui/code_editor/cells/codeCell.h"
@@ -10,8 +11,7 @@
 
 using json = nlohmann::json;
 
-#ifndef FILEUTILS_H
-#define FILEUTILS_H
+
 
 struct FileDecoder{
     std::string filename;
@@ -24,6 +24,7 @@ namespace FileUtils {
     std::string readJsonFile(const std::string& path);
     void writeJsonFile(const std::string& path, const std::string& jsonPath);
 };
+
 
 
 class OpenFile {
@@ -47,5 +48,3 @@ public:
     static std::string base64_decode(const std::string& in);
     static GLuint LoadTextureFromMemory(const void* data, int size, int& width, int& height);
 };
-
-#endif //FILEUTILS_H

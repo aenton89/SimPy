@@ -2,9 +2,11 @@
 // Created by patryk on 10.02.26.
 //
 
-#include "notebookTab.h"
+#include "notebookTile.h"
 
-NotebookTab::NotebookTab(const fs::path& pythonPath) {
+
+
+NotebookTile::NotebookTile(const fs::path& pythonPath) {
     kernel = new PythonKernel(pythonPath);
     std::cout << "debug" << std::endl;
     kernel->start(fs::current_path());
@@ -12,17 +14,17 @@ NotebookTab::NotebookTab(const fs::path& pythonPath) {
 
 }
 
-NotebookTab::~NotebookTab() {
+NotebookTile::~NotebookTile() {
     delete kernel;
 }
 
 
-void NotebookTab::setKernel(PythonKernel *kernel) {
+void NotebookTile::setKernel(PythonKernel *kernel) {
     this->kernel = kernel;
 }
 
 
-void NotebookTab::Draw() {
+void NotebookTile::Draw() {
     // 1. Inicjalizacja focus_index jeśli wektor nie jest pusty, a index to -1
     if (focus_index == -1 && !cells.empty()) {
         focus_index = 0;
@@ -30,7 +32,7 @@ void NotebookTab::Draw() {
 
     if (ImGui::Button("Add Code Cell")) {
         // Wstawiamy pod komórkę z fokusem
-        int insert_pos = std::clamp(focus_index + 1, 0, (int)cells.size());
+        int insert_pos = std::clamp(focus_index + 1, 0, static_cast<int>(cells.size()));
         this->cells.insert(this->cells.begin() + insert_pos, std::make_unique<CodeCell>(*this->kernel));
 
         focus_index = insert_pos;
@@ -38,7 +40,7 @@ void NotebookTab::Draw() {
 
     if (ImGui::Button("Add MarkDown Cell")) {
         // Wstawiamy pod komórkę z fokusem
-        int insert_pos = std::clamp(focus_index + 1, 0, (int)cells.size());
+        int insert_pos = std::clamp(focus_index + 1, 0, static_cast<int>(cells.size()));
         this->cells.insert(this->cells.begin() + insert_pos, std::make_unique<MardownCell>());
 
         focus_index = insert_pos;
@@ -46,13 +48,13 @@ void NotebookTab::Draw() {
 
     ImGui::Separator();
 
-    for (int i = 0; i < (int)cells.size(); ++i) {
+    for (int i = 0; i < static_cast<int>(cells.size()); ++i) {
         ImGui::PushID(i);
         bool requestDelete = cells[i]->Draw(i);
 
         if (!cells[i]->focusedPrev && cells[i]->focused) {
             focus_index = i;
-            for (int j = 0; j < (int)cells.size(); ++j) {
+            for (int j = 0; j < static_cast<int>(cells.size()); ++j) {
                 if (j != i) cells[j]->focused = false;
             }
         }
@@ -70,8 +72,6 @@ void NotebookTab::Draw() {
 }
 
 
-void NotebookTab::Update() {
+void NotebookTile::Update() {
 
 }
-
-

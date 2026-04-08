@@ -2,6 +2,18 @@ cmake_minimum_required(VERSION 3.30)
 project(SimPy)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(MSVC)
+    add_compile_options(/Zc:__cplusplus /std:c++20)
+endif()
+
+set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release)
+set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+
+add_definitions(-DNOMINMAX)
 
 # znajduje wymagane pakiety
 find_package(imgui REQUIRED)
@@ -19,6 +31,12 @@ add_executable(SimPy
         src/main.cpp
         src/imgui_backends/imgui_impl_glfw.cpp
         src/imgui_backends/imgui_impl_opengl3.cpp
+
+        ## karty jak w chrome
+        src/tabs/TabManager.cpp
+        src/tabs/TabModule.cpp
+
+        ## BLUEPRINTS
         # bloczki i inne dane
         src/blueprints/core/structures/BasicBlock.cpp
         src/blueprints/core/structures/Blocks.cpp
@@ -44,34 +62,33 @@ add_executable(SimPy
         src/blueprints/gui/managers/BasicManager.cpp
         # rdzenio-podobne funkcje
         src/blueprints/core/project/ProjectMetadata.cpp
-        # karty jak w chrome
-        src/tabs/TabManager.cpp
-        src/tabs/TabModule.cpp
+
+        ## IDE
+        # jakieś coś pod ide
         src/ide/mainWindow.h
-        src/ide/gui/code_editor/notebookTab.h
-        src/ide/gui/code_editor/notebookTab.cpp
+        src/ide/gui/code_editor/notebookTile.h
+        src/ide/gui/code_editor/notebookTile.cpp
         src/ide/gui/code_editor/cells/baseCell.h
         src/ide/gui/code_editor/cells/codeCell.h
         src/ide/gui/code_editor/cells/codeCell.cpp
         src/ide/gui/code_editor/cells/mardownCell.h
         src/ide/mainWindow.cpp
         src/ide/gui/code_editor/cells/marddownCell.cpp
-        src/ide/gui/code_editor/textEditorTab.h
-        src/ide/gui/code_editor/textEditorTab.cpp
-        # zewnerzne biblioteki wymagajace linkowania
-        include/TextEditor.cpp
+        src/ide/gui/code_editor/textEditorTile.h
+        src/ide/gui/code_editor/textEditorTile.cpp
         src/ide/gui/ui/workSpace.h
         src/ide/gui/ui/workSpace.cpp
         src/ide/core/file_manipulation/FileSystemService.h
         src/ide/core/file_manipulation/FileSystemService.cpp
         src/ide/core/python_kernel/PythonKernel.h
         src/ide/core/python_kernel/PythonKernel.cpp
-        src/ide/gui/code_editor/BaseTab.h
+        src/ide/gui/code_editor/BaseTile.h
         src/ide/core/file_manipulation/FileUtils.h
         src/ide/core/file_manipulation/FileUtils.cpp
-        src/ide/gui/managers/TabManager.h
-        src/ide/gui/managers/TabManager.cpp
-
+        src/ide/gui/managers/TileManager.h
+        src/ide/gui/managers/TileManager.cpp
+        # zewnerzne biblioteki wymagajace linkowania
+        include/TextEditor.cpp
 )
 
 target_compile_definitions(SimPy PRIVATE

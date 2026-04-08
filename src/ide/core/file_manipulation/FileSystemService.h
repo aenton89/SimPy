@@ -1,6 +1,7 @@
 //
 // Created by patryk on 11.02.26.
 //
+#pragma once
 
 #include <fstream>
 #include <sstream>
@@ -8,8 +9,7 @@
 
 namespace fs = std::filesystem;
 
-#ifndef FILESYSTEMSERVICE_H
-#define FILESYSTEMSERVICE_H
+
 
 class FileSystemService {
 public:
@@ -18,5 +18,3 @@ public:
     bool Delete(const fs::path& path, bool force = false);
     bool Move(const fs::path& from, const fs::path& to);
 };
-
-#endif //FILESYSTEMSERVICE_H

@@ -1,7 +1,6 @@
 //
 // Created by tajbe on 12.11.2025.
 //
-#define NOMINMAX
 #include "ConnectionManager.h"
 #include "../../GUICore.h"
 
