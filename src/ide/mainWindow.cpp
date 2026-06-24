@@ -1,6 +1,7 @@
 //
 // Created by patryk on 10.02.26.
 //
+
 #include "mainWindow.h"
 
 
@@ -40,6 +41,8 @@ void MainWindow::update() {
     float topBarHeight = 50.0f;
     float sidebarWidth = 30.0f;
 
+    float wsWidth = 200.0f;
+
     ImGuiWindowFlags window_flags =
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
@@ -50,53 +53,88 @@ void MainWindow::update() {
 
     // GÓRNY PASEK
     ImGui::SetNextWindowPos(ImVec2(
-        sidebarWidth,
+        0,
         viewport->Pos.y + menuBarHeight
     ));
+
     ImGui::SetNextWindowSize(ImVec2(
         viewport->Size.x,
         topBarHeight
     ));
 
-    // taki sam jak sidebar
-    ImGui::SetNextWindowBgAlpha(0.8f);
-    ImGui::Begin("TopBar", nullptr, window_flags);
+    ImGui::SetNextWindowBgAlpha(0.8f); // taki sam jak sidebar
 
+    if (ImGui::Begin("TopBar", nullptr, window_flags)) {
+        // Content kotry bedzie na tym pasku
+    }
     ImGui::End();
 
     // SIDEBAR
     ImGui::SetNextWindowPos(ImVec2(
-        viewport->Pos.x,
-        viewport->Pos.y + menuBarHeight
+        0,
+        topBarHeight + menuBarHeight
     ));
+
     ImGui::SetNextWindowSize(ImVec2(
         sidebarWidth,
-        viewport->Size.y
+        viewport->Size.y - topBarHeight - menuBarHeight
     ));
 
     // ten sam alpha
     ImGui::SetNextWindowBgAlpha(0.8f);
-    ImGui::Begin("Sidebar", nullptr, window_flags);
-    ImVec2 buttonSize(20, 20);
-    float xCenter = (ImGui::GetWindowSize().x - buttonSize.x) / 2.0f;
-    float yCenter = 10.0f;
-    ImGui::SetCursorPos(ImVec2(xCenter, yCenter));
 
-    if (ImGui::Button("F", buttonSize)) {
-        showWorkspace = !showWorkspace;
+    if (ImGui::Begin("Sidebar", nullptr, window_flags)) {
+        ImVec2 buttonSize(20, 20);
+        float xCenter = (ImGui::GetWindowSize().x - buttonSize.x) / 2.0f;
+        float yCenter = 10.0f;
+
+        ImGui::SetCursorPos(ImVec2(xCenter, yCenter));
+
+        if (ImGui::Button("F", buttonSize)) {
+            showWorkspace = !showWorkspace;
+        }
     }
 
     ImGui::End();
 
+
+
+    // Notebook
+    //if (ImGui::Begin("Notebook", nullptr, window_flags)) {
+        if (showWorkspace) {
+            this->notebookTab->SetPos(ImVec2(
+                sidebarWidth + wsWidth,
+                menuBarHeight + topBarHeight
+            ));
+            this->notebookTab->SetSize(ImVec2(
+                viewport->Size.x - sidebarWidth - wsWidth,
+                viewport->Size.y - menuBarHeight - topBarHeight
+            ));
+        } else {
+            this->notebookTab->SetPos(ImVec2(
+                sidebarWidth,
+                menuBarHeight + topBarHeight
+            ));
+            this->notebookTab->SetSize(ImVec2(
+                viewport->Size.x - sidebarWidth,
+                viewport->Size.y - menuBarHeight - topBarHeight
+            ));
+        }
+    //}
+    //ImGui::End();
+
+
     // WORKSPACE
     if (showWorkspace && workspace) {
+
         ImVec2 wsPos(
             sidebarWidth,
-            menuBarHeight
+            menuBarHeight + topBarHeight
         );
+
         ImVec2 wsSize(
-            300,
-            viewport->Size.y - menuBarHeight
+            wsWidth,
+            viewport->Size.y - menuBarHeight - topBarHeight
         );
 
         workspace->Render(wsPos, wsSize);

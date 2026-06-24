@@ -15,6 +15,12 @@ public:
     virtual void Draw() = 0;
     virtual void Update() = 0;
 
+    void SetSize(ImVec2 size);
+    void SetPos(ImVec2 pos);
+
+    ImVec2 GetPos();
+    ImVec2 GetSize();
+
     virtual std::string getType() const = 0;
     fs::path getPath() {return path2open;}
 
@@ -22,6 +28,8 @@ public:
     std::string filename;
 
     bool isFloating = false;
-    ImVec2 floatingPos = ImVec2(100, 100);
-    ImVec2 floatingSize = ImVec2(300, 300);
+
+private:
+    ImVec2 floatingPos;
+    ImVec2 floatingSize;
 };
