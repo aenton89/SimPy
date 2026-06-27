@@ -9,7 +9,10 @@
 
 
 PythonKernel::PythonKernel(const fs::path &pythonPath)
-    : pythonPath(pythonPath) {}
+    : pythonPath(pythonPath), pid(-1) {
+    pipe_in[0] = pipe_in[1] = -1;
+    pipe_out[0] = pipe_out[1] = -1;
+}
 
 PythonKernel::~PythonKernel() {
     stopThread();
@@ -28,6 +31,7 @@ bool PythonKernel::start(fs::path workingDirectory) {
 
     // Pipe: parent writes → child reads (stdin of child)
     if (!CreatePipe(&hPipeOutRd, &hPipeOutWr, &sa, 0)) {
+        std::cerr << "CreatePipe (stdin) failed: " << GetLastError() << '\n';
         std::cerr << "CreatePipe (stdin) failed: " << GetLastError() << '\n';
         return false;
     }
@@ -215,6 +219,7 @@ std::string PythonKernel::executeCode(const std::string &code) {
 #ifdef _WIN32
     writeToChild(payload);
 #else
+    std::cout << code;
     write(pipe_out[1], payload.c_str(), payload.size());
 #endif
     return readOutput();

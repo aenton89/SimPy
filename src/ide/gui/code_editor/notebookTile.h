@@ -30,6 +30,6 @@ protected:
 
 private:
     PythonKernel *kernel;
-    inline static const fs::path kerenl_script = "src/ide/gui/core/python_kernel/kernel.py";
+    //inline static const fs::path kerenl_script = "src/ide/gui/core/python_kernel/kernel.py";
     int focus_index = -1;
 };

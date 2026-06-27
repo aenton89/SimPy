@@ -2,16 +2,16 @@
 // Created by patryk on 10.02.26.
 //
 
-#include "notebookTab.h"
+#include "notebookTile.h"
 
-NotebookTab::NotebookTab(const fs::path& pythonPath) {
+NotebookTile::NotebookTile(const fs::path& pythonPath) {
     kernel = new PythonKernel(pythonPath);
-    //std::cout << "debug" << std::endl;
+    std::cout << "debug" << std::endl;
     kernel->start(fs::current_path());
-    //std::cout << "debug" << std::endl;
+    std::cout << "debug" << std::endl;
 }
 
-NotebookTab::~NotebookTab() {
+NotebookTile::~NotebookTile() {
     delete kernel;
 }
 

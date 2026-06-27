@@ -82,12 +82,12 @@ add_executable(SimPy
         src/ide/core/file_manipulation/FileSystemService.cpp
         src/ide/core/python_kernel/PythonKernel.h
         src/ide/core/python_kernel/PythonKernel.cpp
-        src/ide/gui/code_editor/BaseTab.h
+        src/ide/gui/code_editor/BaseTile.h
         src/ide/core/file_manipulation/FileUtils.h
         src/ide/core/file_manipulation/FileUtils.cpp
-        src/ide/gui/managers/TabManager.h
-        src/ide/gui/managers/TabManager.cpp
-        src/ide/gui/code_editor/BaseTag.cpp
+        src/ide/gui/managers/TileManager.h
+        src/ide/gui/managers/TileManager.cpp
+        src/ide/gui/code_editor/BaseTile.cpp
 
         # zewnerzne biblioteki wymagajace linkowania
         include/ide_dependencies/TextEditor.cpp

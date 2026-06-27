@@ -4,10 +4,11 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "tabs/TabManager.h"
-
+#include <csignal>
 
 
 int main() {
+    std::signal(SIGPIPE, SIG_IGN);
     // setup glfw + open gl bedzie potrzebny tutaj
     // ---------------------------------------------------------------------------------------
 
