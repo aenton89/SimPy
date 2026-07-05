@@ -1,7 +1,7 @@
 //
 // Created by tajbe on 18.04.2025.
 //
-#include "GUICore.h"
+#include "BluePrintTab.h"
 #include <imgui_impl_opengl3.h>
 #include "GLFW/glfw3.h"
 #include <functional>
@@ -14,18 +14,18 @@ CEREAL_FORCE_DYNAMIC_INIT(blocks)
 
 
 
-GUICore::GUICore() : TabModule("Blueprints"){
-    dockingManager.setGUICore(this);
-    fileManager.setGUICore(this);
-    viewportManager.setGUICore(this);
-    blocksManager.setGUICore(this);
-    connectionManager.setGUICore(this);
+BluePrintTab::BluePrintTab() : TabModule("Blueprints"){
+    dockingManager.setBluePrintTab(this);
+    fileManager.setBluePrintTab(this);
+    viewportManager.setBluePrintTab(this);
+    blocksManager.setBluePrintTab(this);
+    connectionManager.setBluePrintTab(this);
 
     // TODO: narazie wstawiam init() do konstruktora
     Model::timeStep = 0.01;
 }
 
-void GUICore::update() {
+void BluePrintTab::update() {
     TabModule::update();
 
     ImGuiIO& io = ImGui::GetIO();
@@ -87,7 +87,7 @@ void GUICore::update() {
     viewportManager.drawGrid();
 }
 
-void GUICore::menuBarFile() {
+void BluePrintTab::menuBarFile() {
     if (ImGui::MenuItem("New", "Ctrl+N"))
         fileManager.newFile();
     if (ImGui::MenuItem("Open", "Ctrl+O"))
@@ -100,12 +100,12 @@ void GUICore::menuBarFile() {
         fileManager.exitFile();
 }
 
-void GUICore::menuBarEdit() {
+void BluePrintTab::menuBarEdit() {
     if (ImGui::MenuItem("Undo", "Ctrl+Z")) { /* akcja */ }
     if (ImGui::MenuItem("Redo", "Ctrl+Y")) { /* akcja */ }
 }
 
-void GUICore::menuBarSettings() {
+void BluePrintTab::menuBarSettings() {
     ImGui::MenuItem("Light mode", "Ctrl+L", &uiPreferences.lightMode);
 
     if (ImGui::BeginMenu("Connection Path Type")) {

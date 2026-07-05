@@ -3,15 +3,14 @@
 //
 #pragma once
 
-class GUICore;
-
+class BluePrintTab;
 
 
 class BasicManager {
 protected:
-	GUICore* guiCore = nullptr;
+	BluePrintTab* blueprintTab = nullptr;
 public:
-	void setGUICore(GUICore* gui);
+	void setBluePrintTab(BluePrintTab* gui);
 
 	template<class Archive>
 	void serialize(Archive& ar) {

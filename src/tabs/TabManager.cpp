@@ -6,18 +6,19 @@
 #include "GLFW/glfw3.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include "../gui/GUICore.h"
+#include "../gui/BluePrintTab.h"
 #include "../ui/UIStyles.h"
-#include "../ide/mainWindow.h"
+#include "../ide/NotebookTab.h"
 
 
 
-// TODO: narazie po prostu na sztywno dodajemy GUICore jako domyślną zakładkę
+// TODO: narazie po prostu na sztywno dodajemy blueprintTab jako domyślną zakładkę
 TabManager::TabManager() {
-	tabs.push_back(std::make_unique<GUICore>());
+	tabs.push_back(std::make_unique<BluePrintTab>());
 	currentTab = 0;
 	tabs[0]->isActive = true;
 	tabs[0]->setTabManager(this);
+	workspace = new workSpace();
 }
 
 // initialization of evertything regarding ImGui
@@ -48,6 +49,72 @@ void TabManager::init(GLFWwindow* win, const char* version) {
 
 	// optional: setup style and custom colors
 	UIStyles::applyDarkStyle();
+}
+
+void TabManager::drawWorkspace() {
+    viewport = ImGui::GetMainViewport();
+
+    if (workspace == nullptr) {
+        std::cout << "nullptr" << std::endl;
+        return;
+    }
+
+    float menuBarHeight = ImGui::GetFrameHeight();
+    float topBarHeight  = 50.0f;
+
+    float startY = viewport->Pos.y + menuBarHeight + topBarHeight;
+
+    float availableHeight = viewport->Size.y - (menuBarHeight + topBarHeight);
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar |
+                                    ImGuiWindowFlags_NoResize |
+                                    ImGuiWindowFlags_NoMove |
+                                    ImGuiWindowFlags_NoScrollbar;
+
+    // sIDEBAR
+    float sidebarWidth = 40.0f;
+
+    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, startY));
+    ImGui::SetNextWindowSize(ImVec2(sidebarWidth, availableHeight));
+    ImGui::SetNextWindowBgAlpha(0.8f);
+
+    if (ImGui::Begin("Sidebar", nullptr, window_flags)) {
+        ImVec2 buttonSize(20, 20);
+        float xCenter = (ImGui::GetWindowSize().x - buttonSize.x) / 2.0f;
+        float yCenter = 10.0f;
+
+        ImGui::SetCursorPos(ImVec2(xCenter, yCenter));
+
+        if (ImGui::Button("F", buttonSize)) {
+            showWorkspace = !showWorkspace;
+        }
+    }
+    ImGui::End();
+
+    // WORKSPACE
+    if (showWorkspace && workspace) {
+        ImVec2 wsPos(viewport->Pos.x + sidebarWidth, startY);
+
+        ImVec2 wsSize(250.0f, availableHeight);
+
+        workspace->Render(wsPos, wsSize);
+    }
+}
+
+ActiveArea TabManager::getActiveArea() {
+	ImGuiViewport* vp = ImGui::GetMainViewport();
+	float menuBarHeight = ImGui::GetFrameHeight();
+	float topBarHeight = 50.0f;
+
+	float offsetX = 40.0f;
+	if (showWorkspace) {
+		offsetX += 250.0f;
+	}
+
+	ActiveArea area;
+	area.pos = ImVec2(offsetX, menuBarHeight + topBarHeight);
+	area.size = ImVec2(vp->Size.x - offsetX, vp->Size.y - (menuBarHeight + topBarHeight));
+	return area;
 }
 
 void TabManager::updateOpen() {
@@ -105,7 +172,7 @@ void TabManager::openTab() {
 
 // TODO: tutaj można UI menadżera zakładek - pasek wyboru zakładek itp.
 // pasek wyrobu zakładek
-// + dodający zakładkę (narazie domyślnie otwiera tylko GUICore)
+// + dodający zakładkę (narazie domyślnie otwiera tylko blueprintTab)
 // x zamykający zakładkę
 void TabManager::update() {
 	updateOpen();
@@ -149,17 +216,21 @@ void TabManager::update() {
 
 	if (ImGui::BeginPopup(popupName)) {
 		if (ImGui::Selectable("Blueprints")) {
-			openTab<GUICore>();
+			openTab<BluePrintTab>();
 			ImGui::CloseCurrentPopup();
 		}
 		if (ImGui::Selectable("CodeEditor")) {
-			openTab<MainWindow>();
+			openTab<NotebookTab>();
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
 	}
 
 	ImGui::EndMainMenuBar();
+
+	//std::cout << "debug" << std::endl;
+
+	drawWorkspace();
 }
 
 void TabManager::newFrame() {

@@ -47,7 +47,7 @@ public:
     static double timeStep;
     static double simTime;
 
-    // przeniesione z GUICore
+    // przeniesione z blueprintTab
     int next_id = 0;
 
 

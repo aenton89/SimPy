@@ -18,8 +18,8 @@ public:
 	bool hasUnsavedChanges;
 
 	// zapis/odczyt stanu do/z pliku
-	bool saveToXML(const std::string& filename, GUICore& gui);
-	bool loadFromXML(const std::string& filename, GUICore& gui);
+	bool saveToXML(const std::string& filename, BluePrintTab& gui);
+	bool loadFromXML(const std::string& filename, BluePrintTab& gui);
 	// do wyboru i odczytu/zapisu plików (otwieraja też okienka dialogowe)
 	void openFileDialog();
 	void saveFileDialog();

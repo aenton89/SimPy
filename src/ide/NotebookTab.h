@@ -5,13 +5,13 @@
 
 #include "../tabs/TabModule.h"
 #include "gui/code_editor/notebookTile.h"
-#include "gui/ui/workSpace.h"
+//#include "gui/workspace/workSpace.h"
 
 
 
-class MainWindow : public TabModule {
+class NotebookTab : public TabModule {
 public:
-    MainWindow();
+    NotebookTab();
 
     void update() override;
     // awkward ale chyba tu zostanie xddd
@@ -20,7 +20,7 @@ public:
     void menuBarSettings() override;
 
 protected:
-    workSpace* workspace = nullptr;
+    //workSpace* workspace = nullptr;
     NotebookTile* notebookTab = nullptr;
 
     bool showWorkspace = false;

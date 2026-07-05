@@ -13,6 +13,7 @@ void TabModule::setTabManager(TabManager *manager) {
 }
 void TabModule::update() {
 	drawMenuBar();
+	drawTopBar();
 }
 
 void TabModule::drawMenuBar() {
@@ -42,4 +43,39 @@ void TabModule::drawMenuBar() {
 
 		ImGui::EndMainMenuBar();
 	}
+}
+
+void TabModule::drawTopBar() {
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+	// Te wartości możesz pobierać dynamicznie lub mieć jako stałe
+	float menuBarHeight = ImGui::GetFrameHeight();
+	float topBarHeight = 50.0f;
+
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar |
+									ImGuiWindowFlags_NoResize |
+									ImGuiWindowFlags_NoMove |
+									ImGuiWindowFlags_NoScrollbar;
+
+	// GÓRNY PASEK
+	ImGui::SetNextWindowPos(ImVec2(0, viewport->Pos.y + menuBarHeight));
+	ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, topBarHeight));
+	//ImGui::SetNextWindowBgAlpha(0.8f);
+
+	if (ImGui::Begin("TopBar", nullptr, window_flags)) {
+
+		drawTopBarContent();
+
+	}
+	ImGui::End();
+}
+
+ImVec2 TabModule::getPose() {
+	if (tabManager) {return tabManager->getActiveArea().pos;}
+	return ImVec2(40, 70);
+}
+
+ImVec2 TabModule::getSize() {
+	if (tabManager) {return tabManager->getActiveArea().size;}
+	return ImGui::GetIO().DisplaySize;
 }

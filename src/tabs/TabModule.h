@@ -10,7 +10,7 @@ class TabManager;
 
 /*
  * bazowa klasa abstrakcyjna dla wszystkich modułów wyświetlanych w zakładkach
- * GUICore i inne moduły dziedziczą po tej klasie
+ * blueprintTab i inne moduły dziedziczą po tej klasie
  */
 class TabModule {
 public:
@@ -33,5 +33,13 @@ public:
 
 	void setTabManager(TabManager* gui);
 
-	// TODO: serializacja stanu modułu - ALE NARAZIE BEZ TEGO (bo GUICore ma swoją a IDE nie potrzebuje)
+	// rysowanie kontetnu w topbar dla konetenego taba
+	virtual void drawTopBarContent() {};
+	void drawTopBar();
+
+	// Reagowanie na otwarcie workspace
+	ImVec2 getPose();
+	ImVec2 getSize();
+
+	// TODO: serializacja stanu modułu - ALE NARAZIE BEZ TEGO (bo blueprintTab ma swoją a IDE nie potrzebuje)
 };

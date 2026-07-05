@@ -2,7 +2,7 @@
 // Created by tajbe on 10.11.2025.
 //
 #include "BlocksManager.h"
-#include "../../GUICore.h"
+#include "../../BluePrintTab.h"
 
 
 
@@ -11,9 +11,9 @@ void BlocksManager::clearSelectedBlocks(const ImGuiIO &io) {
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !io.KeyShift) {
         ImVec2 mousePos = io.MousePos;
         bool clickedOnAnyTitle = false;
-        for (auto& b : guiCore->model.getBlocks()) {
-            ImVec2 screen_pos = ImVec2(b->position.x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x, b->position.y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y);
-            ImVec2 screen_size = ImVec2(b->size.x * guiCore->viewportManager.zoomAmount, b->size.y * guiCore->viewportManager.zoomAmount);
+        for (auto& b : blueprintTab->model.getBlocks()) {
+            ImVec2 screen_pos = ImVec2(b->position.x * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.x, b->position.y * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.y);
+            ImVec2 screen_size = ImVec2(b->size.x * blueprintTab->viewportManager.zoomAmount, b->size.y * blueprintTab->viewportManager.zoomAmount);
             ImVec2 title_min = screen_pos;
             ImVec2 title_max = ImVec2(screen_pos.x + screen_size.x, screen_pos.y + ImGui::GetFrameHeight());
             if (mousePos.x >= title_min.x && mousePos.x <= title_max.x && mousePos.y >= title_min.y && mousePos.y <= title_max.y) {
@@ -35,14 +35,14 @@ void BlocksManager::duplicateSelectedBlocks(const ImGuiIO &io) {
             std::set<int> newSelection;
 
             for (int id : selectedBlocks) {
-                auto it = std::ranges::find_if(guiCore->model.getBlocks(), [&](auto& b){ return b->id == id; });
-                if (it != guiCore->model.getBlocks().end()) {
+                auto it = std::ranges::find_if(blueprintTab->model.getBlocks(), [&](auto& b){ return b->id == id; });
+                if (it != blueprintTab->model.getBlocks().end()) {
                     std::shared_ptr<Block> copy = (*it)->clone();
-                    copy->id = guiCore->model.next_id++;
+                    copy->id = blueprintTab->model.next_id++;
                     copy->position = ImVec2((*it)->position.x + 20, (*it)->position.y + 20);
 
                     newSelection.insert(copy->id);
-                    guiCore->model.getBlocks().push_back(std::move(copy));
+                    blueprintTab->model.getBlocks().push_back(std::move(copy));
                 }
             }
 
@@ -57,10 +57,10 @@ void BlocksManager::deleteSelectedBlocks(const ImGuiIO &io) {
     if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
         if (!selectedBlocks.empty()) {
             // usuwa pozostałe połączenia
-            guiCore->connectionManager.removeConnectionsForBlocks(selectedBlocks);
+            blueprintTab->connectionManager.removeConnectionsForBlocks(selectedBlocks);
 
             // usuwa same bloki
-            auto& blocks = guiCore->model.getBlocks();
+            auto& blocks = blueprintTab->model.getBlocks();
             std::erase_if(blocks,[&](auto& b) {return selectedBlocks.contains(b->id);});
 
             // wyczyść zaznaczenie
@@ -73,7 +73,7 @@ void BlocksManager::deleteSelectedBlocks(const ImGuiIO &io) {
 void BlocksManager::selectAllBlocks(const ImGuiIO& io) {
     if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_A, false)) {
         selectedBlocks.clear();
-        for (const auto& block : guiCore->model.getBlocks()) {
+        for (const auto& block : blueprintTab->model.getBlocks()) {
             selectedBlocks.insert(block->id);
         }
     }
@@ -85,12 +85,12 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
     // oblicz transformowaną pozycję
     ImVec2 world_pos = box->position;
     ImVec2 screen_pos = ImVec2(
-        world_pos.x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x,
-        world_pos.y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y
+        world_pos.x * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.x,
+        world_pos.y * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.y
     );
     ImVec2 screen_size = ImVec2(
-        box->size.x * guiCore->viewportManager.zoomAmount,
-        box->size.y * guiCore->viewportManager.zoomAmount
+        box->size.x * blueprintTab->viewportManager.zoomAmount,
+        box->size.y * blueprintTab->viewportManager.zoomAmount
     );
 
     // MOLTO IMPORTANTE: NIE ustawiaj pozycji jeśli okno jest przeciągane przez użytkownika
@@ -101,7 +101,7 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
     ImGui::SetNextWindowSize(screen_size);
 
     // skaluj font
-    ImGui::GetIO().FontGlobalScale = guiCore->viewportManager.zoomAmount;
+    ImGui::GetIO().FontGlobalScale = blueprintTab->viewportManager.zoomAmount;
 
     // jeśli box jest zaznaczony - ustaw niebieskie titlebary
     bool pushedSelectionStyle = false;
@@ -197,8 +197,8 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
 
             // zapisz początkowe pozycje wszystkich zaznaczonych
             for (int id : selectedBlocks) {
-                auto it = std::ranges::find_if(guiCore->model.getBlocks(), [&](auto& b){ return b->id == id; });
-                if (it != guiCore->model.getBlocks().end())
+                auto it = std::ranges::find_if(blueprintTab->model.getBlocks(), [&](auto& b){ return b->id == id; });
+                if (it != blueprintTab->model.getBlocks().end())
                     groupInitialPositions[id] = (*it)->position;
             }
         } else {
@@ -243,17 +243,17 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
             if (box->getNumOutputs() > 0) {
                 // takie coś też było po drodze - ale pozwalało na pare output'ów z bloczka, który ma jedne dane wyjściowe
                 // dodatkowo sprawdzenie warunku:
-                // && guiCore->model.getOutputConnectionsFor(box).size() < box->getNumOutputs()
+                // && blueprintTab->model.getOutputConnectionsFor(box).size() < box->getNumOutputs()
                 // i to wewenątrz if'a:
-                // guiCore->connectionManager.startConnectionDraft(box->id, guiCore->model.getOutputConnectionsFor(box).size());
+                // blueprintTab->connectionManager.startConnectionDraft(box->id, blueprintTab->model.getOutputConnectionsFor(box).size());
                 int outputPort = 0;
-                guiCore->connectionManager.startConnectionDraft(box->id, outputPort);
+                blueprintTab->connectionManager.startConnectionDraft(box->id, outputPort);
             }
         }
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             if (box->getNumOutputs() > 0) {
                 int outputPort = 0;
-                guiCore->connectionManager.startConnectionDraft(box->id, outputPort);
+                blueprintTab->connectionManager.startConnectionDraft(box->id, outputPort);
             }
         }
     }
@@ -262,27 +262,27 @@ void BlocksManager::drawBlock(const std::shared_ptr<Block> &box) {
     if (isGroupDragging && isDraggingWindow && draggedWindowId == box->id && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
         ImVec2 mouseNow = ImGui::GetMousePos();
         ImVec2 deltaMouse = ImVec2(mouseNow.x - groupDragStartMousePos.x, mouseNow.y - groupDragStartMousePos.y);
-        ImVec2 worldDelta = ImVec2(deltaMouse.x / guiCore->viewportManager.zoomAmount, deltaMouse.y / guiCore->viewportManager.zoomAmount);
+        ImVec2 worldDelta = ImVec2(deltaMouse.x / blueprintTab->viewportManager.zoomAmount, deltaMouse.y / blueprintTab->viewportManager.zoomAmount);
 
         for (auto& kv : groupInitialPositions) {
             int id = kv.first;
             ImVec2 basePos = kv.second;
-            auto it = std::ranges::find_if(guiCore->model.getBlocks(), [&](auto& b){ return b->id == id; });
-            if (it != guiCore->model.getBlocks().end())
+            auto it = std::ranges::find_if(blueprintTab->model.getBlocks(), [&](auto& b){ return b->id == id; });
+            if (it != blueprintTab->model.getBlocks().end())
                 (*it)->position = ImVec2(basePos.x + worldDelta.x, basePos.y + worldDelta.y);
         }
     } else if (!isGroupDragging) {
         // normalne aktualizowanie pozycji tylko tego boxu (po rysowaniu, aby zachować synchronizację)
         box->position = ImVec2(
-            (current_screen_pos.x - guiCore->viewportManager.viewOffset.x) / guiCore->viewportManager.zoomAmount,
-            (current_screen_pos.y - guiCore->viewportManager.viewOffset.y) / guiCore->viewportManager.zoomAmount
+            (current_screen_pos.x - blueprintTab->viewportManager.viewOffset.x) / blueprintTab->viewportManager.zoomAmount,
+            (current_screen_pos.y - blueprintTab->viewportManager.viewOffset.y) / blueprintTab->viewportManager.zoomAmount
         );
     }
 
     // zawsze aktualizuj size
     box->size = ImVec2(
-        current_screen_size.x / guiCore->viewportManager.zoomAmount,
-        current_screen_size.y / guiCore->viewportManager.zoomAmount
+        current_screen_size.x / blueprintTab->viewportManager.zoomAmount,
+        current_screen_size.y / blueprintTab->viewportManager.zoomAmount
     );
 
     ImGui::GetIO().FontGlobalScale = 1.0f;
@@ -303,17 +303,17 @@ void BlocksManager::updateBoxSelect(const ImGuiIO& io) {
     ImVec2 mousePos = io.MousePos;
 
     // START - LPM wciśnięty na pustym miejscu (nie na bloczku)
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !guiCore->connectionManager.isDraggingNode()) {
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !blueprintTab->connectionManager.isDraggingNode()) {
         // sprawdź czy klik był poza każdym bloczkiem
         bool clickedOnBlock = false;
 
-        for (auto& b : guiCore->model.getBlocks()) {
+        for (auto& b : blueprintTab->model.getBlocks()) {
             ImVec2 screen_pos = ImVec2(
-                b->position.x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x,
-                b->position.y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y);
+                b->position.x * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.x,
+                b->position.y * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.y);
             ImVec2 screen_size = ImVec2(
-                b->size.x * guiCore->viewportManager.zoomAmount,
-                b->size.y * guiCore->viewportManager.zoomAmount);
+                b->size.x * blueprintTab->viewportManager.zoomAmount,
+                b->size.y * blueprintTab->viewportManager.zoomAmount);
 
             if (mousePos.x >= screen_pos.x && mousePos.x <= screen_pos.x + screen_size.x && mousePos.y >= screen_pos.y && mousePos.y <= screen_pos.y + screen_size.y) {
                 clickedOnBlock = true;
@@ -330,7 +330,7 @@ void BlocksManager::updateBoxSelect(const ImGuiIO& io) {
     // AKTUALIZACJA: podczas trzymania LPM - przesuwa koniec prostokąta
     if (isBoxSelecting) {
         // jeśli w trakcie box selecta zaczynamy przeciągać połączenie lub węzeł, anuluj box selecta
-        if (guiCore->connectionManager.isDraggingNode() || guiCore->connectionManager.isDraftingConnection()) {
+        if (blueprintTab->connectionManager.isDraggingNode() || blueprintTab->connectionManager.isDraftingConnection()) {
             isBoxSelecting = false;
             return;
         }
@@ -356,13 +356,13 @@ void BlocksManager::updateBoxSelect(const ImGuiIO& io) {
                 if (!io.KeyShift)
                     selectedBlocks.clear();
 
-                for (auto& b : guiCore->model.getBlocks()) {
+                for (auto& b : blueprintTab->model.getBlocks()) {
                     ImVec2 screen_pos = ImVec2(
-                        b->position.x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x,
-                        b->position.y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y);
+                        b->position.x * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.x,
+                        b->position.y * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.y);
                     ImVec2 screen_size = ImVec2(
-                        b->size.x * guiCore->viewportManager.zoomAmount,
-                        b->size.y * guiCore->viewportManager.zoomAmount);
+                        b->size.x * blueprintTab->viewportManager.zoomAmount,
+                        b->size.y * blueprintTab->viewportManager.zoomAmount);
 
                     // bloczek zaznaczony jeśli jego prostokąt przecina obszar box selecta
                     ImVec2 bMax = ImVec2(screen_pos.x + screen_size.x, screen_pos.y + screen_size.y);

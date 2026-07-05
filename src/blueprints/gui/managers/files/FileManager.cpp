@@ -3,12 +3,12 @@
 //
 #include "FileManager.h"
 #include <GLFW/glfw3.h>
-#include "../../GUICore.h"
+#include "../../BluePrintTab.h"
 #include "../../tabs/TabManager.h"
 
 
 
-bool FileManager::saveToXML(const std::string &filename, GUICore& gui) {
+bool FileManager::saveToXML(const std::string &filename, BluePrintTab& gui) {
 	std::string tempFilename = filename + ".tmp";
 	std::string backupFilename = filename + ".bak";
 
@@ -23,7 +23,7 @@ bool FileManager::saveToXML(const std::string &filename, GUICore& gui) {
 			}
 
 			cereal::XMLOutputArchive archive(file);
-			archive(cereal::make_nvp("GUICore", gui));
+			archive(cereal::make_nvp("blueprintTab", gui));
 		}
 
 		// jeśli istnieje stary plik, zrób backup
@@ -57,7 +57,7 @@ bool FileManager::saveToXML(const std::string &filename, GUICore& gui) {
 	}
 }
 
-bool FileManager::loadFromXML(const std::string &filename, GUICore& gui) {
+bool FileManager::loadFromXML(const std::string &filename, BluePrintTab& gui) {
 	std::string backupFilename = filename + ".bak";
 
 	auto tryLoad = [&gui](const std::string& fname) -> bool {
@@ -67,7 +67,7 @@ bool FileManager::loadFromXML(const std::string &filename, GUICore& gui) {
 				return false;
 
 			cereal::XMLInputArchive archive(file);
-			archive(cereal::make_nvp("GUICore", gui));
+			archive(cereal::make_nvp("blueprintTab", gui));
 
 			std::cout << "Loaded successfully from " << fname << "\n";
 			return true;
@@ -104,7 +104,7 @@ void FileManager::openFileDialog() {
 		const std::string& filepath = selection[0];
 		std::cout << "Selected file: " << filepath << "\n";
 
-		if (loadFromXML(filepath, *guiCore)) {
+		if (loadFromXML(filepath, *blueprintTab)) {
 			std::cout << "File loaded successfully!\n";
 			currentFilePath = filepath;
 			hasUnsavedChanges = false;
@@ -138,7 +138,7 @@ void FileManager::saveFileDialog() {
 
 		std::cout << "Save to: " << filepath << "\n";
 
-		if (saveToXML(filepath, *guiCore)) {
+		if (saveToXML(filepath, *blueprintTab)) {
 			std::cout << "File saved successfully!\n";
 			currentFilePath = filepath;
 			hasUnsavedChanges = false;
@@ -163,7 +163,7 @@ void FileManager::saveFile() {
 	// zapisz do bieżącego pliku
 	std::cout << "Saving to: " << currentFilePath << "\n";
 
-	if (saveToXML(currentFilePath, *guiCore)) {
+	if (saveToXML(currentFilePath, *blueprintTab)) {
 		std::cout << "File saved successfully!\n";
 		hasUnsavedChanges = false;
 	} else {
@@ -183,13 +183,13 @@ void FileManager::exitFile() {
 
 		if (result == pfd::button::yes) {
 			saveFile();
-			glfwSetWindowShouldClose(guiCore->tabManager->window, GLFW_TRUE);
+			glfwSetWindowShouldClose(blueprintTab->tabManager->window, GLFW_TRUE);
 		} else if (result == pfd::button::no) {
-			glfwSetWindowShouldClose(guiCore->tabManager->window, GLFW_TRUE);
+			glfwSetWindowShouldClose(blueprintTab->tabManager->window, GLFW_TRUE);
 		}
 		// cancel - nie rób nic
 	} else {
-		glfwSetWindowShouldClose(guiCore->tabManager->window, GLFW_TRUE);
+		glfwSetWindowShouldClose(blueprintTab->tabManager->window, GLFW_TRUE);
 	}
 }
 
@@ -214,7 +214,7 @@ void FileManager::newFile() {
 	}
 
 	// i na koniec: wyczyść dane
-	guiCore->model = Model();
+	blueprintTab->model = Model();
 	currentFilePath.clear();
 	hasUnsavedChanges = false;
 }

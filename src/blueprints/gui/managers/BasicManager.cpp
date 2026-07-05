@@ -5,6 +5,6 @@
 
 
 
-void BasicManager::setGUICore(GUICore *gui) {
-	guiCore = gui;
+void BasicManager::setBluePrintTab(BluePrintTab *gui) {
+	blueprintTab = gui;
 }

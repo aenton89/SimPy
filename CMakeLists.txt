@@ -53,7 +53,7 @@ add_executable(SimPy
         src/blueprints/data/math/digital_signal_processing/DSP.cpp
         src/blueprints/data/math/math_help_fun/MathHelperFunctions.cpp
         # gui
-        src/blueprints/gui/GUICore.cpp
+        src/blueprints/gui/BluePrintTab.cpp
         src/blueprints/gui/managers/windows/DockableWindowManager.cpp
         src/blueprints/gui/managers/files/FileManager.cpp
         src/blueprints/gui/managers/viewport/ViewportManager.cpp
@@ -65,32 +65,38 @@ add_executable(SimPy
 
         ## IDE
         # jakieś coś pod ide
-        src/ide/mainWindow.h
+        src/ide/NotebookTab.h
         src/ide/gui/code_editor/notebookTile.h
         src/ide/gui/code_editor/notebookTile.cpp
         src/ide/gui/code_editor/cells/baseCell.h
         src/ide/gui/code_editor/cells/codeCell.h
         src/ide/gui/code_editor/cells/codeCell.cpp
         src/ide/gui/code_editor/cells/mardownCell.h
-        src/ide/mainWindow.cpp
+        src/ide/NotebookTab.cpp
         src/ide/gui/code_editor/cells/marddownCell.cpp
         src/ide/gui/code_editor/textEditorTile.h
         src/ide/gui/code_editor/textEditorTile.cpp
-        src/ide/gui/ui/workSpace.h
-        src/ide/gui/ui/workSpace.cpp
-        src/ide/core/file_manipulation/FileSystemService.h
-        src/ide/core/file_manipulation/FileSystemService.cpp
+        src/workspace/workSpace.h
+        src/workspace/workSpace.cpp
+        src/workspace/file_manipulation/FileSystemService.h
+        src/workspace/file_manipulation/FileSystemService.cpp
         src/ide/core/python_kernel/PythonKernel.h
         src/ide/core/python_kernel/PythonKernel.cpp
         src/ide/gui/code_editor/BaseTile.h
-        src/ide/core/file_manipulation/FileUtils.h
-        src/ide/core/file_manipulation/FileUtils.cpp
+        src/workspace/file_manipulation/FileUtils.h
+        src/workspace/file_manipulation/FileUtils.cpp
         src/ide/gui/managers/TileManager.h
         src/ide/gui/managers/TileManager.cpp
         src/ide/gui/code_editor/BaseTile.cpp
 
         # zewnerzne biblioteki wymagajace linkowania
         include/ide_dependencies/TextEditor.cpp
+)
+
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/ide/core/python_kernel/kernel.py"
+        "${CMAKE_CURRENT_BINARY_DIR}/kernel.py"
+        COPYONLY
 )
 
 target_compile_definitions(SimPy PRIVATE

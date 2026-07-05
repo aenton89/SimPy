@@ -2,7 +2,7 @@
 // Created by tajbe on 07.11.2025.
 //
 #include "ViewportManager.h"
-#include "../../GUICore.h"
+#include "../../BluePrintTab.h"
 #include "../../../../ui/UIStyles.h"
 
 
@@ -11,7 +11,7 @@ void ViewportManager::zoomAndPanning() {
 	ImGuiIO& io = ImGui::GetIO();
 
 	// obsługa zoom'u względem pozycji myszki
-	if (io.MouseWheel != 0.0f && !canvasDragging && !guiCore->blocksManager.isDraggingWindow) {
+	if (io.MouseWheel != 0.0f && !canvasDragging && !blueprintTab->blocksManager.isDraggingWindow) {
 		float zoom_speed = 0.1f;
 		float old_zoom = zoomAmount;
 
@@ -28,7 +28,7 @@ void ViewportManager::zoomAndPanning() {
 	}
 
 	// rozpoczęcie przeciągania canvas'u - pod (TYLKO) środkowym przyciskiem
-	if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle) && !ImGui::IsAnyItemActive() && !guiCore->blocksManager.isDraggingWindow && !canvasDragging) {
+	if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle) && !ImGui::IsAnyItemActive() && !blueprintTab->blocksManager.isDraggingWindow && !canvasDragging) {
 		canvasDragging = true;
 		dragStartPos = io.MousePos;
 		dragStartOffset = viewOffset;
@@ -46,7 +46,7 @@ void ViewportManager::zoomAndPanning() {
 	}
 
 	// jeśli przeciągamy okno, zatrzymaj przeciąganie canvas'u
-	if (guiCore->blocksManager.isDraggingWindow && canvasDragging)
+	if (blueprintTab->blocksManager.isDraggingWindow && canvasDragging)
 		canvasDragging = false;
 
 	// żeby uniknąć artefaktów renderowania
@@ -55,7 +55,7 @@ void ViewportManager::zoomAndPanning() {
 }
 
 void ViewportManager::drawGrid() const {
-    if (!guiCore->uiPreferences.gridEnabled)
+    if (!blueprintTab->uiPreferences.gridEnabled)
         return;
 
     ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
@@ -65,23 +65,23 @@ void ViewportManager::drawGrid() const {
 
     // calculate world space bounds visible on screen
     ImVec2 world_min = ImVec2(
-        (canvas_pos.x - guiCore->viewportManager.viewOffset.x) / guiCore->viewportManager.zoomAmount,
-        (canvas_pos.y - guiCore->viewportManager.viewOffset.y) / guiCore->viewportManager.zoomAmount
+        (canvas_pos.x - blueprintTab->viewportManager.viewOffset.x) / blueprintTab->viewportManager.zoomAmount,
+        (canvas_pos.y - blueprintTab->viewportManager.viewOffset.y) / blueprintTab->viewportManager.zoomAmount
     );
     ImVec2 world_max = ImVec2(
-        (canvas_pos.x + canvas_size.x - guiCore->viewportManager.viewOffset.x) / guiCore->viewportManager.zoomAmount,
-        (canvas_pos.y + canvas_size.y - guiCore->viewportManager.viewOffset.y) / guiCore->viewportManager.zoomAmount
+        (canvas_pos.x + canvas_size.x - blueprintTab->viewportManager.viewOffset.x) / blueprintTab->viewportManager.zoomAmount,
+        (canvas_pos.y + canvas_size.y - blueprintTab->viewportManager.viewOffset.y) / blueprintTab->viewportManager.zoomAmount
     );
 
     // use fixed grid spacing in world coordinates (like Blender [yupii blender mentioned])
-    float world_spacing = guiCore->uiPreferences.gridSpacing;
+    float world_spacing = blueprintTab->uiPreferences.gridSpacing;
 
     // calculate grid start positions
     float start_x = floor(world_min.x / world_spacing) * world_spacing;
     float start_y = floor(world_min.y / world_spacing) * world_spacing;
 
     // make grid lines fade out when too close or far
-    float screen_spacing = world_spacing * guiCore->viewportManager.zoomAmount;
+    float screen_spacing = world_spacing * blueprintTab->viewportManager.zoomAmount;
     float alpha_factor = 1.0f;
 
     // fade out when too dense
@@ -94,7 +94,7 @@ void ViewportManager::drawGrid() const {
     }
 
     // apply alpha to grid color
-    ImU32 faded_color = (guiCore->uiPreferences.gridColor & 0x00FFFFFF) | (static_cast<int>(((guiCore->uiPreferences.gridColor >> 24) & 0xFF) * alpha_factor) << 24);
+    ImU32 faded_color = (blueprintTab->uiPreferences.gridColor & 0x00FFFFFF) | (static_cast<int>(((blueprintTab->uiPreferences.gridColor >> 24) & 0xFF) * alpha_factor) << 24);
 
     // skip drawing if too faded
     if (alpha_factor < 0.1f)
@@ -102,7 +102,7 @@ void ViewportManager::drawGrid() const {
 
     // vertical lines
     for (float x = start_x; x <= world_max.x + world_spacing; x += world_spacing) {
-        float screen_x = x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x;
+        float screen_x = x * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.x;
 
         if (screen_x < canvas_pos.x - 1 || screen_x > canvas_pos.x + canvas_size.x + 1)
             continue;
@@ -111,13 +111,13 @@ void ViewportManager::drawGrid() const {
             ImVec2(screen_x, canvas_pos.y),
             ImVec2(screen_x, canvas_pos.y + canvas_size.y),
             faded_color,
-            guiCore->uiPreferences.gridThickness
+            blueprintTab->uiPreferences.gridThickness
         );
     }
 
     // horizontal lines
     for (float y = start_y; y <= world_max.y + world_spacing; y += world_spacing) {
-        float screen_y = y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y;
+        float screen_y = y * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.y;
 
         if (screen_y < canvas_pos.y - 1 || screen_y > canvas_pos.y + canvas_size.y + 1)
             continue;
@@ -126,13 +126,13 @@ void ViewportManager::drawGrid() const {
             ImVec2(canvas_pos.x, screen_y),
             ImVec2(canvas_pos.x + canvas_size.x, screen_y),
             faded_color,
-            guiCore->uiPreferences.gridThickness
+            blueprintTab->uiPreferences.gridThickness
         );
     }
 }
 
 void ViewportManager::lightMode() const {
-    if (guiCore->uiPreferences.lightMode)
+    if (blueprintTab->uiPreferences.lightMode)
         UIStyles::applyLightStyle();
     else
         UIStyles::applyDarkStyle();
@@ -141,11 +141,11 @@ void ViewportManager::lightMode() const {
 // włączanie i wyłączanie light mode przez CTRL+L
 void ViewportManager::turnLightModeOnShortcut(const ImGuiIO &io) const {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_L, false))
-		guiCore->uiPreferences.lightMode = !guiCore->uiPreferences.lightMode;
+		blueprintTab->uiPreferences.lightMode = !blueprintTab->uiPreferences.lightMode;
 }
 
 // włączanie i wyłączanie siatki przez CTRL+G
 void ViewportManager::turnGridOnShortcut(const ImGuiIO &io) const {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G, false))
-		guiCore->uiPreferences.gridEnabled = !guiCore->uiPreferences.gridEnabled;
+		blueprintTab->uiPreferences.gridEnabled = !blueprintTab->uiPreferences.gridEnabled;
 }

@@ -4,8 +4,9 @@
 #pragma once
 
 #include <string>
-#include "../../gui/code_editor/cells/codeCell.h"
-#include "../../gui/code_editor/cells/mardownCell.h"
+#include "../../ide/gui/code_editor/cells/codeCell.h"
+#include "../../ide/gui/code_editor/cells/mardownCell.h"
+#include "../../ide/gui/code_editor/cells/baseCell.h"
 #include <nlohmann/json.hpp>
 #include <glad/glad.h>
 

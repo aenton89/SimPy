@@ -2,30 +2,30 @@
 // Created by tajbe on 12.11.2025.
 //
 #include "ConnectionManager.h"
-#include "../../GUICore.h"
+#include "../../BluePrintTab.h"
 
 
 
 
 ImVec2 ConnectionManager::worldToScreen(const ImVec2& worldPos) const {
     return {
-        worldPos.x * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.x,
-        worldPos.y * guiCore->viewportManager.zoomAmount + guiCore->viewportManager.viewOffset.y
+        worldPos.x * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.x,
+        worldPos.y * blueprintTab->viewportManager.zoomAmount + blueprintTab->viewportManager.viewOffset.y
     };
 }
 
 ImVec2 ConnectionManager::screenToWorld(const ImVec2& screenPos) const {
     return {
-        (screenPos.x - guiCore->viewportManager.viewOffset.x) / guiCore->viewportManager.zoomAmount,
-        (screenPos.y - guiCore->viewportManager.viewOffset.y) / guiCore->viewportManager.zoomAmount
+        (screenPos.x - blueprintTab->viewportManager.viewOffset.x) / blueprintTab->viewportManager.zoomAmount,
+        (screenPos.y - blueprintTab->viewportManager.viewOffset.y) / blueprintTab->viewportManager.zoomAmount
     };
 }
 
 ImVec2 ConnectionManager::getBlockOutputPos(const Block& block) const {
     ImVec2 pos = worldToScreen(block.position);
     ImVec2 size = ImVec2(
-        block.size.x * guiCore->viewportManager.zoomAmount,
-        block.size.y * guiCore->viewportManager.zoomAmount
+        block.size.x * blueprintTab->viewportManager.zoomAmount,
+        block.size.y * blueprintTab->viewportManager.zoomAmount
     );
     // TODO: narazie środek prawej krawędzi - ale jakby był wybór output portów to by się zmieniło
     return {pos.x + size.x, pos.y + size.y * 0.5f};
@@ -34,8 +34,8 @@ ImVec2 ConnectionManager::getBlockOutputPos(const Block& block) const {
 ImVec2 ConnectionManager::getBlockInputPos(const Block& block) const {
     ImVec2 pos = worldToScreen(block.position);
     ImVec2 size = ImVec2(
-        block.size.x * guiCore->viewportManager.zoomAmount,
-        block.size.y * guiCore->viewportManager.zoomAmount
+        block.size.x * blueprintTab->viewportManager.zoomAmount,
+        block.size.y * blueprintTab->viewportManager.zoomAmount
     );
     // TODO: narazie środek lewej krawędzi - ale jakby był wybór input portów to by się zmieniło
     return {pos.x, pos.y + size.y * 0.5f};
@@ -47,7 +47,7 @@ void ConnectionManager::drawConnections() {
     ImVec2 mousePosWorld = screenToWorld(mousePos);
 
     // rysuj wszystkie istniejące połączenia
-    for (auto& conn : guiCore->model.getConnections()) {
+    for (auto& conn : blueprintTab->model.getConnections()) {
         drawConnection(conn, drawList);
     }
 
@@ -83,7 +83,7 @@ void ConnectionManager::drawConnection(Connection& conn, ImDrawList* drawList) {
     pathPoints.push_back(endPos);
 
     // sprawdzenie hover'a na krzywej
-    float threshold = drawSettings.pathDetectionRadius * guiCore->viewportManager.zoomAmount;
+    float threshold = drawSettings.pathDetectionRadius * blueprintTab->viewportManager.zoomAmount;
     bool pathHovered = useOrthogonalLines ? isPointNearOrthogonalPath(mousePos, pathPoints, threshold) : isPointNearCurvePath(mousePos, pathPoints, threshold);
 
     // rysowanie krzywej i węzłów
@@ -100,7 +100,7 @@ void ConnectionManager::drawConnectionPath(const std::vector<ImVec2>& points, bo
     if (points.size() < 2)
         return;
 
-    float thickness = (hovered ? drawSettings.hoveredThickness : drawSettings.normalThickness) * guiCore->viewportManager.zoomAmount;
+    float thickness = (hovered ? drawSettings.hoveredThickness : drawSettings.normalThickness) * blueprintTab->viewportManager.zoomAmount;
     ImU32 color = hovered ? UIStyles::CONNECTION_HOVER_COLOR : UIStyles::CONNECTION_COLOR;
 
     if (useOrthogonalLines) {
@@ -170,7 +170,7 @@ void ConnectionManager::drawConnectionPath(const std::vector<ImVec2>& points, bo
             }
         }
     } else {
-        float offset = drawSettings.bezierControlOffset * guiCore->viewportManager.zoomAmount;
+        float offset = drawSettings.bezierControlOffset * blueprintTab->viewportManager.zoomAmount;
 
         // rysuj segmenty krzywej Bezier'a
         for (size_t i = 0; i + 1 < points.size(); ++i) {
@@ -186,7 +186,7 @@ void ConnectionManager::drawConnectionPath(const std::vector<ImVec2>& points, bo
 }
 
 void ConnectionManager::drawControlNodes(Connection& conn, const ImVec2& mousePos, ImDrawList* drawList) {
-    float radius = drawSettings.nodeRadius * guiCore->viewportManager.zoomAmount;
+    float radius = drawSettings.nodeRadius * blueprintTab->viewportManager.zoomAmount;
 
     for (size_t i = 0; i < conn.controlNodes.size(); ++i) {
         ImVec2 nodeScreenPos = worldToScreen(conn.controlNodes[i]);
@@ -241,14 +241,14 @@ void ConnectionManager::cancelConnectionDraft() {
 }
 
 void ConnectionManager::drawDraftConnection(ImDrawList* drawList) const {
-    auto sourceBlock = guiCore->model.findBlockById(currentDraft.sourceBlockId);
+    auto sourceBlock = blueprintTab->model.findBlockById(currentDraft.sourceBlockId);
 
     if (!sourceBlock)
         return;
 
     ImVec2 startPos = getBlockOutputPos(*sourceBlock);
     ImVec2 endPos = ImGui::GetMousePos();
-    float thickness = 2.0f * guiCore->viewportManager.zoomAmount;
+    float thickness = 2.0f * blueprintTab->viewportManager.zoomAmount;
 
     if (useOrthogonalLines) {
         float midX = (startPos.x + endPos.x) * 0.5f;
@@ -264,7 +264,7 @@ void ConnectionManager::drawDraftConnection(ImDrawList* drawList) const {
         drawList->AddCircleFilled(corner1, capRadius, UIStyles::CONNECTION_DRAGGING_COLOR);
         drawList->AddCircleFilled(corner2, capRadius, UIStyles::CONNECTION_DRAGGING_COLOR);
     } else {
-        float offset = drawSettings.bezierControlOffset * guiCore->viewportManager.zoomAmount;
+        float offset = drawSettings.bezierControlOffset * blueprintTab->viewportManager.zoomAmount;
         ImVec2 c1 = ImVec2(startPos.x + offset, startPos.y);
         ImVec2 c2 = ImVec2(endPos.x - offset, endPos.y);
 
@@ -279,16 +279,16 @@ void ConnectionManager::drawDraftConnection(ImDrawList* drawList) const {
 void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos) {
     // puszczono LPM - próba połączenia
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-        if (auto sourceBlock = guiCore->model.findBlockById(currentDraft.sourceBlockId)) {
+        if (auto sourceBlock = blueprintTab->model.findBlockById(currentDraft.sourceBlockId)) {
             // czy kursor jest nad jakimś blokiem
-            for (auto& targetBlock : guiCore->model.getBlocks()) {
+            for (auto& targetBlock : blueprintTab->model.getBlocks()) {
                 if (targetBlock->id == currentDraft.sourceBlockId)
                     continue;
 
                 ImVec2 blockMin = worldToScreen(targetBlock->position);
                 ImVec2 blockSize = ImVec2(
-                    targetBlock->size.x * guiCore->viewportManager.zoomAmount,
-                    targetBlock->size.y * guiCore->viewportManager.zoomAmount
+                    targetBlock->size.x * blueprintTab->viewportManager.zoomAmount,
+                    targetBlock->size.y * blueprintTab->viewportManager.zoomAmount
                 );
                 ImVec2 blockMax = ImVec2(
                     blockMin.x + blockSize.x,
@@ -301,7 +301,7 @@ void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos) {
                     // narazie - znajdź pierwszy wolny port
                     int targetPort = -1;
                     for (int i = 0; i < targetBlock->getNumInputs(); i++) {
-                        if (!guiCore->model.isInputPortUsed(targetBlock, i)) {
+                        if (!blueprintTab->model.isInputPortUsed(targetBlock, i)) {
                             targetPort = i;
                             break;
                         }
@@ -314,7 +314,7 @@ void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos) {
                     }
 
                     // próbuj dodać połączenie - addConnection() wykonuje walidacje
-                    guiCore->model.addConnection(
+                    blueprintTab->model.addConnection(
                         sourceBlock, currentDraft.sourcePort,
                         targetBlock, targetPort
                     );
@@ -330,7 +330,7 @@ void ConnectionManager::handleConnectionCreation(const ImVec2& mousePos) {
 
 void ConnectionManager::handleConnectionDeletion(const Connection& conn, bool pathHovered) const {
     if (pathHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-        guiCore->model.removeConnection(
+        blueprintTab->model.removeConnection(
             conn.sourceBlock, conn.sourcePort,
             conn.targetBlock, conn.targetPort
         );
@@ -338,11 +338,11 @@ void ConnectionManager::handleConnectionDeletion(const Connection& conn, bool pa
 }
 
 void ConnectionManager::removeConnectionsForBlocks(const std::set<int>& blockIds) const {
-    auto& connections = guiCore->model.getConnections();
+    auto& connections = blueprintTab->model.getConnections();
 
     for (auto it = connections.begin(); it != connections.end();) {
         if ((it->sourceBlock && blockIds.contains(it->sourceBlock->id)) || (it->targetBlock && blockIds.contains(it->targetBlock->id))) {
-            guiCore->model.removeConnection(it->sourceBlock, it->sourcePort, it->targetBlock, it->targetPort);
+            blueprintTab->model.removeConnection(it->sourceBlock, it->sourcePort, it->targetBlock, it->targetPort);
             it = connections.begin();
         } else {
             ++it;
@@ -359,7 +359,7 @@ bool ConnectionManager::isPointNearCurvePath(const ImVec2& point, const std::vec
     if (pathPoints.size() < 2)
         return false;
 
-    float offset = drawSettings.bezierControlOffset * guiCore->viewportManager.zoomAmount;
+    float offset = drawSettings.bezierControlOffset * blueprintTab->viewportManager.zoomAmount;
 
     for (size_t i = 0; i + 1 < pathPoints.size(); ++i) {
         ImVec2 c1 = ImVec2(pathPoints[i].x + offset, pathPoints[i].y);

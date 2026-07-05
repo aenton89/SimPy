@@ -2,7 +2,7 @@
 // Created by tajbe on 25.10.2025.
 //
 #include "DockableWindowManager.h"
-#include "../../GUICore.h"
+#include "../../BluePrintTab.h"
 #include "../../../core/structures/Model.h"
 #include "../../../core/structures/Blocks.h"
 #include "../../../data/math/solvers/SolverMethod.h"
@@ -39,34 +39,47 @@ DockPosition DockableWindowManager::checkDockPosition(ImVec2 windowPos, ImVec2 w
 }
 
 ImVec2 DockableWindowManager::calculateDockedPosition(DockPosition position, DockableWindowType windowType) const {
-    ImGuiIO& io = ImGui::GetIO();
-    ImVec2 displaySize = io.DisplaySize;
+    ImVec2 contentPos  = blueprintTab->getPose();
+    ImVec2 contentSize = blueprintTab->getSize();
+
+    const float marginY = 0.0f;
+
+    float rightEdge = contentPos.x + contentSize.x;
 
     switch (position) {
         case DockPosition::Left:
-            // jeśli RUN WINDOW i MENU WINDOW jest już zadockowane po lewej, umieść poniżej
-            if (windowType == DockableWindowType::Start && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
-                return {0, lastMenuHeight + 1 + ImGui::GetFrameHeight()};
-            return {0, ImGui::GetFrameHeight()};
+            if (windowType == DockableWindowType::Start && menuWindow.isDocked &&
+               (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
+            {
+                return { contentPos.x, contentPos.y + lastMenuHeight + 1 + marginY };
+            }
+            return { contentPos.x, contentPos.y + marginY };
 
         case DockPosition::Right:
-            if (windowType == DockableWindowType::Start && menuWindow.isDocked && menuWindow.position == DockPosition::Right)
-                return {displaySize.x - DEFAULT_DOCKED_START_SIZE.x, lastMenuHeight + 1 + ImGui::GetFrameHeight()};
-            return {displaySize.x - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.x : DEFAULT_DOCKED_MENU_SIZE.x), ImGui::GetFrameHeight()};
+            if (windowType == DockableWindowType::Start && menuWindow.isDocked && menuWindow.position == DockPosition::Right) {
+                return { rightEdge - DEFAULT_DOCKED_START_SIZE.x, contentPos.y + lastMenuHeight + 1 + marginY };
+            }
+            return { rightEdge - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.x : DEFAULT_DOCKED_MENU_SIZE.x),
+                     contentPos.y + marginY };
 
         case DockPosition::Top:
-            // rozsuń okna w poziomie
-            if (windowType == DockableWindowType::Start && menuWindow.isDocked && (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
-                return {DEFAULT_DOCKED_MENU_SIZE.x + 1, ImGui::GetFrameHeight()};
-            return {0, ImGui::GetFrameHeight()};
+            if (windowType == DockableWindowType::Start && menuWindow.isDocked &&
+               (menuWindow.position == DockPosition::Left || menuWindow.position == DockPosition::Top))
+            {
+                return { contentPos.x + DEFAULT_DOCKED_MENU_SIZE.x + 1, contentPos.y + marginY };
+            }
+            return { contentPos.x, contentPos.y + marginY };
 
         case DockPosition::Bottom:
-            if (windowType == DockableWindowType::Start && menuWindow.isDocked && menuWindow.position == DockPosition::Bottom)
-                return {DEFAULT_DOCKED_MENU_SIZE.x + 1, displaySize.y - DEFAULT_DOCKED_START_SIZE.y};
-            return {0, displaySize.y - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.y : lastMenuHeight)};
+            if (windowType == DockableWindowType::Start && menuWindow.isDocked && menuWindow.position == DockPosition::Bottom) {
+                return { contentPos.x + DEFAULT_DOCKED_MENU_SIZE.x + 1,
+                         contentPos.y + contentSize.y - DEFAULT_DOCKED_START_SIZE.y - marginY };
+            }
+            return { contentPos.x,
+                     contentPos.y + contentSize.y - (windowType == DockableWindowType::Start ? DEFAULT_DOCKED_START_SIZE.y : lastMenuHeight) - marginY };
 
         default:
-            return {100, 100};
+            return { 100, 100 };
     }
 }
 
@@ -146,119 +159,119 @@ void DockableWindowManager::drawMenu() {
         // modul math
         if (ImGui::CollapsingHeader("Math")) {
             if (ImGui::Button("Add Sum Box"))
-                guiCore->model.addBlock<SumBlock>();
+                blueprintTab->model.addBlock<SumBlock>();
             if (ImGui::Button("Add Multiply Box"))
-                guiCore->model.addBlock<MultiplyBlock>();
+                blueprintTab->model.addBlock<MultiplyBlock>();
             if (ImGui::Button("Add Division Box"))
-                guiCore->model.addBlock<DivisionBlock>();
+                blueprintTab->model.addBlock<DivisionBlock>();
             if (ImGui::Button("Add Integrator Box"))
-                guiCore->model.addBlock<IntegratorBlock>();
+                blueprintTab->model.addBlock<IntegratorBlock>();
             if (ImGui::Button("Add Diff Box"))
-                guiCore->model.addBlock<DifferentiatorBlock>();
+                blueprintTab->model.addBlock<DifferentiatorBlock>();
             if (ImGui::Button("Add Trigonometric Funcion Box"))
-                guiCore->model.addBlock<TrigonometricFunctionBlock>();
+                blueprintTab->model.addBlock<TrigonometricFunctionBlock>();
             if (ImGui::Button("Add Sqrt Box"))
-                guiCore->model.addBlock<sqrtBlock>();
+                blueprintTab->model.addBlock<sqrtBlock>();
             if (ImGui::Button("Add Squered Box"))
-                guiCore->model.addBlock<squaredBlock>();
+                blueprintTab->model.addBlock<squaredBlock>();
         }
 
         // modul contorl
         if (ImGui::CollapsingHeader("Control Continous")) {
             if (ImGui::Button("Add Tf box"))
-                guiCore->model.addBlock<TransferFuncionContinous>();
+                blueprintTab->model.addBlock<TransferFuncionContinous>();
             if (ImGui::Button("Add PID box"))
-                guiCore->model.addBlock<PID_regulator>();
+                blueprintTab->model.addBlock<PID_regulator>();
             if (ImGui::Button("Add Gain Box"))
-                guiCore->model.addBlock<GainBlock>();
+                blueprintTab->model.addBlock<GainBlock>();
             if (ImGui::Button("Add Saturation Box"))
-                guiCore->model.addBlock<SaturationBlock>();
+                blueprintTab->model.addBlock<SaturationBlock>();
             if (ImGui::Button("Add DeadZone Box"))
-                guiCore->model.addBlock<DeadZoneBlock>();
+                blueprintTab->model.addBlock<DeadZoneBlock>();
         }
 
         // modul inputy
         if (ImGui::CollapsingHeader("Input")) {
             if (ImGui::Button("Add Step Box"))
-                guiCore->model.addBlock<StepBlock>();
+                blueprintTab->model.addBlock<StepBlock>();
             if (ImGui::Button("Add SinusInput Box"))
-                guiCore->model.addBlock<SinusInputBlock>();
+                blueprintTab->model.addBlock<SinusInputBlock>();
             if (ImGui::Button("Add PWM Input"))
-                guiCore->model.addBlock<PWMInputBlock>();
+                blueprintTab->model.addBlock<PWMInputBlock>();
             if (ImGui::Button("Add WhiteNoise Box"))
-                guiCore->model.addBlock<WhiteNoiseInputBlock>();
+                blueprintTab->model.addBlock<WhiteNoiseInputBlock>();
             if (ImGui::Button("Add Input form File"))
-                guiCore->model.addBlock<SignalFromFileBlock>();
+                blueprintTab->model.addBlock<SignalFromFileBlock>();
         }
 
         // modul spketum czestoliwosciowego
         if (ImGui::CollapsingHeader("DSP")) {
             if (ImGui::Button("Add FFT Box"))
-                guiCore->model.addBlock<FFTBlock>();
+                blueprintTab->model.addBlock<FFTBlock>();
             // if (ImGui::Button("Add STFT Box (work in progres)"))
-            //     guiCore->model.addBlock<STFT_block>();
+            //     blueprintTab->model.addBlock<STFT_block>();
             if (ImGui::Button("Add filter Box"))
-                guiCore->model.addBlock<filterImplementationBlock>();
+                blueprintTab->model.addBlock<filterImplementationBlock>();
             if (ImGui::Button("Add MovAvg Box"))
-                guiCore->model.addBlock<meanFilter1DBlock>();
+                blueprintTab->model.addBlock<meanFilter1DBlock>();
             if (ImGui::Button("Add MedianFilter Box"))
-                guiCore->model.addBlock<medianFilter1DBlock>();
+                blueprintTab->model.addBlock<medianFilter1DBlock>();
             if (ImGui::Button("Add Window Box"))
-                guiCore->model.addBlock<WindowApplayerBlock>();
+                blueprintTab->model.addBlock<WindowApplayerBlock>();
             if (ImGui::Button("Add Delay Box"))
-                guiCore->model.addBlock<delayBlock>();
+                blueprintTab->model.addBlock<delayBlock>();
             if (ImGui::Button("To Fixpoint box"))
-                guiCore->model.addBlock<ToFixpoint>();
+                blueprintTab->model.addBlock<ToFixpoint>();
             if (ImGui::Button("From Fixpoint box"))
-                guiCore->model.addBlock<FromFixpoint>();
+                blueprintTab->model.addBlock<FromFixpoint>();
         }
 
         // modul print/ploty
         if (ImGui::CollapsingHeader("Print")) {
             if (ImGui::Button("Add Print Box"))
-                guiCore->model.addBlock<PrintBlock>();
+                blueprintTab->model.addBlock<PrintBlock>();
             if (ImGui::Button("Add Plot Box"))
-                guiCore->model.addBlock<PlotBlock>();
+                blueprintTab->model.addBlock<PlotBlock>();
             if (ImGui::Button("Add Plot XY Box"))
-                guiCore->model.addBlock<PlotXYBlock>();
+                blueprintTab->model.addBlock<PlotXYBlock>();
             if (ImGui::Button("Add Spectogram Box (work in progres)"))
-                guiCore->model.addBlock<PlotHeatmapBlock>();
+                blueprintTab->model.addBlock<PlotHeatmapBlock>();
         }
 
         // moduł code
         if (ImGui::CollapsingHeader("Code Box")) {
             if (ImGui::Button("Add Python Box"))
-                guiCore->model.addBlock<pythonBlock>();
+                blueprintTab->model.addBlock<pythonBlock>();
             if (ImGui::Button("Add C++ Box"))
-                guiCore->model.addBlock<cppBlock>();
+                blueprintTab->model.addBlock<cppBlock>();
         }
 
         // bloki logiczne (sprawdzenie czy aktualna struktra sie do tego nadaje)
         if (ImGui::CollapsingHeader("Logic")) {
             if (ImGui::Button("Add OR Box"))
-                guiCore->model.addBlock<logicORBlock>();
+                blueprintTab->model.addBlock<logicORBlock>();
             if (ImGui::Button("Add AND Box"))
-                guiCore->model.addBlock<logicANDBlock>();
+                blueprintTab->model.addBlock<logicANDBlock>();
             if (ImGui::Button("Add NOT Box"))
-                guiCore->model.addBlock<logicNOTBlock>();
+                blueprintTab->model.addBlock<logicNOTBlock>();
             if (ImGui::Button("Add NOR Box"))
-                guiCore->model.addBlock<logicNORBlock>();
+                blueprintTab->model.addBlock<logicNORBlock>();
         }
 
         #ifdef __linux__
             // bloki zwzane z HIL i coderem esp
             if (ImGui::CollapsingHeader("ESP Coder")) {
                 if (ImGui::Button("Add ESP output"))
-                    guiCore->model.addBlock<ESPoutBlock>();
+                    blueprintTab->model.addBlock<ESPoutBlock>();
                 if (ImGui::Button("Add ESP input"))
-                    guiCore->model.addBlock<ESPinBlock>();
+                    blueprintTab->model.addBlock<ESPinBlock>();
             }
         #endif
 
         // wysylanie danych
         if (ImGui::CollapsingHeader("Sender")) {
             if (ImGui::Button("Add Sender Box"))
-                guiCore->model.addBlock<DataSenderBlock>();
+                blueprintTab->model.addBlock<DataSenderBlock>();
         }
 
         ImGui::Separator();
@@ -362,7 +375,7 @@ void DockableWindowManager::drawStartButton() {
                 bool is_selected = (current_precision == n);
                 if (ImGui::Selectable(solvers[n], is_selected)) {
                     current_solver = n;
-                    guiCore->solverName = solvers[n];
+                    blueprintTab->solverName = solvers[n];
                 }
                 if (is_selected)
                     ImGui::SetItemDefaultFocus();
@@ -375,7 +388,7 @@ void DockableWindowManager::drawStartButton() {
                 bool is_selected = (current_precision == i);
                 if (ImGui::Selectable(precisions[i], is_selected)) {
                     current_precision = i;
-                    guiCore->solverPrecison = precisions[i];
+                    blueprintTab->solverPrecison = precisions[i];
                 }
                 if (is_selected)
                     ImGui::SetItemDefaultFocus();
@@ -396,26 +409,26 @@ void DockableWindowManager::drawStartButton() {
             {"Gear",[](){ return std::make_shared<RK1Method>(); }}
         };
 
-        if (guiCore->simulationRunning) {
+        if (blueprintTab->simulationRunning) {
             ImGui::BeginDisabled();
             ImGui::Button("Running...");
             ImGui::EndDisabled();
         } else {
             if (ImGui::Button("Run Simulation")) {
-                guiCore->simulationRunning = true;
-                auto method = solverMap[guiCore->solverName]();
+                blueprintTab->simulationRunning = true;
+                auto method = solverMap[blueprintTab->solverName]();
                 SolverManager::initSolver(Model::timeStep, method);
                 // uruchom w osobnym wątku i nie czekaj na niego:
                 std::thread([this]() {
                     // cleanup w bloczkach jeśli jest potrzeb
-                    guiCore->model.cleanupBefore();
-                    // guiCore->model.makeConnections();
+                    blueprintTab->model.cleanupBefore();
+                    // blueprintTab->model.makeConnections();
                     for (int i = 0; i < (Model::simTime/ Model::timeStep) + 1; i++) {
-                        guiCore->model.simulate();
+                        blueprintTab->model.simulate();
                     }
-                    guiCore->model.cleanupAfter();
-                    guiCore->model.cleanSolver();
-                    guiCore->simulationRunning = false;
+                    blueprintTab->model.cleanupAfter();
+                    blueprintTab->model.cleanSolver();
+                    blueprintTab->simulationRunning = false;
                 }).detach();
             }
         }

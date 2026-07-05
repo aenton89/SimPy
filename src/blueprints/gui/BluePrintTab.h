@@ -24,9 +24,9 @@
  * main logic core for UI is here
  * combines all modules together
  */
-class GUICore : public TabModule {
+class BluePrintTab : public TabModule {
 public:
-    GUICore();
+    BluePrintTab();
 
     void update() override;
     // awkward ale chyba tu zostanie xddd

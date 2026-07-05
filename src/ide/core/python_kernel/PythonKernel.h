@@ -61,7 +61,7 @@ public:
 
 private:
     fs::path pythonPath;
-    fs::path kernelScript = "/home/patryk/CLionProjects/SimPy/src/ide/core/python_kernel/kernel.py";
+    fs::path kernelScript = fs::current_path()/"kernel.py";
 
     std::thread worker;
     std::atomic<bool> running{false};
