@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 
-
 PythonKernel::PythonKernel(const fs::path &pythonPath)
     : pythonPath(pythonPath), pid(-1) {
     pipe_in[0] = pipe_in[1] = -1;
@@ -85,6 +84,7 @@ bool PythonKernel::start(fs::path workingDirectory) {
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         content += "\n[[END]]\n";
         writeToChild(content);
+        flushPipeUntilEndMarker();
     }
 
     std::cout << "Kernel process started (Windows).\n";
@@ -121,11 +121,13 @@ bool PythonKernel::start(fs::path workingDirectory) {
         close(pipe_out[0]);
         close(pipe_in[1]);
 
-        std::fstream file("../plot_config.py", std::ios::in);
+        std::fstream file(fs::current_path()/"plot_config.py", std::ios::in);
         if (file.is_open()) {
             std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             content += "\n[[END]]\n";
             write(pipe_out[1], content.c_str(), content.size());
+            flushPipeUntilEndMarker();
+            std::cout << "plot debug" << std::endl;
         }
 
         std::cout << "Kernel process started with PID: " << pid << '\n';
@@ -219,7 +221,7 @@ std::string PythonKernel::executeCode(const std::string &code) {
 #ifdef _WIN32
     writeToChild(payload);
 #else
-    std::cout << code;
+    //std::cout << code;
     write(pipe_out[1], payload.c_str(), payload.size());
 #endif
     return readOutput();
@@ -243,7 +245,7 @@ std::string PythonKernel::fetchNamespace() {
 
 std::string PythonKernel::getPlot() {
     std::string plot = "'__pltmap__'\n[[END]]\n";
-    std::cout << plot << std::endl;
+    //std::cout << plot << std::endl;
 #ifdef _WIN32
     writeToChild(plot);
 #else

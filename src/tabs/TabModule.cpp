@@ -50,7 +50,6 @@ void TabModule::drawTopBar() {
 
 	// Te wartości możesz pobierać dynamicznie lub mieć jako stałe
 	float menuBarHeight = ImGui::GetFrameHeight();
-	float topBarHeight = 50.0f;
 
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar |
 									ImGuiWindowFlags_NoResize |
@@ -70,12 +69,12 @@ void TabModule::drawTopBar() {
 	ImGui::End();
 }
 
-ImVec2 TabModule::getPose() {
+ImVec2 TabModule::GetPose() {
 	if (tabManager) {return tabManager->getActiveArea().pos;}
 	return ImVec2(40, 70);
 }
 
-ImVec2 TabModule::getSize() {
+ImVec2 TabModule::GetSize() {
 	if (tabManager) {return tabManager->getActiveArea().size;}
 	return ImGui::GetIO().DisplaySize;
 }

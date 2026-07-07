@@ -18,6 +18,7 @@ public:
     void menuBarFile() override;
     void menuBarEdit() override;
     void menuBarSettings() override;
+    void drawTopBarContent() override;
 
 protected:
     //workSpace* workspace = nullptr;

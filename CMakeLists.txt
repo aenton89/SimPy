@@ -93,9 +93,16 @@ add_executable(SimPy
         include/ide_dependencies/TextEditor.cpp
 )
 
+# dodanie kerenla i scierzki dla
 configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/src/ide/core/python_kernel/kernel.py"
         "${CMAKE_CURRENT_BINARY_DIR}/kernel.py"
+        COPYONLY
+)
+
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/ide/core/python_kernel/plot_config.py"
+        "${CMAKE_CURRENT_BINARY_DIR}/plot_config.py"
         COPYONLY
 )
 

@@ -36,10 +36,11 @@ public:
 	// rysowanie kontetnu w topbar dla konetenego taba
 	virtual void drawTopBarContent() {};
 	void drawTopBar();
+	float topBarHeight = 50.0f;
 
 	// Reagowanie na otwarcie workspace
-	ImVec2 getPose();
-	ImVec2 getSize();
+	ImVec2 GetPose();
+	ImVec2 GetSize();
 
 	// TODO: serializacja stanu modułu - ALE NARAZIE BEZ TEGO (bo blueprintTab ma swoją a IDE nie potrzebuje)
 };

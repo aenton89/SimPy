@@ -70,6 +70,10 @@ void NotebookTile::Draw() {
     ImGui::End();
 }
 
+PythonKernel* NotebookTile::GetKernel() {
+    return kernel;
+}
+
 
 void NotebookTile::Update() {
 

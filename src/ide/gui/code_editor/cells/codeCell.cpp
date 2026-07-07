@@ -11,7 +11,6 @@
 #include <glad/glad.h>
 
 
-
 CodeCell::CodeCell(PythonKernel& kernelRef) : kernel(&kernelRef) {
     output_buffer[0] = '\0';
     inputEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::Python());
@@ -109,6 +108,7 @@ bool CodeCell::Draw(int id) {
 
     // IMAGE
     if (texture != 0) {
+        //std::cout << texture << " debug " << std::endl;
         float aspect = static_cast<float>(texture_width) / static_cast<float>(texture_height);
         float img_width = 512.0f;
         float img_height = img_width / aspect;
@@ -136,6 +136,8 @@ void CodeCell::pollExecutionResult() {
     if (!is_executing || !exec_future.valid())
         return;
 
+    clearTexture();
+
     if (exec_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
         auto result = exec_future.get();
 
@@ -143,6 +145,7 @@ void CodeCell::pollExecutionResult() {
         output_buffer[sizeof(output_buffer) - 1] = '\0';
 
         std::string plot = kernel->getPlot();
+        //std::cout <<plot;
         processPlot(plot);
 
         is_executing = false;
@@ -154,12 +157,15 @@ void CodeCell::processPlot(const std::string& rawPlot) {
         return;
 
     base64 = rawPlot;
+    //std::cout <<base64;
     std::string cleaned = std::regex_replace(rawPlot, std::regex("\\[\\[OK\\]]\\s*$"), "");
     updateTextureFromBase64(cleaned);
 }
 
 void CodeCell::updateTextureFromBase64(const std::string& base64Data) {
+    //std::cout << " debug " << base64Data << std::endl;
     std::string decoded = ImgOpen::base64_decode(base64Data);
+    //std::cout << " debug " << decoded << std::endl;
 
     int w = 0, h = 0;
     GLuint new_texture = ImgOpen::LoadTextureFromMemory(decoded.data(), decoded.size(), w, h);

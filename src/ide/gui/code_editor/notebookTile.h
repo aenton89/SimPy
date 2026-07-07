@@ -22,11 +22,13 @@ public:
 
     [[nodiscard]]
     std::string getType() const override {return "Notebook";}
+    PythonKernel* GetKernel();
 
     void setKernel(PythonKernel* kernel);
 
 protected:
     std::vector<std::unique_ptr<BaseCell>> cells;
+
 
 private:
     PythonKernel *kernel;

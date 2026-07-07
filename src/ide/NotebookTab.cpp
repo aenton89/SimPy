@@ -34,8 +34,8 @@ void NotebookTab::menuBarSettings() {
 void NotebookTab::update() {
     TabModule::update();
 
-    this->notebookTab->SetPos(getPose());
-    this->notebookTab->SetSize(getSize());
+    this->notebookTab->SetPos(GetPose());
+    this->notebookTab->SetSize(GetSize());
     this->notebookTab->Draw();
     ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -146,5 +146,15 @@ void NotebookTab::update() {
 //     }
      // notebookTab->Draw();
 }
+
+void NotebookTab::drawTopBarContent() {
+    // Guik rezetu dla kernela
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetWindowPos(ImVec2(viewport->Size.x*3/4, NotebookTab::topBarHeight/2));
+    if (ImGui::Button("Reset", ImVec2(viewport->Pos.x/6, 0))) {
+        notebookTab->GetKernel()->reset(fs::current_path());
+    }
+}
+
 
 

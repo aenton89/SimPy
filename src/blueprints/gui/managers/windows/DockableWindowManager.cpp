@@ -39,8 +39,8 @@ DockPosition DockableWindowManager::checkDockPosition(ImVec2 windowPos, ImVec2 w
 }
 
 ImVec2 DockableWindowManager::calculateDockedPosition(DockPosition position, DockableWindowType windowType) const {
-    ImVec2 contentPos  = blueprintTab->getPose();
-    ImVec2 contentSize = blueprintTab->getSize();
+    ImVec2 contentPos  = blueprintTab->GetPose();
+    ImVec2 contentSize = blueprintTab->GetSize();
 
     const float marginY = 0.0f;
 

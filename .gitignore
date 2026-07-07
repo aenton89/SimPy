@@ -6,3 +6,4 @@ CMakeUserPresets.json
 src/ide/core/SimPy_venv
 include/ide_dependencies/imgui_markdown.h
 include/imgui_backends
+tmp_folder/config.json
