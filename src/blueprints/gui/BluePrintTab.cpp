@@ -16,7 +16,7 @@ CEREAL_FORCE_DYNAMIC_INIT(blocks)
 
 BluePrintTab::BluePrintTab() : TabModule("Blueprints"){
     dockingManager.setBluePrintTab(this);
-    fileManager.setBluePrintTab(this);
+    //fileManager->setBluePrintTab(this);
     viewportManager.setBluePrintTab(this);
     blocksManager.setBluePrintTab(this);
     connectionManager.setBluePrintTab(this);
@@ -41,10 +41,10 @@ void BluePrintTab::update() {
     // skróty klawiszowe
     viewportManager.turnLightModeOnShortcut(io);
     viewportManager.turnGridOnShortcut(io);
-    fileManager.saveStateShortcut(io);
-    fileManager.loadStateShortcut(io);
-    fileManager.exitFileShortcut(io);
-    fileManager.newFileShortcut(io);
+    fileManager->saveStateShortcut(io, *this);
+    fileManager->loadStateShortcut(io, *this);
+    fileManager->exitFileShortcut(io, *this);
+    fileManager->newFileShortcut(io, *this);
 
     // rysowanie okien, które się dockują
     dockingManager.drawMenu();
@@ -88,16 +88,17 @@ void BluePrintTab::update() {
 }
 
 void BluePrintTab::menuBarFile() {
+    //std::cout<<"test";
     if (ImGui::MenuItem("New", "Ctrl+N"))
-        fileManager.newFile();
+        fileManager->newFile(*this);
     if (ImGui::MenuItem("Open", "Ctrl+O"))
-        fileManager.openFileDialog();
-    if (ImGui::MenuItem("Save", "Ctrl+S", false, !fileManager.currentFilePath.empty() || fileManager.hasUnsavedChanges))
-        fileManager.saveFile();
+        fileManager->openFileDialog(*this);
+    if (ImGui::MenuItem("Save", "Ctrl+S", false, !fileManager->currentFilePath.empty() || fileManager->hasUnsavedChanges))
+        fileManager->saveFile(*this);
     if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
-        fileManager.saveFileDialog();
+        fileManager->saveFileDialog(*this);
     if (ImGui::MenuItem("Exit", "Ctrl+W"))
-        fileManager.exitFile();
+        fileManager->exitFile(*this);
 }
 
 void BluePrintTab::menuBarEdit() {

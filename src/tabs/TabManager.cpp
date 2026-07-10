@@ -15,10 +15,12 @@
 // TODO: narazie po prostu na sztywno dodajemy blueprintTab jako domyślną zakładkę
 TabManager::TabManager() {
 	tabs.push_back(std::make_unique<BluePrintTab>());
+	tabs[0]->setFileManager(&fileManager);
 	currentTab = 0;
 	tabs[0]->isActive = true;
 	tabs[0]->setTabManager(this);
 	workspace = new workSpace();
+
 }
 
 // initialization of evertything regarding ImGui
@@ -167,6 +169,7 @@ void TabManager::openTab() {
 	auto newTab = std::make_unique<T>();
 	newTab->setTabManager(this);
 	tabs.push_back(std::move(newTab));
+	tabs[tabs.size()-1]->setFileManager(&fileManager);
 	changeTab(tabs.size() - 1);
 }
 
@@ -250,3 +253,12 @@ void TabManager::shutdown() {
 	ImGui::DestroyContext();
 	ImPlot::DestroyContext();
 }
+
+template<typename T>
+T *TabManager::getCurrentTabAs() {
+	if (currentTab >= 0 && currentTab < tabs.size()) {
+		return dynamic_cast<T*>(tabs[currentTab].get());
+	}
+	return nullptr;
+}
+

@@ -3,6 +3,7 @@
 //
 #pragma once
 // #include <string>
+#include "../files/FileManager.h"
 
 class TabManager;
 
@@ -43,4 +44,8 @@ public:
 	ImVec2 GetSize();
 
 	// TODO: serializacja stanu modułu - ALE NARAZIE BEZ TEGO (bo blueprintTab ma swoją a IDE nie potrzebuje)
+
+	// File manager tutaj (jeden w spolny dla wszyskich)
+	FileManager* fileManager = nullptr;
+	void setFileManager(FileManager* gui);
 };

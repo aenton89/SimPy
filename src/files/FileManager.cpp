@@ -3,7 +3,8 @@
 //
 #include "FileManager.h"
 #include <GLFW/glfw3.h>
-#include "../../BluePrintTab.h"
+#include "BluePrintTab.h"
+#include "../blueprints/gui/BluePrintTab.h"
 #include "../../tabs/TabManager.h"
 
 
@@ -91,7 +92,8 @@ bool FileManager::loadFromXML(const std::string &filename, BluePrintTab& gui) {
 	return false;
 }
 
-void FileManager::openFileDialog() {
+template<>
+void FileManager::openFileDialog<BluePrintTab>(BluePrintTab& blueprintTab) {
 	// tytuł okna; domyślna ścieżka; filtr; opcje (none = pojedynczy plik, multiselect = wiele plików)
 	auto selection = pfd::open_file(
 		"Select a file",
@@ -104,7 +106,7 @@ void FileManager::openFileDialog() {
 		const std::string& filepath = selection[0];
 		std::cout << "Selected file: " << filepath << "\n";
 
-		if (loadFromXML(filepath, *blueprintTab)) {
+		if (loadFromXML(filepath, blueprintTab)) { // tu byl ptr
 			std::cout << "File loaded successfully!\n";
 			currentFilePath = filepath;
 			hasUnsavedChanges = false;
@@ -118,7 +120,8 @@ void FileManager::openFileDialog() {
 	}
 }
 
-void FileManager::saveFileDialog() {
+template<>
+void FileManager::saveFileDialog<BluePrintTab>(BluePrintTab& blueprintTab) {
 	// domyślna ścieżka - jeśli nie istnieje to "untitled.xml"
 	std::string defaultPath = currentFilePath.empty() ? "untitled.xml" : currentFilePath;
 	// tytuł okna; domyślna ścieżka; filtr; pytaj o nadpisanie
@@ -138,7 +141,7 @@ void FileManager::saveFileDialog() {
 
 		std::cout << "Save to: " << filepath << "\n";
 
-		if (saveToXML(filepath, *blueprintTab)) {
+		if (saveToXML(filepath, blueprintTab)) { // tu byl ptr
 			std::cout << "File saved successfully!\n";
 			currentFilePath = filepath;
 			hasUnsavedChanges = false;
@@ -153,17 +156,18 @@ void FileManager::saveFileDialog() {
 	}
 }
 
-void FileManager::saveFile() {
+template<>
+void FileManager::saveFile<BluePrintTab>(BluePrintTab& blueprintTab) {
 	// jeśli nie ma aktualnej ścieżki, otwórz dialog "Save As"
 	if (currentFilePath.empty()) {
-		saveFileDialog();
+		saveFileDialog(blueprintTab);
 		return;
 	}
 
 	// zapisz do bieżącego pliku
 	std::cout << "Saving to: " << currentFilePath << "\n";
 
-	if (saveToXML(currentFilePath, *blueprintTab)) {
+	if (saveToXML(currentFilePath, blueprintTab)) { // tu byl ptr
 		std::cout << "File saved successfully!\n";
 		hasUnsavedChanges = false;
 	} else {
@@ -172,7 +176,8 @@ void FileManager::saveFile() {
 	}
 }
 
-void FileManager::exitFile() {
+template<>
+void FileManager::exitFile<BluePrintTab>(BluePrintTab& blueprintTab) {
 	if (hasUnsavedChanges) {
 		auto result = pfd::message(
 			"Unsaved changes",
@@ -182,18 +187,19 @@ void FileManager::exitFile() {
 		).result();
 
 		if (result == pfd::button::yes) {
-			saveFile();
-			glfwSetWindowShouldClose(blueprintTab->tabManager->window, GLFW_TRUE);
+			saveFile(blueprintTab);
+			glfwSetWindowShouldClose(blueprintTab.tabManager->window, GLFW_TRUE);
 		} else if (result == pfd::button::no) {
-			glfwSetWindowShouldClose(blueprintTab->tabManager->window, GLFW_TRUE);
+			glfwSetWindowShouldClose(blueprintTab.tabManager->window, GLFW_TRUE);
 		}
 		// cancel - nie rób nic
 	} else {
-		glfwSetWindowShouldClose(blueprintTab->tabManager->window, GLFW_TRUE);
+		glfwSetWindowShouldClose(blueprintTab.tabManager->window, GLFW_TRUE);
 	}
 }
 
-void FileManager::newFile() {
+template<>
+void FileManager::newFile<BluePrintTab> (BluePrintTab& blueprintTab) {
 	// wyczyść projekt
 	if (hasUnsavedChanges) {
 		// zapytaj czy zapisać przed utworzeniem nowego
@@ -205,7 +211,7 @@ void FileManager::newFile() {
 		).result();
 
 		if (result == pfd::button::yes)
-			saveFile();
+			saveFile(blueprintTab);
 		else if (result == pfd::button::cancel) {
 			ImGui::EndMenu();
 			// anuluj tworzenie nowego
@@ -214,34 +220,42 @@ void FileManager::newFile() {
 	}
 
 	// i na koniec: wyczyść dane
-	blueprintTab->model = Model();
+	blueprintTab.model = Model();
 	currentFilePath.clear();
 	hasUnsavedChanges = false;
 }
 
 // zapis pod CTRL+S, zapis jako pod CTRL+SHIFT+S
-void FileManager::saveStateShortcut(const ImGuiIO &io) {
+template<>
+void FileManager::saveStateShortcut<BluePrintTab> (const ImGuiIO &io, BluePrintTab& blueprintTab) {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false)){
 		if (io.KeyShift)
-			saveFileDialog();
-		saveFile();
+			saveFileDialog(blueprintTab);
+		saveFile(blueprintTab);
 	}
 }
 
 // wczytywanie pod CTRL+O
-void FileManager::loadStateShortcut(const ImGuiIO &io) {
+template<>
+void FileManager::loadStateShortcut<BluePrintTab>(const ImGuiIO &io, BluePrintTab& blueprintTab) {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_O, false))
-		openFileDialog();
+		openFileDialog(blueprintTab);
 }
 
 // wyjście pod CTRL+W
-void FileManager::exitFileShortcut(const ImGuiIO &io) {
+template<>
+void FileManager::exitFileShortcut<BluePrintTab>(const ImGuiIO &io, BluePrintTab& blueprintTab) {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_W, false))
-		exitFile();
+		exitFile(blueprintTab);
 }
 
 // nowy plik pod CTRL+N
-void FileManager::newFileShortcut(const ImGuiIO &io) {
+template<>
+void FileManager::newFileShortcut<BluePrintTab>(const ImGuiIO &io, BluePrintTab& blueprintTab) {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_N, false))
-		newFile();
+		newFile(blueprintTab);
 }
+
+// void FileManager::setBluePrintTab(BluePrintTab *gui) {
+// 	blueprintTab = gui;
+// }

@@ -78,3 +78,7 @@ ImVec2 TabModule::GetSize() {
 	if (tabManager) {return tabManager->getActiveArea().size;}
 	return ImGui::GetIO().DisplaySize;
 }
+
+void TabModule::setFileManager(FileManager* filemanager) {
+	fileManager = filemanager;
+}

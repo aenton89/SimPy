@@ -31,6 +31,9 @@ private:
 
     bool showWorkspace = false;
 
+protected:
+    FileManager fileManager;
+
 
 public:
     // TODO: rzeczy zwiazane z renderowaniem
@@ -64,4 +67,8 @@ public:
     ActiveArea getActiveArea();
 
     // TODO: serializacja jakie zakładki są otwarte - ALE NARAZIE BEZ TEGO
+
+    // Moje podejscie do tych tabow
+    template<typename T>
+    T* getCurrentTabAs();
 };

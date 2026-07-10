@@ -55,7 +55,7 @@ add_executable(SimPy
         # gui
         src/blueprints/gui/BluePrintTab.cpp
         src/blueprints/gui/managers/windows/DockableWindowManager.cpp
-        src/blueprints/gui/managers/files/FileManager.cpp
+        src/files/FileManager.cpp
         src/blueprints/gui/managers/viewport/ViewportManager.cpp
         src/blueprints/gui/managers/windows/BlocksManager.cpp
         src/blueprints/gui/managers/viewport/ConnectionManager.cpp

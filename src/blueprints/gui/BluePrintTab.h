@@ -9,7 +9,7 @@
 #include "../core/structures/Blocks.h"
 #include "ui/UIPreferences.h"
 #include "managers/windows/DockableWindowManager.h"
-#include "managers/files/FileManager.h"
+#include "../../files/FileManager.h"
 #include "managers/viewport/ViewportManager.h"
 #include "managers/windows/BlocksManager.h"
 #include "managers/viewport/ConnectionManager.h"
@@ -36,7 +36,7 @@ public:
 
     // nowe manager'y
     DockableWindowManager dockingManager;
-    FileManager fileManager;
+    //FileManager* fileManager = nullptr;
     ViewportManager viewportManager;
     BlocksManager blocksManager;
     ConnectionManager connectionManager;
@@ -64,7 +64,7 @@ public:
     void serialize(Archive& ar) {
         // managers
         ar(CEREAL_NVP(dockingManager));
-        ar(CEREAL_NVP(fileManager));
+        //ar(CEREAL_NVP(fileManager));
         ar(CEREAL_NVP(viewportManager));
         ar(CEREAL_NVP(blocksManager));
         ar(CEREAL_NVP(connectionManager));
