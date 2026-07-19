@@ -74,6 +74,10 @@ PythonKernel* NotebookTile::GetKernel() {
     return kernel;
 }
 
+const std::vector<std::unique_ptr<BaseCell>>& NotebookTile::getCells() const{
+    return cells;
+}
+
 
 void NotebookTile::Update() {
 

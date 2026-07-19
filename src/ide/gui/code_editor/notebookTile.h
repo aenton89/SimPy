@@ -25,6 +25,7 @@ public:
     PythonKernel* GetKernel();
 
     void setKernel(PythonKernel* kernel);
+    const std::vector<std::unique_ptr<BaseCell>>& getCells() const;
 
 protected:
     std::vector<std::unique_ptr<BaseCell>> cells;

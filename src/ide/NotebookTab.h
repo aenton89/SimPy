@@ -19,11 +19,11 @@ public:
     void menuBarEdit() override;
     void menuBarSettings() override;
     void drawTopBarContent() override;
+    NotebookTile* getNotebookTab();
 
 protected:
     //workSpace* workspace = nullptr;
     NotebookTile* notebookTab = nullptr;
-
     bool showWorkspace = false;
 
     // preferencje ui

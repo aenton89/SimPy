@@ -4,8 +4,10 @@
 #include "FileManager.h"
 #include <GLFW/glfw3.h>
 #include "BluePrintTab.h"
+#include "../ide/NotebookTab.h"
 #include "../blueprints/gui/BluePrintTab.h"
 #include "../../tabs/TabManager.h"
+#include <nlohmann/json.hpp>
 
 
 
@@ -14,9 +16,7 @@ bool FileManager::saveToXML(const std::string &filename, BluePrintTab& gui) {
 	std::string backupFilename = filename + ".bak";
 
 	try {
-		// scope jest potrzebny, bo dzięki temu destruktory zamkną i zapiszą plik przed rename
 		{
-			// zapisz do pliku tymczasowego
 			std::ofstream file(tempFilename, std::ios::binary);
 			if (!file.is_open()) {
 				std::cerr << "ERR: can't open temp file " << tempFilename << "\n";
@@ -27,13 +27,10 @@ bool FileManager::saveToXML(const std::string &filename, BluePrintTab& gui) {
 			archive(cereal::make_nvp("blueprintTab", gui));
 		}
 
-		// jeśli istnieje stary plik, zrób backup
 		if (std::filesystem::exists(filename)) {
-			// usuń stary backup jeśli istnieje
 			if (std::filesystem::exists(backupFilename))
 				std::filesystem::remove(backupFilename);
 
-			// przenieś aktualny plik do backupu
 			std::filesystem::rename(filename, backupFilename);
 		}
 
@@ -44,12 +41,11 @@ bool FileManager::saveToXML(const std::string &filename, BluePrintTab& gui) {
 		return true;
 
 	} catch (const std::exception& e) {
-		// spróbuj posprzątać
 		if (std::filesystem::exists(tempFilename)) {
 			try {
 				std::filesystem::remove(tempFilename);
 			} catch (...) {
-				// ignoruj błędy przy czyszczeniu; pozdro z fartem
+
 			}
 		}
 
@@ -92,31 +88,45 @@ bool FileManager::loadFromXML(const std::string &filename, BluePrintTab& gui) {
 	return false;
 }
 
-template<>
-void FileManager::openFileDialog<BluePrintTab>(BluePrintTab& blueprintTab) {
-	// tytuł okna; domyślna ścieżka; filtr; opcje (none = pojedynczy plik, multiselect = wiele plików)
-	auto selection = pfd::open_file(
-		"Select a file",
-		".",
-		{"XML Files", "*.xml", "All Files", "*"},
-		pfd::opt::none
+void FileManager::openFileDialog() {
+	auto selection = pfd::open_file("Open File", "",
+	   {"Project Files", "*.xml *.py *.txt *.ipynb", "All Files", "*"}
 	).result();
 
-	if (!selection.empty()) {
-		const std::string& filepath = selection[0];
-		std::cout << "Selected file: " << filepath << "\n";
+	if (selection.empty()) return;
 
-		if (loadFromXML(filepath, blueprintTab)) { // tu byl ptr
-			std::cout << "File loaded successfully!\n";
-			currentFilePath = filepath;
-			hasUnsavedChanges = false;
-		} else {
-			std::cerr << "ERR: failed to load file!\n";
-			// komunikat błędu
-			pfd::message("Error", "Failed to load file: " + filepath, pfd::choice::ok, pfd::icon::error);
+	std::string filePath = selection[0];
+	std::filesystem::path p(filePath);
+	std::string extension = p.extension().string();
+
+	if (extension == ".xml") {
+		if (tabManager) {
+			// Open the new tab first
+			tabManager->openTab<BluePrintTab>();
+
+			std::cout << "Selected file: " << filePath << "\n";
+
+			auto* newTab = dynamic_cast<BluePrintTab*>(tabManager->getTabs().back().get());
+
+			if (newTab) {
+				if (loadFromXML(filePath, *newTab)) { // Passing by reference to loadFromXML
+					std::cout << "File loaded successfully!\n";
+					currentFilePath = filePath;
+					hasUnsavedChanges = false;
+				} else {
+					std::cerr << "ERR: failed to load file!\n";
+					pfd::message("Error", "Failed to load file: " + filePath, pfd::choice::ok, pfd::icon::error);
+				}
+			} else {
+				std::cerr << "ERR: The newly created tab is not a BluePrintTab!\n";
+			}
 		}
-	} else {
-		std::cout << "No file selected\n";
+	}
+	else if (extension == ".ipynb") {
+		if (tabManager) {
+			tabManager->openTab<NotebookTab>();
+
+		}
 	}
 }
 
@@ -156,6 +166,7 @@ void FileManager::saveFileDialog<BluePrintTab>(BluePrintTab& blueprintTab) {
 	}
 }
 
+// metoda dla blueprinta
 template<>
 void FileManager::saveFile<BluePrintTab>(BluePrintTab& blueprintTab) {
 	// jeśli nie ma aktualnej ścieżki, otwórz dialog "Save As"
@@ -175,6 +186,78 @@ void FileManager::saveFile<BluePrintTab>(BluePrintTab& blueprintTab) {
 		pfd::message("Error", "Failed to save file: " + currentFilePath, pfd::choice::ok, pfd::icon::error);
 	}
 }
+
+// metoda dla notebooka
+template<>
+void FileManager::saveFile<NotebookTab>(NotebookTab& notebookTab) {
+	// tworzenie mapy cell
+	const std::vector<std::unique_ptr<BaseCell>>& cells = notebookTab.getNotebookTab()->getCells();
+
+	std::map<int, CellData> cellMap;
+	int i = 0;
+
+	for (auto& cell : cells) {
+		CellData cellData;
+
+		if (cell->getType() == CellType::CodeCell) {
+			const auto& codeCell = dynamic_cast<const CodeCell&>(*cell);
+			cellData.cell_type = "code";
+			cellData.source = codeCell.getInputText();
+			cellData.outputs = codeCell.getOutputText();
+		} else {
+			const auto& baseCell = dynamic_cast<const BaseCell&>(*cell);
+			cellData.cell_type = "markdown";
+			cellData.source = baseCell.getInputText();
+		}
+		cellMap[i++] = cellData;
+	}
+
+	// zapis do json-a
+
+	nlohmann::json j;
+	j['cells'] = nlohmann::json::array();
+
+	for (const auto& [index, cell] : cellMap) {
+		nlohmann::json cellJson;
+		cellJson["cell_type"] = cell.cell_type;
+		cellJson["metadata"] = nlohmann::json::object();
+		cellJson["source"] = nlohmann::json::array();
+		cellJson["source"].push_back(cell.source);
+
+		if (cell.cell_type == "code") {
+			cellJson["outputs"] = nlohmann::json::array();
+			for (const auto& out : cell.outputs) {
+				nlohmann::json outputJson;
+				outputJson["output_type"] = "stream";
+				outputJson["name"] = "stdout";
+				outputJson["text"] = out;
+				cellJson["outputs"].push_back(outputJson);
+			}
+			cellJson["execution_count"] = nullptr;
+		}
+
+		j["cells"].push_back(cellJson);
+
+		// TODO te metadane trzeba poprawic
+		j["metadata"] = {
+			{"kernelspec", {
+	                {"display_name", "Python 3"},
+					{"language", "python"},
+					{"name", "python3"}
+			}},
+			{"language_info", {
+	                {"name", "python"},
+					{"version", "3.10"}
+			}}
+		};
+		j["nbformat"] = 4;
+		j["nbformat_minor"] = 5;
+
+		std::ofstream file(currentFilePath);
+		file << j.dump(4);
+	}
+}
+
 
 template<>
 void FileManager::exitFile<BluePrintTab>(BluePrintTab& blueprintTab) {
@@ -239,7 +322,7 @@ void FileManager::saveStateShortcut<BluePrintTab> (const ImGuiIO &io, BluePrintT
 template<>
 void FileManager::loadStateShortcut<BluePrintTab>(const ImGuiIO &io, BluePrintTab& blueprintTab) {
 	if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_O, false))
-		openFileDialog(blueprintTab);
+		openFileDialog();
 }
 
 // wyjście pod CTRL+W
@@ -256,6 +339,9 @@ void FileManager::newFileShortcut<BluePrintTab>(const ImGuiIO &io, BluePrintTab&
 		newFile(blueprintTab);
 }
 
-// void FileManager::setBluePrintTab(BluePrintTab *gui) {
-// 	blueprintTab = gui;
-// }
+void FileManager::setTabManager(TabManager* tabManager) {
+	this->tabManager = tabManager;
+}
+////////////////////////////////////////////////////////// Metody dla Notebooka /////////////////////////////////////////////////////
+
+

@@ -92,7 +92,7 @@ void BluePrintTab::menuBarFile() {
     if (ImGui::MenuItem("New", "Ctrl+N"))
         fileManager->newFile(*this);
     if (ImGui::MenuItem("Open", "Ctrl+O"))
-        fileManager->openFileDialog(*this);
+        fileManager->openFileDialog();
     if (ImGui::MenuItem("Save", "Ctrl+S", false, !fileManager->currentFilePath.empty() || fileManager->hasUnsavedChanges))
         fileManager->saveFile(*this);
     if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))

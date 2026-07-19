@@ -7,7 +7,7 @@
 
 class TabManager;
 
-
+class FileManager;
 
 /*
  * bazowa klasa abstrakcyjna dla wszystkich modułów wyświetlanych w zakładkach

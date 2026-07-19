@@ -35,6 +35,7 @@ protected:
     FileManager fileManager;
 
 
+
 public:
     // TODO: rzeczy zwiazane z renderowaniem
     GLFWwindow* window = nullptr;
@@ -71,4 +72,6 @@ public:
     // Moje podejscie do tych tabow
     template<typename T>
     T* getCurrentTabAs();
+
+    std::vector<std::unique_ptr<TabModule>>& getTabs();
 };

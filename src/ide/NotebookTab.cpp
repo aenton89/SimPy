@@ -156,5 +156,10 @@ void NotebookTab::drawTopBarContent() {
     }
 }
 
+NotebookTile *NotebookTab::getNotebookTab() {
+    return notebookTab;
+}
+
+
 
 

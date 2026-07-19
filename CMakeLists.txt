@@ -85,8 +85,6 @@ add_executable(SimPy
         src/ide/gui/code_editor/BaseTile.h
         src/workspace/file_manipulation/FileUtils.h
         src/workspace/file_manipulation/FileUtils.cpp
-        src/ide/gui/managers/TileManager.h
-        src/ide/gui/managers/TileManager.cpp
         src/ide/gui/code_editor/BaseTile.cpp
 
         # zewnerzne biblioteki wymagajace linkowania

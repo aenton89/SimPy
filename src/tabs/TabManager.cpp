@@ -20,6 +20,7 @@ TabManager::TabManager() {
 	tabs[0]->isActive = true;
 	tabs[0]->setTabManager(this);
 	workspace = new workSpace();
+	fileManager.setTabManager(this);
 
 }
 
@@ -260,5 +261,9 @@ T *TabManager::getCurrentTabAs() {
 		return dynamic_cast<T*>(tabs[currentTab].get());
 	}
 	return nullptr;
+}
+
+std::vector<std::unique_ptr<TabModule>>& TabManager::getTabs() {
+	return tabs;
 }
 
