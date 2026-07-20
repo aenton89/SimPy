@@ -26,6 +26,8 @@ public:
     std::string getOutputText() const;
     std::string getBase64() const;
 
+    void processPlot(const std::string& rawPlot);
+
 private:
     TextEditor inputEditor;
     PythonKernel* kernel = nullptr;
@@ -38,7 +40,6 @@ private:
     void startExecution();
     void pollExecutionResult();
 
-    void processPlot(const std::string& rawPlot);
     void updateTextureFromBase64(const std::string& base64Data);
     void clearTexture();
 

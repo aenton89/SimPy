@@ -78,6 +78,14 @@ const std::vector<std::unique_ptr<BaseCell>>& NotebookTile::getCells() const{
     return cells;
 }
 
+void NotebookTile::setCells(std::vector<std::unique_ptr<BaseCell>> cells) {
+    this->cells = std::move(cells);
+}
+
+PythonKernel* NotebookTile::getKernel() {
+    return kernel;
+}
+
 
 void NotebookTile::Update() {
 

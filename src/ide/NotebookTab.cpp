@@ -13,14 +13,18 @@ NotebookTab::NotebookTab() : TabModule("Ide") {
 }
 
 void NotebookTab::menuBarFile() {
-    if (ImGui::MenuItem("New", "Ctrl+N")) {}
-    if (ImGui::MenuItem("Open file", "Ctrl+O")) {}
-    if (ImGui::MenuItem("Open Folder", "Ctrl+O+F")) {}
-    if (ImGui::MenuItem("Save", "Ctrl+S", false)) {}
-    if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) {}
-    if (ImGui::MenuItem("Exit", "Ctrl+W")) {}
+    //std::cout<<"test";
+    if (ImGui::MenuItem("New", "Ctrl+N"))
+        fileManager->newFile(*this);
+    if (ImGui::MenuItem("Open", "Ctrl+O"))
+        fileManager->openFileDialog();
+    if (ImGui::MenuItem("Save", "Ctrl+S", false, !fileManager->currentFilePath.empty() || fileManager->hasUnsavedChanges))
+        fileManager->saveFile(*this);
+    if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+        fileManager->saveFileDialog(*this);
+    if (ImGui::MenuItem("Exit", "Ctrl+W"))
+        fileManager->exitFile(*this);
 }
-
 void NotebookTab::menuBarEdit() {
     if (ImGui::MenuItem("Undo", "Ctrl+Z")) { /* akcja */ }
     if (ImGui::MenuItem("Redo", "Ctrl+Y")) { /* akcja */ }
