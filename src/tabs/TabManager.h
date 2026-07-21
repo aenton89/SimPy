@@ -9,6 +9,8 @@
 class BluePrintTab;
 
 class NotebookTab;
+
+class workSpace;
 /*
  * manager zarządzający zakładkami w aplikacji
  * przechowuje moduły, obsługuje przełączanie między nimi i renderowanie paska zakładek

@@ -323,6 +323,8 @@ void FileManager::openFileDialog() {
 				std::cerr << "ERR: The newly created tab is not a BluePrintTab!\n";
 			}
 		}
+	} else {
+		// tu bedzie reszta plikow kotre beda tratowane jako pliki tekstowe
 	}
 }
 
@@ -601,6 +603,15 @@ void FileManager::newFileShortcut<NotebookTab>(const ImGuiIO &io, NotebookTab& n
 void FileManager::setTabManager(TabManager* tabManager) {
 	this->tabManager = tabManager;
 }
-////////////////////////////////////////////////////////// Metody dla Notebooka /////////////////////////////////////////////////////
+
+// uniwersalne metody dla
+void FileManager::openFolderDialog() {
+	auto destination = pfd::select_folder("Select Folder", "C:\\").result();
+
+	if (destination.empty()) return;
+
+	this->folderPath = destination;
+	std::cout << this->folderPath << std::endl;
+}
 
 

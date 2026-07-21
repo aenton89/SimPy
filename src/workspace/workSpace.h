@@ -6,14 +6,18 @@
 #include <fstream>
 #include <iostream>
 #include "file_manipulation/FileSystemService.h"
-
+#include "../tabs/TabManager.h"
+#include "../files/FileManager.h"
+#include "portable-file-dialogs.h"
+#include "../blueprints/gui/BluePrintTab.h"
+#include "../ide/NotebookTab.h"
 
 
 class workSpace {
 public:
-    workSpace();
+    workSpace(TabManager* tabManager) : tabManager(tabManager) {};
     ~workSpace();
-
+    
     void Update();
     void Render(ImVec2 pos_xy, ImVec2 window_size);
 
@@ -21,9 +25,6 @@ public:
     fs::path get_path2open();
     ImVec2 GetWindowSize();
     ImVec2 GetWindowPosition();
-
-    fs::path project_path;
-    fs::path open_path;
 
 protected:
     void OpenContextMenu(const fs::directory_entry& entry);
@@ -33,4 +34,8 @@ protected:
 
 private:
     FileSystemService fsService;
+    fs::path projectPath;
+    fs::path openPath;
+    TabManager* tabManager = nullptr;
+
 };

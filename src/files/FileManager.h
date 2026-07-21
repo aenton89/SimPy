@@ -33,15 +33,6 @@ struct CellData
  */
 class FileManager {
 private:
-
-	// Te metody wewnętrzne zostają (będą wywoływane wewnątrz specjalizacji dla BluePrintTab)
-	bool saveToXML(const std::string& filename, BluePrintTab& gui);
-	bool loadFromXML(const std::string& filename, BluePrintTab& gui);
-
-	// Metody do otierania notebooka
-	bool loadFromIpynb(const std::string& filename, NotebookTab& gui);
-	bool saveToIpynb(const std::string& filename, NotebookTab& gui);
-
 	// Zeby file dialog mogl otierac dowalne pliki
 	TabManager* tabManager;
 
@@ -49,6 +40,7 @@ private:
 
 public:
 	std::string currentFilePath;
+	std::string folderPath;
 	bool hasUnsavedChanges;
 
 	void openFileDialog();
@@ -88,4 +80,14 @@ public:
 	}
 
 	void setTabManager(TabManager* tabManager);
+
+	void openFolderDialog();
+
+	// Te metody wewnętrzne zostają (będą wywoływane wewnątrz specjalizacji dla BluePrintTab)
+	static bool saveToXML(const std::string& filename, BluePrintTab& gui);
+	static bool loadFromXML(const std::string& filename, BluePrintTab& gui);
+
+	// Metody do otierania notebooka
+	static bool loadFromIpynb(const std::string& filename, NotebookTab& gui);
+	static bool saveToIpynb(const std::string& filename, NotebookTab& gui);
 };

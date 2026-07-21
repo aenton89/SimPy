@@ -19,7 +19,7 @@ TabManager::TabManager() {
 	currentTab = 0;
 	tabs[0]->isActive = true;
 	tabs[0]->setTabManager(this);
-	workspace = new workSpace();
+	workspace = new workSpace(this);
 	fileManager.setTabManager(this);
 
 }
@@ -101,6 +101,7 @@ void TabManager::drawWorkspace() {
         ImVec2 wsSize(250.0f, availableHeight);
 
         workspace->Render(wsPos, wsSize);
+    	workspace->set_ProjectPath(fileManager.folderPath);
     }
 }
 

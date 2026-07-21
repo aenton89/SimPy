@@ -6,11 +6,6 @@
 #include <fstream>
 
 
-
-workSpace::workSpace() {
-    this->project_path = fs::current_path();
-}
-
 workSpace::~workSpace() {}
 
 void workSpace::Render(ImVec2 pos, ImVec2 size) {
@@ -23,8 +18,8 @@ void workSpace::Render(ImVec2 pos, ImVec2 size) {
 
     static std::string path;
 
-    if (!project_path.empty() && ImGui::TreeNode(this->project_path.filename().string().c_str())) {
-        ShowDirectoryTree(this->project_path, path);
+    if (!projectPath.empty() && ImGui::TreeNode(this->projectPath.filename().string().c_str())) {
+        ShowDirectoryTree(this->projectPath, path);
         ImGui::TreePop();
     }
 
@@ -41,11 +36,11 @@ ImVec2 workSpace::GetWindowPosition() {
 }
 
 void workSpace::set_ProjectPath(const fs::path& path) {
-    this->project_path = path;
+    this->projectPath = path;
 }
 
 fs::path workSpace::get_path2open() {
-    return this->open_path;
+    return this->openPath;
 }
 
 
@@ -58,8 +53,38 @@ void workSpace::OpenContextMenu(const fs::directory_entry& entry) {
     ImGui::Text("File: %s", entry.path().filename().string().c_str());
     ImGui::Separator();
 
-    if (ImGui::MenuItem("Open"))
-        this->open_path = entry.path();
+    if (ImGui::MenuItem("Open")) {
+        //this->openPath = entry.path();
+        std::string extension = entry.path().extension().string();
+        if (extension == ".ipynb") {
+            tabManager->openTab<NotebookTab>();
+            auto* newTab = dynamic_cast<NotebookTab*>(tabManager->getTabs().back().get());
+            if (newTab) {
+                if (FileManager::loadFromIpynb(entry.path(), *newTab)) { // Passing by reference to loadFromXML
+                    std::cout << "File loaded successfully!\n";
+                } else {
+                    std::cerr << "ERR: failed to load file!\n";
+                    pfd::message("Error", "Failed to load file: " + entry.path().string(), pfd::choice::ok, pfd::icon::error);
+                }
+            } else {
+                std::cerr << "ERR: The newly created tab is not a BluePrintTab!\n";
+            }
+        } else if (extension == ".xml") {
+            tabManager->openTab<BluePrintTab>();
+            auto* newTab = dynamic_cast<BluePrintTab*>(tabManager->getTabs().back().get());
+            if (newTab) {
+                if (FileManager::loadFromXML(entry.path(), *newTab)) { // Passing by reference to loadFromXML
+                    std::cout << "File loaded successfully!\n";
+                } else {
+                    std::cerr << "ERR: failed to load file!\n";
+                    pfd::message("Error", "Failed to load file: " + entry.path().string(), pfd::choice::ok, pfd::icon::error);
+                }
+            } else {
+                std::cerr << "ERR: The newly created tab is not a BluePrintTab!\n";
+            }
+        }
+    }
+
 
     if (ImGui::MenuItem("Copy abs path")) {
         std::string path = entry.path().string();

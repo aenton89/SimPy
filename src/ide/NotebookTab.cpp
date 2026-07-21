@@ -16,8 +16,10 @@ void NotebookTab::menuBarFile() {
     //std::cout<<"test";
     if (ImGui::MenuItem("New", "Ctrl+N"))
         fileManager->newFile(*this);
-    if (ImGui::MenuItem("Open", "Ctrl+O"))
+    if (ImGui::MenuItem("Open file", "Ctrl+O"))
         fileManager->openFileDialog();
+    if (ImGui::MenuItem("Open folder"))
+        fileManager->openFolderDialog();
     if (ImGui::MenuItem("Save", "Ctrl+S", false, !fileManager->currentFilePath.empty() || fileManager->hasUnsavedChanges))
         fileManager->saveFile(*this);
     if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
