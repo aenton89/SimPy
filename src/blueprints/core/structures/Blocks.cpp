@@ -2008,13 +2008,65 @@ void logicNORBlock::drawMenu() {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // python block
-pythonBlock::pythonBlock(int _id) : BlockCloneable(_id, 1, 1, true) {
+pythonBlock::pythonBlock(int _id) : BlockCloneable(_id, 2, 1, true) {
     size = ImVec2(200, 120);
+    inputValues.resize(2, 0.0);
+    outputValues.resize(1, 0.0);
 }
 
-// tu trzeba dodac ten bytcode ale to poniej jak sie zainstaluje pybinda
+pythonBlock::~pythonBlock() {
+    // Bezpieczne zwolnienie uchwytu przy usuwaniu bloku
+    pyFunction = pybind11::object();
+}
+
+void pythonBlock::compileScript() {
+    pybind11::gil_scoped_acquire acquire;
+
+    //try {
+        pyFunction = pybind11::object(); // czyszczenie starej funkcji
+        isCompiled = false;
+
+        pybind11::dict scope;
+        // Wykonanie kodu w słowniku scope
+        pybind11::exec(pythonCode, scope, scope);
+
+        if (scope.contains("process")) {
+            pyFunction = scope["process"];
+            isCompiled = true;
+            std::cout << "[pythonBlock]: Skrypt skompilowany pomyślnie!" << std::endl;
+        } else {
+            std::cerr << "[pythonBlock Error]: Brak funkcji 'def process(inputs):'" << std::endl;
+        }
+    // } catch (const pybind11::error_already_set& e) {
+    //     isCompiled = false;
+    //     std::cerr << "[pythonBlock Błąd kompilacji]: " << e.what() << std::endl;
+    // }
+}
+
+void pythonBlock::resetBefore() {
+    // Upewniamy się, że wektory mają odpowiedni rozmiar
+    if (inputValues.size() < 2) inputValues.resize(2, 0.0);
+    if (outputValues.size() < 1) outputValues.resize(1, 0.0);
+
+    compileScript();
+}
+
 void pythonBlock::process() {
-    outputValues[0] = inputValues[0];
+    if (!isCompiled) return;
+
+   // try {
+        pybind11::object result = pyFunction(inputValues);
+
+        if (pybind11::isinstance<pybind11::float_>(result) || pybind11::isinstance<pybind11::int_>(result)) {
+            if (!outputValues.empty()) {
+                outputValues[0] = result.cast<double>();
+            }
+        } else if (pybind11::isinstance<pybind11::list>(result) || pybind11::isinstance<pybind11::tuple>(result)) {
+            outputValues = result.cast<std::vector<double>>();
+        }
+//     } catch (const pybind11::error_already_set& e) {
+//         std::cerr << "[pythonBlock Błąd wykonania]: " << e.what() << std::endl;
+//     }
 }
 
 void pythonBlock::drawContent() {
@@ -2023,19 +2075,20 @@ void pythonBlock::drawContent() {
 }
 
 void pythonBlock::drawMenu() {
-    // TODO: tu jescze ma sie zmainac wewntrzna funjja ze wzgledu an inplentacje
     if (ImGui::InputInt("Number of inputs", &maxNumInputs)) {
-        inputValues.resize(maxNumInputs);
+        if (maxNumInputs < 0) maxNumInputs = 0;
+        inputValues.resize(maxNumInputs, 0.0);
     }
-    ImGui::SameLine();
+
     if (ImGui::InputInt("Number of outputs", &numOutputs)) {
-        outputValues.resize(numOutputs);
+        if (numOutputs < 0) numOutputs = 0;
+        outputValues.resize(numOutputs, 0.0);
     }
 
-    ImGui::InputTextMultiline("Python Code", this->pythonCode, IM_ARRAYSIZE(this->pythonCode), ImVec2(400, 240));
+    if (ImGui::InputTextMultiline("Python Code", this->pythonCode, IM_ARRAYSIZE(this->pythonCode), ImVec2(400, 240))) {
+        isCompiled = false;
+    }
 }
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // cpp block

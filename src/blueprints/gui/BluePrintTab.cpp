@@ -85,6 +85,13 @@ void BluePrintTab::update() {
 
     // MAMMA MIA last time i forgor about de grid
     viewportManager.drawGrid();
+
+    if (model.isError) {
+        std::cout << "Error: " << model.errorMessage << std::endl;
+        pfd::message("Error", model.errorMessage, pfd::choice::ok, pfd::icon::error);
+        model.isError = false;
+        model.errorMessage = "";
+    }
 }
 
 void BluePrintTab::menuBarFile() {

@@ -21,6 +21,9 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
+    pybind11::scoped_interpreter guard{}; // testowe mei4wsjce. OPotyem sie to jakos przniesie do kernela
+    pybind11::gil_scoped_release release;
+
 
     // create window with graphics context
     GLFWwindow* window = glfwCreateWindow(1280, 720, "SimPy", nullptr, nullptr);

@@ -9,6 +9,8 @@
 #include <filesystem>
 #include <fstream>
 #include <numbers>
+#include <pybind11/embed.h>
+#include <pybind11/stl.h>
 #include <cereal/types/complex.hpp>
 #include "BasicBlock.h"
 #include "Model.h"
@@ -28,8 +30,6 @@
 
 // pomocnicze do jednoczesnej rejestracji i bloczków i ich polimorfizmu
 #define REGISTER_BLOCK_TYPE(T) CEREAL_REGISTER_TYPE(T); CEREAL_REGISTER_POLYMORPHIC_RELATION(Block, T)
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 // bloczek sumujący
@@ -908,33 +908,42 @@ public:
 // bloki zwazane z inpelntacja kodu pythona i cpp w symualaci, rozwazam uzycie pybinda
 class pythonBlock : public BlockCloneable<pythonBlock> {
 public:
-    // konstruktor dla cereal
-    pythonBlock() : BlockCloneable<pythonBlock>(-1, 2, 1, false) {}
+    pythonBlock() : BlockCloneable<pythonBlock>(-1, 2, 1, true) {}
     explicit pythonBlock(int _id);
+    ~pythonBlock() override; // Dodano destruktor
+
     void process() override;
     void drawContent() override;
     void drawMenu() override;
+    void resetBefore() override;
+
 private:
-    char pythonCode[512] = "def add(a, b): \n"
-                           "   num = a + b \n"
-                           "   return num \n";
+    char pythonCode[512] =
+            "def process(inputs):\n"
+            "    # inputs to lista z danymi wejsciowymi z C++\n"
+            "    return inputs[0] + inputs[1]\n";
+
+    void compileScript();
+    pybind11::object pyFunction;
+    bool isCompiled = false;
+
 public:
     template<class Archive>
     void serialize(Archive& ar) {
-        ar(cereal::base_class<Block>(this));
+        // Poprawiono klasę bazową dla CRTP
+        ar(cereal::base_class<BlockCloneable<pythonBlock>>(this));
 
-        // zamieniamy char[512] na std::string do serializacji
         std::string codeStr(pythonCode);
         ar(CEREAL_NVP(codeStr));
 
-        // przy wczytywaniu kopiujemy z powrotem do tablicy
         if constexpr (Archive::is_loading::value) {
             std::strncpy(pythonCode, codeStr.c_str(), sizeof(pythonCode));
-            // gwarancja null-terminacji
             pythonCode[sizeof(pythonCode) - 1] = '\0';
+            isCompiled = false;
         }
     }
 };
+
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // cpp tu

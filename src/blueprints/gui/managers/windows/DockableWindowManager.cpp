@@ -9,6 +9,7 @@
 
 
 
+
 ImVec2 DockableWindowManager::lerpVec2(const ImVec2& a, const ImVec2& b, float t) {
     // ease-out cubic dla płynniejszej animacji
     t = 1.0f - std::pow(1.0f - t, 3.0f);
@@ -410,25 +411,65 @@ void DockableWindowManager::drawStartButton() {
         };
 
         if (blueprintTab->simulationRunning) {
-            ImGui::BeginDisabled();
-            ImGui::Button("Running...");
-            ImGui::EndDisabled();
+
+            if (ImGui::Button("Stop Simulation")) {
+                blueprintTab->model.stopSimulation = true;
+            }
+
         } else {
             if (ImGui::Button("Run Simulation")) {
+
                 blueprintTab->simulationRunning = true;
+                blueprintTab->model.stopSimulation = false;
+                blueprintTab->model.isError = false; // Reset flagi przed startem
+
                 auto method = solverMap[blueprintTab->solverName]();
                 SolverManager::initSolver(Model::timeStep, method);
-                // uruchom w osobnym wątku i nie czekaj na niego:
+
                 std::thread([this]() {
-                    // cleanup w bloczkach jeśli jest potrzeb
-                    blueprintTab->model.cleanupBefore();
-                    // blueprintTab->model.makeConnections();
-                    for (int i = 0; i < (Model::simTime/ Model::timeStep) + 1; i++) {
-                        blueprintTab->model.simulate();
+                    try {
+                        pybind11::gil_scoped_acquire acquire;
+
+                        blueprintTab->model.cleanupBefore();
+
+                        for (int i = 0; i < (Model::simTime / Model::timeStep) + 1; i++) {
+
+                            if (blueprintTab->model.stopSimulation) {
+                                break;
+                            }
+
+                            blueprintTab->model.simulate();
+                        }
+
+                        blueprintTab->model.cleanupAfter();
+                        blueprintTab->model.cleanSolver();
+
+                    } catch (pybind11::error_already_set& e) {
+                        blueprintTab->model.stopSimulation = true;
+                        std::string err = "Details: " + std::string(e.what());
+                        std::replace(err.begin(), err.end(), '\n', ' ');
+                        std::replace(err.begin(), err.end(), ':', '-');
+                        std::erase(err, '<');
+                        std::erase(err, '>');
+                        blueprintTab->model.errorMessage = err;
+                        blueprintTab->model.isError = true;
+
+                        //std::cerr << "Python error:\n" << e.what() << std::endl;
+
+                        //e.discard_handled_state();
+
+                    } catch (const std::exception& e) {
+                        blueprintTab->model.stopSimulation = true;
+                        std::string err = e.what();
+                        std::replace(err.begin(), err.end(), '\n', ' ');
+                        blueprintTab->model.errorMessage = err;
+                        blueprintTab->model.isError = true;
+
+                        //std::cerr << "Simulation error: " << e.what() << std::endl;
                     }
-                    blueprintTab->model.cleanupAfter();
-                    blueprintTab->model.cleanSolver();
+
                     blueprintTab->simulationRunning = false;
+
                 }).detach();
             }
         }

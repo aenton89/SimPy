@@ -20,6 +20,8 @@ class CompressorRecipe(ConanFile):
         self.requires("stb/cci.20240531")
         # dla wyboru/zapisu plików
         self.requires("portable-file-dialogs/0.1.0")
+        # dla bloku pythona
+        self.requires("pybind11/3.0.1")
 
     def configure(self):
         self.options["imgui/*"].with_glfw = True

@@ -7,6 +7,7 @@
 #include "../../data/math/solvers/SolverManager.h"
 #include "BasicBlock.h"
 #include "Connection.h"
+#include <atomic>
 // #include <vector>
 // #include <memory>
 
@@ -50,7 +51,10 @@ public:
     // przeniesione z blueprintTab
     int next_id = 0;
 
-
+    // zatrzymanie symulowania wynikajace z inputu urzytkonika badz bledu komulicaji kodu Pythona czy cpp
+    bool stopSimulation = false;
+    bool isError = false;
+    std::string errorMessage;
 
     // dodanie i usuwanie bloku do modelu
     template<typename BlockType, typename... Args>

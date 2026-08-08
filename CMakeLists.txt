@@ -25,6 +25,7 @@ find_package(cereal REQUIRED)
 find_package(stb REQUIRED)
 find_package(portable-file-dialogs REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(pybind11 REQUIRED)
 
 # =================== MAIN PROGRAM ===================
 add_executable(SimPy
@@ -122,6 +123,7 @@ target_link_libraries(SimPy PRIVATE
         stb::stb
         nlohmann_json::nlohmann_json
         portable-file-dialogs::portable-file-dialogs
+        pybind11::embed
 )
 
 target_include_directories(SimPy PRIVATE
