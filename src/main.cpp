@@ -21,9 +21,21 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    pybind11::scoped_interpreter guard{}; // testowe mei4wsjce. OPotyem sie to jakos przniesie do kernela
-    pybind11::gil_scoped_release release;
+    std::string venv_path = "/home/patryk/Desktop/venv/ML_venv";
+    std::string site_packages = venv_path + "/lib/python3.10/site-packages";
+    static pybind11::scoped_interpreter guard{};
 
+    // 3. Konfiguracja sys.path w osobnym bloku
+    {
+        pybind11::module_ sys = pybind11::module_::import("sys");
+        sys.attr("path").attr("insert")(0, site_packages);
+        sys.attr("prefix") = venv_path;
+
+        // Zmienna 'sys' zostanie zniszczona w tym miejscu (dopóki jeszcze MAMY GIL)
+    }
+
+    // 4. Zwolnienie GIL dla reszty aplikacji C++ / kernela
+    pybind11::gil_scoped_release release;
 
     // create window with graphics context
     GLFWwindow* window = glfwCreateWindow(1280, 720, "SimPy", nullptr, nullptr);

@@ -919,6 +919,7 @@ public:
 
 private:
     char pythonCode[512] =
+            "import numpy as np\n"
             "def process(inputs):\n"
             "    # inputs to lista z danymi wejsciowymi z C++\n"
             "    return inputs[0] + inputs[1]\n";
